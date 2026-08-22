@@ -85,9 +85,10 @@ function FullView({ media, onClose }: { media: ProjectMedia; onClose: () => void
  * A framed "display" inside the VKOS interface. Media is labelled as system
  * output rather than as a screenshot.
  *
- * The frame crops to fill; selecting it opens the capture at full size. An
- * empty `src` renders an explicit awaiting-media state instead of a broken
- * image.
+ * The frame crops to fill from the centre, so a wide capture loses an equal
+ * slice from each side rather than its whole right-hand edge. Selecting it
+ * opens the capture uncropped at full size. An empty `src` renders an explicit
+ * awaiting-media state instead of a broken image.
  */
 export function Display({
   media,
@@ -129,7 +130,7 @@ export function Display({
             alt={media.alt}
             fill
             sizes="(max-width: 1024px) 100vw, 900px"
-            className="object-cover object-left-top transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.015]"
+            className="object-cover object-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.015]"
             priority={priority}
           />
           <span className="absolute inset-0 bg-[var(--vk-bg)]/0 transition-colors duration-300 group-hover:bg-[var(--vk-bg)]/25" />
