@@ -114,7 +114,7 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
               text: `  ${p.id}   ${p.name.padEnd(24)} ${p.status}`,
             })),
             { kind: "out", text: "" },
-            { kind: "dim", text: `${projectStats.total} FILES / ${projectStats.archived} ARCHIVED` },
+            { kind: "dim", text: `${projectStats.indexed} FILES / ${projectStats.archived} ARCHIVED` },
             { kind: "out", text: "" },
           ]);
           go("/projects", "PROJECT INDEX");
@@ -178,7 +178,7 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
             { kind: "accent", text: "SYSTEM STATUS" },
             { kind: "out", text: "" },
             { kind: "out", text: `  STATE          ${system.state}` },
-            { kind: "out", text: `  PROJECTS       ${projectStats.total}` },
+            { kind: "out", text: `  PROJECTS       ${projectStats.indexed}` },
             { kind: "out", text: `  ACTIVE         ${projectStats.active}` },
             { kind: "out", text: `  BUILDING       ${projectStats.building}` },
             { kind: "out", text: `  R&D            ${projectStats.rd}` },
