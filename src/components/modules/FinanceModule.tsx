@@ -157,13 +157,13 @@ export function FinanceModule() {
             <LineChart values={main} />
           </div>
 
-          <div>
+          <div className="flex flex-col">
             {demoInstruments.map((inst, i) => {
               const s = syntheticSeries(inst.seed, 60, inst.drift);
               return (
                 <div
                   key={inst.symbol}
-                  className="flex items-center justify-between gap-4 border-b border-[var(--vk-line)] px-4 py-4 last:border-b-0"
+                  className="flex flex-1 items-center justify-between gap-4 border-b border-[var(--vk-line)] px-4 py-4 last:border-b-0"
                 >
                   <div>
                     <div className="vk-mono text-[11px] tracking-[0.14em] text-[var(--vk-fg-dim)]">
