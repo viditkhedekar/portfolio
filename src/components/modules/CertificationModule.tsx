@@ -156,7 +156,7 @@ export function CertificationModule() {
         document view with its evidence attached where a file exists.
       </p>
 
-      <div className="grid gap-6 border-y border-[var(--vk-line)] py-6 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-6 border-y border-[var(--vk-line)] py-6 sm:grid-cols-4">
         {[
           { label: "RECORDS", value: String(certifications.length).padStart(2, "0") },
           {
