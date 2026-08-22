@@ -33,13 +33,13 @@ export function SystemFooter() {
               <div>
                 <Label as="dt">FILES</Label>
                 <dd className="vk-mono mt-1.5 text-[12px] text-[var(--vk-fg-dim)]">
-                  {projectStats.indexed}
+                  {String(projectStats.indexed).padStart(2, "0")}
                 </dd>
               </div>
               <div>
                 <Label as="dt">MODULES</Label>
                 <dd className="vk-mono mt-1.5 text-[12px] text-[var(--vk-fg-dim)]">
-                  {modules.length}
+                  {String(modules.length).padStart(2, "0")}
                 </dd>
               </div>
             </dl>
