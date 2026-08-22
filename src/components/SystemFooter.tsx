@@ -33,7 +33,7 @@ export function SystemFooter() {
               <div>
                 <Label as="dt">FILES</Label>
                 <dd className="vk-mono mt-1.5 text-[12px] text-[var(--vk-fg-dim)]">
-                  {projectStats.total}
+                  {projectStats.indexed}
                 </dd>
               </div>
               <div>
