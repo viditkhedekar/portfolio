@@ -2,6 +2,8 @@ import { formatDot, system, uptimeYears } from "@/lib/data/system";
 import { projectStats } from "@/lib/data/projects";
 import { Label, StatusDot, cx } from "@/components/ui";
 
+const pad = (n: number) => String(n).padStart(2, "0");
+
 function Readout({
   label,
   value,
@@ -48,10 +50,10 @@ export function TelemetryPanel({ className }: { className?: string }) {
       </div>
       <dl>
         <Readout label="SYSTEM STATUS" value="ONLINE" dot="ONLINE" accent />
-        <Readout label="PROJECTS" value={String(projectStats.indexed)} />
-        <Readout label="ACTIVE" value={String(projectStats.active)} />
-        <Readout label="BUILDING" value={String(projectStats.building)} />
-        <Readout label="ARCHIVED" value={String(projectStats.archived)} />
+        <Readout label="PROJECTS" value={pad(projectStats.indexed)} />
+        <Readout label="ACTIVE" value={pad(projectStats.active)} />
+        <Readout label="BUILDING" value={pad(projectStats.building)} />
+        <Readout label="ARCHIVED" value={pad(projectStats.archived)} />
         <Readout label="UPTIME" value={`${uptimeYears()} YEARS`} />
         <Readout label="LAST UPDATE" value={formatDot(system.lastUpdate)} />
       </dl>
