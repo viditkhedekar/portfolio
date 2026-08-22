@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { apps } from "@/lib/data/apps";
-import { liveProjects, projectStats } from "@/lib/data/projects";
+import { liveProjects, projectStats, slugOf } from "@/lib/data/projects";
 import { Label, StatusDot, statusColor } from "@/components/ui";
 import { subjects } from "@/lib/data/school";
 import { certifications } from "@/lib/data/certifications";
@@ -105,7 +105,7 @@ export function ModuleNavigation() {
           {liveProjects.slice(0, 3).map((p) => (
             <li key={p.id} className="border-b border-[var(--vk-line)] last:border-b-0">
               <Link
-                href={`/projects/${p.id.toLowerCase()}`}
+                href={`/projects/${slugOf(p)}`}
                 data-cursor="OPEN FILE"
                 data-cursor-sub={p.id}
                 className="group flex items-center gap-4 px-4 py-3 transition-colors hover:bg-[var(--vk-bg-raised)]"
