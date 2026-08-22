@@ -3,10 +3,11 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { BootSequence, hasBooted } from "@/components/BootSequence";
+import { BootSequence } from "@/components/BootSequence";
 import { Cursor } from "@/components/Cursor";
 import { SystemHeader } from "@/components/SystemHeader";
 import { TerminalProvider } from "@/components/TerminalProvider";
+import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot";
 
 /**
  * The persistent operating-system chrome: boot gate, header, cursor, terminal,
@@ -14,30 +15,18 @@ import { TerminalProvider } from "@/components/TerminalProvider";
  */
 export function VKOSShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [booting, setBooting] = React.useState(false);
-  const [ready, setReady] = React.useState(false);
-
-  React.useEffect(() => {
-    if (hasBooted()) {
-      document.documentElement.removeAttribute("data-boot");
-      setReady(true);
-    } else {
-      setBooting(true);
-    }
-  }, []);
-
-  const finish = React.useCallback(() => {
-    document.documentElement.removeAttribute("data-boot");
-    setBooting(false);
-    setReady(true);
-  }, []);
+  const booting = React.useSyncExternalStore(
+    subscribeBoot,
+    getBootPending,
+    getBootPendingServer,
+  );
 
   return (
     <TerminalProvider>
-      {booting && <BootSequence onFinish={finish} />}
+      {booting && <BootSequence />}
       <Cursor />
 
-      <div className="vk-app" data-ready={ready ? "1" : undefined}>
+      <div className="vk-app" data-ready={booting ? undefined : "1"}>
         <SystemHeader />
         <motion.main
           key={pathname}
