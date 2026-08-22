@@ -3,21 +3,26 @@ import { ArrowUpRight } from "lucide-react";
 import { modules } from "@/lib/data/system";
 import { liveProjects, projectStats } from "@/lib/data/projects";
 import { Label, StatusDot, statusColor } from "@/components/ui";
+import { subjects } from "@/lib/data/school";
+import { topics } from "@/lib/data/finance";
+import { certifications } from "@/lib/data/certifications";
+import { channels } from "@/lib/data/identity";
 
+/** Counts come from the data files so a tile never contradicts its module. */
 function moduleMeta(id: string): string {
   switch (id) {
     case "projects":
       return `${projectStats.indexed} FILES`;
     case "school":
-      return "6 SUBJECTS";
+      return `${subjects.length} SUBJECTS`;
     case "finance":
-      return "5 AREAS";
+      return `${topics.length} AREAS`;
     case "certifications":
-      return "ARCHIVE";
+      return `${certifications.length} RECORDS`;
     case "about":
       return "IDENTITY";
     case "contact":
-      return "3 CHANNELS";
+      return `${channels.length} CHANNELS`;
     default:
       return "";
   }
