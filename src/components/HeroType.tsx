@@ -17,23 +17,21 @@ const START_DELAY_MS = 240;
 export function HeroType({ text, className }: { text: string; className?: string }) {
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
   /* Starts empty so the server and first client render agree. */
-  const [shown, setShown] = React.useState(0);
+  const [typed, setTyped] = React.useState(0);
+  const shown = reduced ? text.length : typed;
 
   React.useEffect(() => {
-    if (reduced) {
-      setShown(text.length);
-      return;
-    }
+    if (reduced) return;
 
-    /* Retype from the start on every visit to the desktop. */
-    setShown(0);
     let i = 0;
     let step: number | undefined;
 
     const begin = window.setTimeout(() => {
+      /* Retype from the start on every visit to the desktop. */
+      setTyped(0);
       step = window.setInterval(() => {
         i += 1;
-        setShown(i);
+        setTyped(i);
         if (i >= text.length && step !== undefined) window.clearInterval(step);
       }, CHAR_MS);
     }, START_DELAY_MS);
