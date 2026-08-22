@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: `%s — ${system.code}`,
   },
   description:
-    "VKOS/01 — the personal operating system of Vidit Khedekar. Projects, research, finance and academic modules.",
+    "VKOS/01 — the personal operating system of Vidit Khedekar. Projects, academic record, credentials and contact.",
   applicationName: system.code,
   authors: [{ name: system.operator }],
   openGraph: {
