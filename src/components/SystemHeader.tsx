@@ -86,7 +86,8 @@ export function SystemHeader() {
 
           {/* Status */}
           <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-            <GithubLink variant="header" className="hidden sm:inline-flex" />
+            {/* Shown at every width — the header is the one slot on every page. */}
+            <GithubLink variant="header" />
 
             <button
               type="button"
@@ -181,7 +182,6 @@ export function SystemHeader() {
                 >
                   OPEN TERMINAL
                 </button>
-                <GithubLink variant="header" className="mt-3 flex w-full justify-center" />
               </div>
             </nav>
           </motion.div>
