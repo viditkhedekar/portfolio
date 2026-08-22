@@ -7,6 +7,7 @@ import { AppLauncher } from "@/components/AppLauncher";
 import { AppWindow } from "@/components/AppWindow";
 import { BootSequence } from "@/components/BootSequence";
 import { Cursor } from "@/components/Cursor";
+import { SystemFooter } from "@/components/SystemFooter";
 import { SystemHeader } from "@/components/SystemHeader";
 import { Taskbar } from "@/components/Taskbar";
 import { TerminalProvider } from "@/components/TerminalProvider";
@@ -52,6 +53,8 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
           className="min-h-[calc(100vh-62px)] pt-[62px]"
         >
           {app ? <AppWindow app={app}>{children}</AppWindow> : children}
+          {/* System chrome, so it sits outside the application window. */}
+          <SystemFooter />
         </motion.main>
         <Taskbar />
       </div>
