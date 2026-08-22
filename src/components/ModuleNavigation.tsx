@@ -4,7 +4,6 @@ import { modules } from "@/lib/data/system";
 import { liveProjects, projectStats } from "@/lib/data/projects";
 import { Label, StatusDot, statusColor } from "@/components/ui";
 import { subjects } from "@/lib/data/school";
-import { topics } from "@/lib/data/finance";
 import { certifications } from "@/lib/data/certifications";
 import { channels } from "@/lib/data/identity";
 
@@ -15,8 +14,6 @@ function moduleMeta(id: string): string {
       return `${String(projectStats.indexed).padStart(2, "0")} FILES`;
     case "school":
       return `${String(subjects.length).padStart(2, "0")} SUBJECTS`;
-    case "finance":
-      return `${String(topics.length).padStart(2, "0")} AREAS`;
     case "certifications":
       return `${String(certifications.length).padStart(2, "0")} RECORDS`;
     case "about":
