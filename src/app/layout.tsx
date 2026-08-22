@@ -38,8 +38,18 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-/** Runs before first paint: hides the interface if this session hasn't booted. */
-const BOOT_GATE = `try{if(sessionStorage.getItem('vkos.booted')!=='1'){document.documentElement.setAttribute('data-boot','pending')}}catch(e){}`;
+/**
+ * Runs before first paint: hides the interface if this session hasn't booted.
+ * Must agree with src/lib/boot.ts — reduced motion skips the sequence, so the
+ * gate must not engage there or the page would stay hidden.
+ */
+const BOOT_GATE = [
+  "try{",
+  "var c=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;",
+  "if(!c&&sessionStorage.getItem('vkos.booted')!=='1'){",
+  "document.documentElement.setAttribute('data-boot','pending')}",
+  "}catch(e){}",
+].join("");
 
 export default function RootLayout({
   children,
