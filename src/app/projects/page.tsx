@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Container, ModuleHeading } from "@/components/ui";
 import { ProjectExplorer } from "@/components/ProjectExplorer";
-import { archivedProjects, liveProjects, projectStats } from "@/lib/data/projects";
+import { archivedProjects, liveProjects, liveStatuses } from "@/lib/data/projects";
 import Link from "next/link";
 import { Label } from "@/components/ui";
 
@@ -10,18 +10,24 @@ export const metadata: Metadata = {
   description: "PROJECT INDEX — selected builds, experiments and systems.",
 };
 
+/* Only statuses present in the index get a tile, so the row never shows a
+   column of zeroes. */
+const stats = [
+  { label: "INDEXED", value: liveProjects.length },
+  ...liveStatuses.map((status) => ({
+    label: status,
+    value: liveProjects.filter((p) => p.status === status).length,
+  })),
+  { label: "ARCHIVED", value: archivedProjects.length },
+];
+
 export default function ProjectsPage() {
   return (
     <Container>
       <ModuleHeading index="01" name="PROJECTS" subtitle="PROJECT INDEX" />
 
       <div className="grid grid-cols-2 gap-6 border-b border-[var(--vk-line)] py-6 sm:grid-cols-4">
-        {[
-          { label: "INDEXED", value: liveProjects.length },
-          { label: "ACTIVE", value: projectStats.active },
-          { label: "BUILDING", value: projectStats.building },
-          { label: "R&D", value: projectStats.rd },
-        ].map((s) => (
+        {stats.map((s) => (
           <div key={s.label}>
             <Label>{s.label}</Label>
             <div className="vk-mono mt-2 text-[28px] leading-none tracking-tight text-[var(--vk-fg)]">
