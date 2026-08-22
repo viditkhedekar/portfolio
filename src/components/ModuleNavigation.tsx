@@ -7,7 +7,7 @@ import { Label, StatusDot, statusColor } from "@/components/ui";
 function moduleMeta(id: string): string {
   switch (id) {
     case "projects":
-      return `${projectStats.total} FILES`;
+      return `${projectStats.indexed} FILES`;
     case "school":
       return "6 SUBJECTS";
     case "finance":
@@ -67,7 +67,7 @@ export function ModuleNavigation() {
 
           {/* File preview strip */}
           <div className="mt-10">
-            <ul className="hidden border-t border-[var(--vk-line)] sm:block">
+            <ul className="border-t border-[var(--vk-line)]">
               {liveProjects.slice(0, 3).map((p) => (
                 <li
                   key={p.id}
@@ -76,9 +76,10 @@ export function ModuleNavigation() {
                   <span className="vk-mono w-[54px] shrink-0 text-[10px] tracking-[0.12em] text-[var(--vk-fg-faint)]">
                     {p.id}
                   </span>
-                  <span className="vk-mono flex-1 truncate text-[10px] tracking-[0.12em] text-[var(--vk-fg-ghost)]">
+                  <span className="vk-mono hidden flex-1 truncate text-[10px] tracking-[0.12em] text-[var(--vk-fg-ghost)] sm:block">
                     {p.name}
                   </span>
+                  <span className="flex-1 sm:hidden" />
                   <StatusDot status={p.status} />
                   <span
                     className="vk-mono w-[62px] shrink-0 text-right text-[9px] tracking-[0.12em]"
@@ -92,7 +93,7 @@ export function ModuleNavigation() {
 
             <div className="mt-5 flex items-center justify-between">
               <span className="vk-mono text-[10px] tracking-[0.16em] text-[var(--vk-fg-faint)]">
-                {projectStats.total} FILES
+                {projectStats.indexed} FILES
                 <span className="mx-2 text-[var(--vk-fg-ghost)]">/</span>
                 {projectStats.active} ACTIVE
               </span>
