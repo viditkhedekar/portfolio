@@ -12,17 +12,17 @@ import { channels } from "@/lib/data/identity";
 function moduleMeta(id: string): string {
   switch (id) {
     case "projects":
-      return `${projectStats.indexed} FILES`;
+      return `${String(projectStats.indexed).padStart(2, "0")} FILES`;
     case "school":
-      return `${subjects.length} SUBJECTS`;
+      return `${String(subjects.length).padStart(2, "0")} SUBJECTS`;
     case "finance":
-      return `${topics.length} AREAS`;
+      return `${String(topics.length).padStart(2, "0")} AREAS`;
     case "certifications":
-      return `${certifications.length} RECORDS`;
+      return `${String(certifications.length).padStart(2, "0")} RECORDS`;
     case "about":
       return "IDENTITY";
     case "contact":
-      return `${channels.length} CHANNELS`;
+      return `${String(channels.length).padStart(2, "0")} CHANNELS`;
     default:
       return "";
   }
@@ -98,9 +98,9 @@ export function ModuleNavigation() {
 
             <div className="mt-5 flex items-center justify-between">
               <span className="vk-mono text-[10px] tracking-[0.16em] text-[var(--vk-fg-faint)]">
-                {projectStats.indexed} FILES
+                {String(projectStats.indexed).padStart(2, "0")} FILES
                 <span className="mx-2 text-[var(--vk-fg-ghost)]">/</span>
-                {projectStats.active} ACTIVE
+                {String(projectStats.active).padStart(2, "0")} ACTIVE
               </span>
               <span className="vk-mono text-[10px] tracking-[0.16em] text-[var(--vk-accent)]">
                 {primary.status}
