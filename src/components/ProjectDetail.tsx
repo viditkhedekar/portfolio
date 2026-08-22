@@ -83,10 +83,13 @@ export function ProjectDetail({ project }: { project: Project }) {
           <Meta
             label="TECHNOLOGY"
             value={
-              <span className="flex flex-wrap gap-x-2 gap-y-1">
+              <span className="flex flex-wrap gap-1.5">
                 {project.technologies.map((t, i) => (
                   /* Placeholder values repeat, so the index is part of the key. */
-                  <span key={`${t}-${i}`} className="text-[var(--vk-fg-dim)]">
+                  <span
+                    key={`${t}-${i}`}
+                    className="border border-[var(--vk-line)] px-2 py-1 text-[10px] tracking-[0.08em] text-[var(--vk-fg-dim)]"
+                  >
                     {t}
                   </span>
                 ))}
@@ -104,10 +107,16 @@ export function ProjectDetail({ project }: { project: Project }) {
                         href={l.href}
                         target="_blank"
                         rel="noreferrer noopener"
-                        className="vk-mono group inline-flex items-center gap-1.5 text-[11px] tracking-[0.14em] text-[var(--vk-fg-dim)] transition-colors hover:text-[var(--vk-accent)]"
+                        data-cursor="OPEN"
+                        data-cursor-sub="EXTERNAL"
+                        className="vk-mono block break-words text-[11px] leading-relaxed tracking-[0.1em] text-[var(--vk-fg-dim)] transition-colors hover:text-[var(--vk-accent)]"
                       >
                         {l.label}
-                        <ArrowUpRight size={11} strokeWidth={1.5} />
+                        <ArrowUpRight
+                          size={11}
+                          strokeWidth={1.5}
+                          className="ml-1.5 inline align-[-1px]"
+                        />
                       </a>
                     ) : (
                       <span className="vk-mono text-[11px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
