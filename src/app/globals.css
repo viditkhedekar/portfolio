@@ -233,3 +233,40 @@ body {
     cursor: none !important;
   }
 }
+
+/* ---------- Boot gate ----------
+   An inline script in <head> sets data-boot="pending" before first paint when
+   this session has not yet booted, so the interface never flashes behind the
+   boot sequence. Without JS the attribute is never set and the site renders
+   normally. */
+
+.vk-app {
+  opacity: 1;
+  transition: opacity 500ms var(--vk-ease);
+}
+
+html[data-boot="pending"] .vk-app {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---------- Skip link ---------- */
+
+.vk-skip {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  transform: translateY(-200%);
+  background: var(--vk-bg-raised);
+  border: 1px solid var(--vk-accent);
+  color: var(--vk-fg);
+  padding: 10px 14px;
+  font-family: var(--font-mono-jb), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+
+.vk-skip:focus {
+  transform: translateY(0);
+}
