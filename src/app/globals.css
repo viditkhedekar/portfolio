@@ -1,26 +1,235 @@
 @import "tailwindcss";
 
+/* ============================================================
+   VKOS/01 — DESIGN SYSTEM
+   Near-black base, monochrome UI, lime accent used sparingly.
+   ============================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces */
+  --vk-bg: #08090a;
+  --vk-bg-panel: #0c0d0f;
+  --vk-bg-raised: #111315;
+  --vk-bg-hover: #16181b;
+
+  /* Text */
+  --vk-fg: #e9eaec;
+  --vk-fg-dim: #8b9096;
+  --vk-fg-faint: #565b61;
+  --vk-fg-ghost: #34383c;
+
+  /* Lines */
+  --vk-line: rgba(255, 255, 255, 0.07);
+  --vk-line-mid: rgba(255, 255, 255, 0.12);
+  --vk-line-strong: rgba(255, 255, 255, 0.22);
+
+  /* Accent — muted electric lime. Used sparingly. */
+  --vk-accent: #aee83c;
+  --vk-accent-soft: rgba(174, 232, 60, 0.55);
+  --vk-accent-faint: rgba(174, 232, 60, 0.14);
+  --vk-accent-ghost: rgba(174, 232, 60, 0.06);
+
+  /* Status */
+  --vk-status-active: #aee83c;
+  --vk-status-building: #e8c53c;
+  --vk-status-rd: #6aa9f0;
+  --vk-status-archived: #6b7076;
+
+  /* Metrics */
+  --vk-radius: 2px;
+  --vk-gutter: 24px;
+  --vk-header-h: 56px;
+  --vk-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --vk-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--vk-bg);
+  --color-panel: var(--vk-bg-panel);
+  --color-raised: var(--vk-bg-raised);
+  --color-hover: var(--vk-bg-hover);
+
+  --color-fg: var(--vk-fg);
+  --color-dim: var(--vk-fg-dim);
+  --color-faint: var(--vk-fg-faint);
+  --color-ghost: var(--vk-fg-ghost);
+
+  --color-line: var(--vk-line);
+  --color-line-mid: var(--vk-line-mid);
+  --color-line-strong: var(--vk-line-strong);
+
+  --color-accent: var(--vk-accent);
+  --color-accent-soft: var(--vk-accent-soft);
+  --color-accent-faint: var(--vk-accent-faint);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono-jb), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --ease-vk: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- Base ---------- */
+
+* {
+  border-color: var(--vk-line);
+}
+
+html {
+  background: var(--vk-bg);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--vk-bg);
+  color: var(--vk-fg);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "ss01";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--vk-accent);
+  color: #050606;
+}
+
+/* ---------- Focus ---------- */
+
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 1px solid var(--vk-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Scrollbar ---------- */
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: var(--vk-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: #232629;
+  border: 2px solid var(--vk-bg);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #33373b;
+}
+
+/* ---------- Typography primitives ---------- */
+
+.vk-label {
+  font-family: var(--font-mono-jb), ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vk-fg-faint);
+}
+
+.vk-label-dim {
+  color: var(--vk-fg-ghost);
+}
+
+.vk-mono {
+  font-family: var(--font-mono-jb), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.vk-display {
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+}
+
+/* ---------- Structural helpers ---------- */
+
+.vk-hairline {
+  background: var(--vk-line);
+}
+
+/* Dotted grid backdrop, extremely subtle */
+.vk-grid-bg {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.045) 1px,
+    transparent 0
+  );
+  background-size: 32px 32px;
+}
+
+/* Faint horizontal scanline texture for "display" surfaces */
+.vk-scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.017) 0px,
+    rgba(255, 255, 255, 0.017) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes vk-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.vk-pulse {
+  animation: vk-pulse 2.8s var(--vk-ease-io) infinite;
+}
+
+@keyframes vk-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.vk-caret {
+  animation: vk-blink 1.05s step-end infinite;
+}
+
+@keyframes vk-sweep {
+  0% { transform: translateY(-100%); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(2000%); opacity: 0; }
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .vk-pulse,
+  .vk-caret {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* ---------- Custom cursor host ---------- */
+
+@media (hover: hover) and (pointer: fine) {
+  body[data-vk-cursor="on"],
+  body[data-vk-cursor="on"] * {
+    cursor: none !important;
+  }
 }
