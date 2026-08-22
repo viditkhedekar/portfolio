@@ -106,11 +106,11 @@ export function BootSequence() {
                         </span>
                         <span
                           aria-hidden
-                          className="mb-[3px] h-px flex-1"
+                          className="mb-[3px] h-[2px] flex-1"
                           style={{
                             backgroundImage:
-                              "radial-gradient(circle, var(--vk-fg-ghost) 0.5px, transparent 0.5px)",
-                            backgroundSize: "4px 1px",
+                              "radial-gradient(circle at center, var(--vk-fg-faint) 0.9px, transparent 1px)",
+                            backgroundSize: "5px 2px",
                           }}
                         />
                         <span className="vk-mono shrink-0 text-[11px] tracking-[0.14em] text-[var(--vk-accent)]">
