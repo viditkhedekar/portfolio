@@ -8,6 +8,7 @@ import { Menu, X } from "lucide-react";
 import { modules, system } from "@/lib/data/system";
 import { StatusDot, cx } from "@/components/ui";
 import { useTerminal } from "@/components/TerminalProvider";
+import { GithubLink } from "@/components/GithubLink";
 import { useClock } from "@/lib/hooks";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -84,7 +85,9 @@ export function SystemHeader() {
           </nav>
 
           {/* Status */}
-          <div className="flex shrink-0 items-center gap-5">
+          <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+            <GithubLink variant="header" className="hidden sm:inline-flex" />
+
             <button
               type="button"
               onClick={terminal.open}
@@ -178,6 +181,7 @@ export function SystemHeader() {
                 >
                   OPEN TERMINAL
                 </button>
+                <GithubLink variant="header" className="mt-3 flex w-full justify-center" />
               </div>
             </nav>
           </motion.div>
