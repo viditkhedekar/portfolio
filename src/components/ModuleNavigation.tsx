@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { modules } from "@/lib/data/system";
-import { liveProjects, projectStats, slugOf } from "@/lib/data/projects";
-import { Label, StatusDot, cx, statusColor } from "@/components/ui";
+import { liveProjects, projectStats } from "@/lib/data/projects";
+import { Label, StatusDot, statusColor } from "@/components/ui";
 
 function moduleMeta(id: string): string {
   switch (id) {
@@ -142,5 +142,3 @@ export function ModuleNavigation() {
     </nav>
   );
 }
-
-export { moduleMeta, cx };
