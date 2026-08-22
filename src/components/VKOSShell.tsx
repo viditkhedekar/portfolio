@@ -21,6 +21,12 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
     getBootPendingServer,
   );
 
+  /* Safety net: if the sequence is not going to run, release the boot gate the
+     inline script may have set. */
+  React.useEffect(() => {
+    if (!booting) document.documentElement.removeAttribute("data-boot");
+  }, [booting]);
+
   return (
     <TerminalProvider>
       {booting && <BootSequence />}
