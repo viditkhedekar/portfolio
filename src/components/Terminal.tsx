@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { liveProjects, projectStats, projects, slugOf } from "@/lib/data/projects";
 import { formatDot, modules, system, uptimeYears } from "@/lib/data/system";
+import { githubUrl } from "@/lib/data/identity";
 
 type LineKind = "input" | "out" | "dim" | "accent" | "error";
 interface Line {
@@ -21,12 +22,11 @@ const HELP: Line[] = [
   { kind: "out", text: "  projects          load the project index" },
   { kind: "out", text: "  open <id>         open a project file, e.g. open px-001" },
   { kind: "out", text: "  school            academic system" },
-  { kind: "out", text: "  finance           financial research" },
   { kind: "out", text: "  certifications    credential database" },
   { kind: "out", text: "  about             identity file" },
   { kind: "out", text: "  contact           communications system" },
   { kind: "out", text: "  archive           archived builds" },
-  { kind: "out", text: "  map               system architecture" },
+  { kind: "out", text: "  github            open the github profile" },
   { kind: "out", text: "  status            system telemetry" },
   { kind: "out", text: "  clear             clear the buffer" },
   { kind: "out", text: "  exit              close the terminal" },
@@ -148,9 +148,6 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
         case "school":
           go("/school", "ACADEMIC SYSTEM");
           return;
-        case "finance":
-          go("/finance", "FINANCIAL RESEARCH");
-          return;
         case "certifications":
         case "certs":
           go("/certifications", "CREDENTIAL DATABASE");
@@ -164,9 +161,13 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
         case "archive":
           go("/archive", "ARCHIVE");
           return;
-        case "map":
-        case "graph":
-          go("/#architecture", "SYSTEM ARCHITECTURE");
+        case "github":
+          push([
+            { kind: "dim", text: "OPENING EXTERNAL CHANNEL..." },
+            { kind: "accent", text: githubUrl },
+            { kind: "out", text: "" },
+          ]);
+          window.open(githubUrl, "_blank", "noopener,noreferrer");
           return;
         case "home":
         case "cd":
