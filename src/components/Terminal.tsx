@@ -6,8 +6,26 @@ import { AnimatePresence, motion } from "framer-motion";
 import { liveProjects, projectStats, projects, slugOf } from "@/lib/data/projects";
 import { formatDot, modules, system, uptimeYears } from "@/lib/data/system";
 import { githubUrl } from "@/lib/data/identity";
+import { apps } from "@/lib/data/apps";
+import { getWindows } from "@/lib/apps-session";
 
-type LineKind = "input" | "out" | "dim" | "accent" | "error";
+type LineKind = "input" | "out" | "dim" | "accent" | "error" | "gems";
+
+/** The collapsed list under `help`. Half real system commands, half jokes. */
+const GEMS: Array<{ cmd: string; note: string }> = [
+  { cmd: "whoami", note: "operator record" },
+  { cmd: "system", note: "kernel and build info" },
+  { cmd: "ps", note: "running processes" },
+  { cmd: "dmesg", note: "kernel log" },
+  { cmd: "uptime", note: "years since first boot" },
+  { cmd: "date", note: "current system time" },
+  { cmd: "echo <text>", note: "repeat something back" },
+  { cmd: "sudo access_future", note: "try it" },
+  { cmd: "coffee", note: "brew one" },
+  { cmd: "matrix", note: "look busy" },
+  { cmd: "42", note: "the answer" },
+  { cmd: "hello", note: "say hi" },
+];
 interface Line {
   kind: LineKind;
   text: string;
@@ -30,6 +48,8 @@ const HELP: Line[] = [
   { kind: "out", text: "  status            system telemetry" },
   { kind: "out", text: "  clear             clear the buffer" },
   { kind: "out", text: "  exit              close the terminal" },
+  { kind: "out", text: "" },
+  { kind: "gems", text: "" },
 ];
 
 const BANNER: Line[] = [
@@ -37,8 +57,41 @@ const BANNER: Line[] = [
   { kind: "dim", text: `${system.fullName}` },
   { kind: "out", text: "" },
   { kind: "dim", text: "Type 'help' for available commands." },
+  { kind: "dim", text: "Or click anywhere outside to browse normally." },
   { kind: "out", text: "" },
 ];
+
+/**
+ * The collapsed extras under `help`. Built on <details> so it opens without any
+ * state of its own and keeps working with a keyboard.
+ */
+function GemsBlock() {
+  return (
+    <details className="group my-1">
+      <summary
+        className="vk-mono flex cursor-pointer list-none items-center gap-2 text-[12px] leading-[1.65] text-[var(--vk-fg-faint)] transition-colors hover:text-[var(--vk-fg-dim)] [&::-webkit-details-marker]:hidden"
+        /* The transcript focuses the input on click; this must not steal it back. */
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span aria-hidden className="inline-block transition-transform group-open:rotate-90">
+          ▸
+        </span>
+        And some hidden gems...
+      </summary>
+
+      <div className="mt-1.5 border-l border-[var(--vk-line)] pl-4">
+        {GEMS.map((g) => (
+          <div
+            key={g.cmd}
+            className="vk-mono whitespace-pre-wrap text-[12px] leading-[1.65] text-[var(--vk-fg-dim)]"
+          >
+            {`  ${g.cmd.padEnd(20)}${g.note}`}
+          </div>
+        ))}
+      </div>
+    </details>
+  );
+}
 
 export function Terminal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
@@ -218,6 +271,14 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
           return;
 
         case "sudo": {
+          if (arg.startsWith("rm -rf")) {
+            push([
+              { kind: "error", text: "NICE TRY, VISITOR." },
+              { kind: "dim", text: "This filesystem is load-bearing." },
+              { kind: "out", text: "" },
+            ]);
+            return;
+          }
           if (arg === "access_future") {
             push([
               { kind: "error", text: "ACCESS DENIED" },
@@ -250,6 +311,87 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
 
         case "echo":
           push([{ kind: "out", text: args.join(" ") }, { kind: "out", text: "" }]);
+          return;
+
+        case "ps": {
+          const windows = getWindows();
+          const running = windows.open
+            .map((id) => apps.find((a) => a.id === id))
+            .filter((a): a is (typeof apps)[number] => Boolean(a));
+          push([
+            { kind: "accent", text: "PID   PROCESS" },
+            { kind: "out", text: "" },
+            { kind: "out", text: "  1   vkos-shell" },
+            { kind: "out", text: "  2   terminal" },
+            ...running.map<Line>((a, i) => ({
+              kind: "out",
+              text: `${String(i + 3).padStart(3, " ")}   ${a.file.toLowerCase()}${
+                windows.minimised.includes(a.id) ? "  (minimised)" : ""
+              }`,
+            })),
+            { kind: "out", text: "" },
+            { kind: "dim", text: `${running.length + 2} PROCESSES` },
+            { kind: "out", text: "" },
+          ]);
+          return;
+        }
+
+        case "dmesg":
+          push([
+            { kind: "dim", text: "[    0.000000] vkos: kernel 1.0.0 booting" },
+            { kind: "dim", text: "[    0.120000] core: online" },
+            { kind: "dim", text: "[    0.270000] database: mounted read-only" },
+            { kind: "dim", text: `[    0.460000] index: ${projectStats.indexed} files registered` },
+            { kind: "dim", text: `[    0.590000] modules: ${modules.length} loaded` },
+            { kind: "dim", text: "[    0.760000] network: link up" },
+            { kind: "dim", text: "[    0.930000] operator: authenticated" },
+            { kind: "dim", text: "[    1.000000] vkos: all systems operational" },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "coffee":
+          push([
+            { kind: "dim", text: "BREWING..." },
+            { kind: "out", text: "" },
+            { kind: "error", text: "ERR: NO HARDWARE" },
+            { kind: "dim", text: "This system has never been fitted with a kettle." },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "matrix": {
+          const glyphs = "01<>[]{}/\\|=+*-#@$%&";
+          const rows = Array.from({ length: 6 }, () =>
+            Array.from(
+              { length: 46 },
+              () => glyphs[Math.floor(Math.random() * glyphs.length)],
+            ).join(""),
+          );
+          push([
+            ...rows.map<Line>((r) => ({ kind: "accent", text: r })),
+            { kind: "out", text: "" },
+            { kind: "dim", text: "There is no spoon. There is a portfolio." },
+            { kind: "out", text: "" },
+          ]);
+          return;
+        }
+
+        case "42":
+          push([
+            { kind: "accent", text: "42" },
+            { kind: "dim", text: "Answer located. Question still outstanding." },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "hello":
+        case "hi":
+          push([
+            { kind: "out", text: "hello, visitor." },
+            { kind: "dim", text: "You are the only process with a pulse in here." },
+            { kind: "out", text: "" },
+          ]);
           return;
 
         default:
@@ -344,14 +486,18 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
               className="flex-1 overflow-y-auto px-4 py-3"
               onClick={() => inputRef.current?.focus()}
             >
-              {lines.map((l, i) => (
-                <div
-                  key={i}
-                  className={`vk-mono whitespace-pre-wrap text-[12px] leading-[1.65] ${colorFor(l.kind)}`}
-                >
-                  {l.text || " "}
-                </div>
-              ))}
+              {lines.map((l, i) =>
+                l.kind === "gems" ? (
+                  <GemsBlock key={i} />
+                ) : (
+                  <div
+                    key={i}
+                    className={`vk-mono whitespace-pre-wrap text-[12px] leading-[1.65] ${colorFor(l.kind)}`}
+                  >
+                    {l.text || " "}
+                  </div>
+                ),
+              )}
 
               <div className="flex items-center gap-2">
                 <span className="vk-mono shrink-0 text-[12px] text-[var(--vk-accent)]">
