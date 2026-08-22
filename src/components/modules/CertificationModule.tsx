@@ -142,12 +142,40 @@ function DocumentView({ cert, onClose }: { cert: Certification; onClose: () => v
 
 export function CertificationModule() {
   const [open, setOpen] = React.useState<Certification | null>(null);
+  const years = React.useMemo(
+    () => [...new Set(certifications.map((c) => c.issued))].sort(),
+    [],
+  );
 
   return (
     <Container>
       <ModuleHeading index="04" name="CERTIFICATIONS" subtitle="CREDENTIAL DATABASE" />
 
-      <div className="pt-10">
+      <p className="max-w-[58ch] py-8 text-[15px] leading-relaxed text-[var(--vk-fg-dim)]">
+        Formal credentials and the documents behind them. Each record opens as a
+        document view with its evidence attached where a file exists.
+      </p>
+
+      <div className="grid gap-6 border-y border-[var(--vk-line)] py-6 sm:grid-cols-4">
+        {[
+          { label: "RECORDS", value: String(certifications.length).padStart(2, "0") },
+          {
+            label: "WITH EVIDENCE",
+            value: String(certifications.filter((c) => c.evidence).length).padStart(2, "0"),
+          },
+          { label: "EARLIEST", value: years[0] ?? "—" },
+          { label: "LATEST", value: years[years.length - 1] ?? "—" },
+        ].map((f) => (
+          <div key={f.label}>
+            <Label>{f.label}</Label>
+            <div className="vk-mono mt-2 text-[26px] leading-none tracking-tight text-[var(--vk-fg)]">
+              {f.value}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-14">
         <SectionTitle right={`${String(certifications.length).padStart(2, "0")} RECORDS`}>
           RECORDS
         </SectionTitle>
