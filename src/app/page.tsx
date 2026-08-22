@@ -74,7 +74,7 @@ export default function Home() {
         {CONTEXT.map((c) => (
           <span
             key={c}
-            className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-ghost)]"
+            className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)]"
           >
             {c}
           </span>
