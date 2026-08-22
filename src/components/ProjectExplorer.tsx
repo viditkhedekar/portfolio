@@ -4,10 +4,16 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Project, ProjectStatus } from "@/lib/types";
-import { slugOf } from "@/lib/data/projects";
+import { liveStatuses, slugOf } from "@/lib/data/projects";
 import { Label, Slot, cx, statusColor } from "@/components/ui";
 
-const FILTERS: Array<ProjectStatus | "ALL"> = ["ALL", "ACTIVE", "BUILDING", "R&D"];
+/* Only offer filters for statuses that actually exist in the index, so the
+   control never presents an empty result as a valid choice. */
+const ORDER: ProjectStatus[] = ["ACTIVE", "BUILDING", "R&D"];
+const FILTERS: Array<ProjectStatus | "ALL"> = [
+  "ALL",
+  ...ORDER.filter((s) => liveStatuses.includes(s)),
+];
 
 /** A single file row in the index. */
 function ProjectFile({
@@ -48,8 +54,8 @@ function ProjectFile({
             <h3 className="truncate text-[21px] tracking-tight transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:translate-x-1 sm:text-[24px]">
               <Slot className="text-[var(--vk-fg)]">{project.name}</Slot>
             </h3>
-            <p className="mt-1.5 max-w-[46ch] truncate text-[13px] text-[var(--vk-fg-faint)]">
-              <Slot>{project.summary}</Slot>
+            <p className="mt-1.5 max-w-[52ch] truncate text-[13px] text-[var(--vk-fg-faint)]">
+              <Slot>{project.tagline ?? project.summary}</Slot>
             </p>
           </div>
 
