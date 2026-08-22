@@ -29,7 +29,8 @@ export function SystemMap() {
         </h2>
         <div className="h-px flex-1 bg-[var(--vk-line)]" />
         <span className="vk-label">
-          {domains.length} DOMAINS / {liveProjects.length} FILES
+          {String(domains.length).padStart(2, "0")} DOMAINS /{" "}
+          {String(liveProjects.length).padStart(2, "0")} FILES
         </span>
       </div>
 
