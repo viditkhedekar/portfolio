@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VKOS/01
 
-## Getting Started
+`VIDIT KHEDEKAR OPERATING SYSTEM / 01` — a personal portfolio built as a
+fictional operating system: boot sequence, module index, project file explorer,
+interactive terminal and a system architecture map.
 
-First, run the development server:
+Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · Framer Motion · Lucide.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Where the content lives
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+All content sits in `src/lib/data/`. Nothing is hard-coded into components, and
+**every string wrapped in `[ SQUARE BRACKETS ]` is an unfilled placeholder** —
+it renders in a dimmed colour so an unfinished field is obvious on screen and
+never reads as a real claim.
 
-## Learn More
+| File | What it holds |
+| --- | --- |
+| `system.ts` | Name, age, disciplines, current system state, module list, the CURRENT MISSION panel, boot copy |
+| `projects.ts` | The project index and archive. Everything else derives from this array |
+| `school.ts` | Level, subjects, achievements, independent research |
+| `finance.ts` | Areas of study, notes, and the synthetic chart series |
+| `certifications.ts` | Credential records and evidence file paths |
+| `identity.ts` | The About statement blocks and the contact channels |
+| `graph.ts` | Domain nodes for the system map. Project nodes are generated |
 
-To learn more about Next.js, take a look at the following resources:
+### Adding a project
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Copy a block in `src/lib/data/projects.ts`, give it the next free `PX-0NN` id,
+and fill in the brackets. That single edit updates the project index, the file
+counts in the header and footer telemetry, the system architecture map, the
+terminal's `projects` and `open` commands, and the static routes.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Set `archived: true` to move an entry into `/archive` instead.
 
-## Deploy on Vercel
+### Adding media
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Drop files into `public/` and point a project's `media[].src` at them. Each
+frame is labelled as system output rather than as a screenshot:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```ts
+media: [
+  { src: "/px-001/output.png", label: "SYSTEM OUTPUT", ref: "PX-001 / BUILD 042", alt: "…" },
+]
+```
+
+An empty `src` renders a deliberate `NO SIGNAL / AWAITING MEDIA` state, so the
+layout is never broken by a missing file.
+
+### Certification evidence
+
+Put the PDF or image in `public/certifications/` and set `evidence` plus
+`evidenceKind` on the record. The document view embeds it.
+
+## Things worth knowing
+
+- **Counts are derived, never typed.** `PROJECTS`, `ACTIVE`, `ARCHIVED` and the
+  file totals all come from the projects array. `UPTIME` comes from `system.age`,
+  or is calculated from `system.birthDate` if you set one.
+- **No live market data.** The finance module's series are generated from a
+  fixed seed and labelled `SYNTHETIC DATA · NOT MARKET DATA` on screen. Do not
+  present them as prices.
+- **Contact channels are opt-in.** A channel with an empty `href` renders as
+  `UNCONFIGURED` rather than as a broken link, so nothing is published until you
+  fill it in.
+- **The terminal is secondary navigation.** `⌘K` / `Ctrl+K` opens it; every
+  destination is also reachable through normal links and keyboard focus.
+- **Reduced motion is respected.** `prefers-reduced-motion` skips the boot
+  sequence, the file-opening transition and the custom cursor.
+
+## Commands
+
+```bash
+npm run dev      # dev server
+npm run build    # production build
+npm run lint     # eslint
+npx tsc --noEmit # typecheck
+```
