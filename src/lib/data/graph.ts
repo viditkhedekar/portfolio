@@ -1,90 +1,109 @@
 import type { MapEdge, MapNode } from "@/lib/types";
-import { projects, slugOf } from "@/lib/data/projects";
+import { liveProjects, slugOf } from "@/lib/data/projects";
 
 /**
  * VKOS/01 — SYSTEM ARCHITECTURE.
  *
- * Domain nodes are hand-placed. Project nodes are derived from
- * `projects[].domains` and fanned out from their parent domain, so adding a
- * project to the index automatically adds it to the map.
+ * Layout is deterministic and collision-free by construction: the six domains
+ * form a fixed tree down the centre, and project files sit on two vertical
+ * rails either side of it. Files are assigned to the rail nearest their primary
+ * domain and rebalanced so neither side crowds.
+ *
+ * Adding a project to the index adds it to the map automatically.
  */
 
 export const domains: MapNode[] = [
-  { id: "mathematics", label: "MATHEMATICS", x: 50, y: 9, kind: "domain" },
-  { id: "finance", label: "FINANCE", x: 20, y: 33, kind: "domain", href: "/finance" },
-  { id: "ai", label: "AI", x: 80, y: 33, kind: "domain" },
-  { id: "software", label: "SOFTWARE", x: 50, y: 57, kind: "domain", href: "/projects" },
-  { id: "sports", label: "SPORTS", x: 24, y: 84, kind: "domain" },
-  { id: "systems", label: "SYSTEMS", x: 76, y: 84, kind: "domain" },
+  { id: "mathematics", label: "MATHEMATICS", x: 50, y: 11, kind: "domain" },
+  { id: "finance", label: "FINANCE", x: 31, y: 33, kind: "domain", href: "/finance" },
+  { id: "ai", label: "AI", x: 69, y: 33, kind: "domain" },
+  { id: "software", label: "SOFTWARE", x: 50, y: 56, kind: "domain", href: "/projects" },
+  { id: "sports", label: "SPORTS", x: 34, y: 80, kind: "domain" },
+  { id: "systems", label: "SYSTEMS", x: 66, y: 80, kind: "domain" },
 ];
 
-export const domainEdges: MapEdge[] = [
+const DOMAIN_EDGES: MapEdge[] = [
   { from: "mathematics", to: "finance" },
   { from: "mathematics", to: "ai" },
   { from: "finance", to: "software" },
   { from: "ai", to: "software" },
+  { from: "finance", to: "ai" },
   { from: "software", to: "sports" },
   { from: "software", to: "systems" },
-  { from: "finance", to: "ai" },
 ];
 
-const CENTER = { x: 50, y: 46 };
-const RADIUS = 15;
-const SPREAD = 34; // degrees between fanned siblings
-
-function fan(domainId: string, index: number, count: number): { x: number; y: number } {
-  const d = domains.find((n) => n.id === domainId) ?? domains[3];
-  const base = Math.atan2(d.y - CENTER.y, d.x - CENTER.x) * (180 / Math.PI);
-  const offset = (index - (count - 1) / 2) * SPREAD;
-  const angle = ((base + offset) * Math.PI) / 180;
-  return {
-    x: Math.max(6, Math.min(94, d.x + Math.cos(angle) * RADIUS)),
-    y: Math.max(6, Math.min(94, d.y + Math.sin(angle) * RADIUS * 0.86)),
-  };
+/** Edges that only appear once one of their endpoints is focused. */
+export interface MapLink extends MapEdge {
+  secondary?: boolean;
 }
 
-function buildProjectNodes(): { nodes: MapNode[]; edges: MapEdge[] } {
-  const nodes: MapNode[] = [];
-  const edges: MapEdge[] = [];
-  const byDomain = new Map<string, string[]>();
+const RAIL_LEFT = 9;
+const RAIL_RIGHT = 91;
+const RAIL_TOP = 14;
+const RAIL_BOTTOM = 86;
 
-  for (const p of projects) {
-    if (p.archived) continue;
-    const primary = p.domains?.[0] ?? "software";
-    const list = byDomain.get(primary) ?? [];
-    list.push(p.id);
-    byDomain.set(primary, list);
+function domainOf(id: string): MapNode {
+  return domains.find((d) => d.id === id) ?? domains[3];
+}
+
+function layout(): { nodes: MapNode[]; links: MapLink[] } {
+  const entries = liveProjects.map((p) => {
+    const primary = domainOf(p.domains?.[0] ?? "software");
+    return { project: p, primary };
+  });
+
+  const cap = Math.ceil(entries.length / 2);
+  const left: typeof entries = [];
+  const right: typeof entries = [];
+
+  // Prefer the rail nearest the primary domain, then rebalance.
+  for (const e of entries) {
+    const wantsLeft = e.primary.x <= 50;
+    const target = wantsLeft ? left : right;
+    const other = wantsLeft ? right : left;
+    (target.length < cap ? target : other).push(e);
   }
 
-  for (const [domainId, ids] of byDomain) {
-    ids.forEach((id, i) => {
-      const project = projects.find((p) => p.id === id)!;
-      const { x, y } = fan(domainId, i, ids.length);
+  // Ordering by domain height keeps the connector lines from crossing.
+  left.sort((a, b) => a.primary.y - b.primary.y);
+  right.sort((a, b) => a.primary.y - b.primary.y);
+
+  const nodes: MapNode[] = [];
+  const links: MapLink[] = [];
+
+  const place = (list: typeof entries, x: number) => {
+    const span = RAIL_BOTTOM - RAIL_TOP;
+    list.forEach((e, i) => {
+      const y =
+        list.length === 1 ? RAIL_TOP + span / 2 : RAIL_TOP + (i / (list.length - 1)) * span;
       nodes.push({
-        id: project.id,
-        label: project.id,
+        id: e.project.id,
+        label: e.project.id,
         x,
         y,
         kind: "project",
-        href: `/projects/${slugOf(project)}`,
+        href: `/projects/${slugOf(e.project)}`,
       });
-      for (const d of project.domains ?? [domainId]) {
-        edges.push({ from: project.id, to: d });
+      links.push({ from: e.project.id, to: e.primary.id });
+      for (const d of e.project.domains ?? []) {
+        if (d !== e.primary.id) links.push({ from: e.project.id, to: d, secondary: true });
       }
     });
-  }
+  };
 
-  return { nodes, edges };
+  place(left, RAIL_LEFT);
+  place(right, RAIL_RIGHT);
+
+  return { nodes, links };
 }
 
-const built = buildProjectNodes();
+const built = layout();
 
 export const mapNodes: MapNode[] = [...domains, ...built.nodes];
-export const mapEdges: MapEdge[] = [...domainEdges, ...built.edges];
+export const mapLinks: MapLink[] = [...DOMAIN_EDGES, ...built.links];
 
 export function neighboursOf(id: string): Set<string> {
   const set = new Set<string>([id]);
-  for (const e of mapEdges) {
+  for (const e of mapLinks) {
     if (e.from === id) set.add(e.to);
     if (e.to === id) set.add(e.from);
   }
