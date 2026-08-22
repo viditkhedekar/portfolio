@@ -79,8 +79,9 @@ export function ProjectDetail({ project }: { project: Project }) {
             label="TECHNOLOGY"
             value={
               <span className="flex flex-wrap gap-x-2 gap-y-1">
-                {project.technologies.map((t) => (
-                  <span key={t} className="text-[var(--vk-fg-dim)]">
+                {project.technologies.map((t, i) => (
+                  /* Placeholder values repeat, so the index is part of the key. */
+                  <span key={`-`} className="text-[var(--vk-fg-dim)]">
                     {t}
                   </span>
                 ))}
@@ -91,8 +92,8 @@ export function ProjectDetail({ project }: { project: Project }) {
             <div className="pt-4">
               <Label>LINKS</Label>
               <ul className="mt-3 space-y-2">
-                {project.links.map((l) => (
-                  <li key={l.label}>
+                {project.links.map((l, i) => (
+                  <li key={`-`}>
                     {l.href ? (
                       <a
                         href={l.href}
