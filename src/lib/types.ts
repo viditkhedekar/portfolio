@@ -55,14 +55,22 @@ export interface Project {
 export interface Certification {
   id: string;
   name: string;
+  /** The awarding body. Records are grouped under this on the module page. */
   issuer: string;
-  issued: string;
-  credentialId?: string;
   summary?: string;
   /** Path under /public to a PDF or image of the credential. */
   evidence?: string;
   evidenceKind?: "pdf" | "image";
   verifyUrl?: string;
+}
+
+/** One provider and every credential taken with them. */
+export interface CertificationGroup {
+  id: string;
+  provider: string;
+  /** One line on what the provider is. Optional. */
+  note?: string;
+  items: Certification[];
 }
 
 export interface Subject {
@@ -71,17 +79,26 @@ export interface Subject {
   note?: string;
 }
 
-export interface ResearchItem {
+/** A single line inside a collapsible achievement section. */
+export interface AchievementEntry {
   title: string;
-  field: string;
-  note: string;
-  progress?: number;
+  /** Optional second line — context, scale, or what the award was for. */
+  detail?: string;
 }
 
-export interface FinanceTopic {
+/** A labelled run of entries, e.g. "MATHEMATICAL". */
+export interface AchievementGroup {
+  label?: string;
+  entries: AchievementEntry[];
+}
+
+/** A whole collapsible block. Rendered closed by default. */
+export interface AchievementSection {
   id: string;
   title: string;
-  items: string[];
+  /** Shown on the summary row while the section is closed. */
+  summary?: string;
+  groups: AchievementGroup[];
 }
 
 export interface Channel {
@@ -90,19 +107,4 @@ export interface Channel {
   handle: string;
   href: string;
   primary?: boolean;
-}
-
-export interface MapNode {
-  id: string;
-  label: string;
-  /** Percentage coordinates within the map viewport. */
-  x: number;
-  y: number;
-  kind: "domain" | "project";
-  href?: string;
-}
-
-export interface MapEdge {
-  from: string;
-  to: string;
 }
