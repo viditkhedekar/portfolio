@@ -81,7 +81,7 @@ export function ModuleNavigation() {
                   <span className="vk-mono w-[54px] shrink-0 text-[10px] tracking-[0.12em] text-[var(--vk-fg-faint)]">
                     {p.id}
                   </span>
-                  <span className="vk-mono hidden flex-1 truncate text-[10px] tracking-[0.12em] text-[var(--vk-fg-ghost)] sm:block">
+                  <span className="vk-mono hidden flex-1 truncate text-[10px] tracking-[0.12em] text-[var(--vk-fg-faint)] sm:block">
                     {p.name}
                   </span>
                   <span className="flex-1 sm:hidden" />
