@@ -364,7 +364,9 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
                   spellCheck={false}
                   autoComplete="off"
                   aria-label="Terminal input"
-                  className="vk-mono min-w-0 flex-1 bg-transparent text-[12px] text-[var(--vk-fg)] outline-none"
+                  /* The native caret is the focus indicator here; a ring around
+                     the full-width input reads as an error state. */
+                  className="vk-mono min-w-0 flex-1 bg-transparent text-[12px] text-[var(--vk-fg)] caret-[var(--vk-accent)] outline-none focus-visible:outline-none"
                 />
               </div>
             </div>
