@@ -4,23 +4,13 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { appForPath, apps } from "@/lib/data/apps";
+import {
+  getOpenApps,
+  getOpenAppsServer,
+  openApp,
+  subscribeOpenApps,
+} from "@/lib/apps-session";
 import { StatusDot, cx } from "@/components/ui";
-
-const STORAGE_KEY = "vkos.open-apps";
-
-function readOpen(): string[] {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    const parsed: unknown = raw ? JSON.parse(raw) : [];
-    if (!Array.isArray(parsed)) return [];
-    /* Ignore ids that no longer exist in the registry. */
-    return parsed.filter(
-      (id): id is string => typeof id === "string" && apps.some((a) => a.id === id),
-    );
-  } catch {
-    return [];
-  }
-}
 
 /**
  * The application dock.
@@ -32,26 +22,18 @@ function readOpen(): string[] {
 export function Taskbar() {
   const pathname = usePathname();
   const current = appForPath(pathname);
-  const [open, setOpen] = React.useState<string[]>([]);
+  const currentId = current?.id;
+  const open = React.useSyncExternalStore(
+    subscribeOpenApps,
+    getOpenApps,
+    getOpenAppsServer,
+  );
 
-  /* Session storage is read after mount so SSR and hydration agree. */
+  /* Unresolved paths are not real applications, so they never join the dock. */
   React.useEffect(() => {
-    setOpen(readOpen());
-  }, []);
-
-  React.useEffect(() => {
-    if (!current || current.id === "system") return;
-    setOpen((prev) => {
-      if (prev.includes(current.id)) return prev;
-      const next = [...prev, current.id];
-      try {
-        sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        /* private mode — the dock simply resets on the next load */
-      }
-      return next;
-    });
-  }, [current]);
+    if (!currentId || currentId === "system") return;
+    openApp(currentId);
+  }, [currentId]);
 
   /* The dock reserves space via a body attribute rather than page padding, so
      no page has to know it exists. */
