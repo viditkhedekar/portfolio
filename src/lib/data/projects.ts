@@ -203,7 +203,10 @@ export function getProject(slug: string): Project | undefined {
 
 /** All counts derive from the array above — nothing is hand-written. */
 export const projectStats = {
+  /** Everything on file, archive included. */
   total: projects.length,
+  /** Live entries — what the index and the FILES readouts count. */
+  indexed: liveProjects.length,
   active: projects.filter((p) => p.status === "ACTIVE").length,
   building: projects.filter((p) => p.status === "BUILDING").length,
   rd: projects.filter((p) => p.status === "R&D").length,
