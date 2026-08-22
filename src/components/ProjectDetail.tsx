@@ -62,10 +62,15 @@ export function ProjectDetail({ project }: { project: Project }) {
           <div className="vk-mono text-[11px] tracking-[0.22em] text-[var(--vk-accent)]">
             {project.id}
           </div>
-          <h1 className="vk-display mt-6 text-[clamp(2.4rem,7vw,5.25rem)]">
+          <h1 className="vk-display mt-6 text-[clamp(2.2rem,6vw,4.5rem)]">
             <Slot className="text-[var(--vk-fg)]">{project.name}</Slot>
           </h1>
-          <p className="mt-6 max-w-[52ch] text-[15px] leading-relaxed">
+          {project.tagline && (
+            <p className="mt-6 max-w-[26ch] text-[clamp(1.15rem,2.4vw,1.6rem)] leading-[1.35] tracking-tight">
+              <Slot className="text-[var(--vk-fg)]">{project.tagline}</Slot>
+            </p>
+          )}
+          <p className="mt-6 max-w-[54ch] text-[15px] leading-[1.75]">
             <Slot className="text-[var(--vk-fg-dim)]">{project.summary}</Slot>
           </p>
         </div>
