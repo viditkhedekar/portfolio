@@ -5,7 +5,7 @@ import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import type { Certification } from "@/lib/types";
-import { certifications } from "@/lib/data/certifications";
+import { certificationGroups, certifications } from "@/lib/data/certifications";
 import { Container, Label, ModuleHeading, SectionTitle, Slot } from "@/components/ui";
 
 function DocumentView({ cert, onClose }: { cert: Certification; onClose: () => void }) {
@@ -69,12 +69,11 @@ function DocumentView({ cert, onClose }: { cert: Certification; onClose: () => v
             <Slot className="text-[var(--vk-fg)]">{cert.name}</Slot>
           </h2>
 
-          <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-6 border-y border-[var(--vk-line)] py-6 sm:grid-cols-4">
+          <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-6 border-y border-[var(--vk-line)] py-6 sm:grid-cols-3">
             {[
               { k: "ISSUER", v: cert.issuer },
-              { k: "ISSUED", v: cert.issued },
-              { k: "CREDENTIAL ID", v: cert.credentialId ?? "[ ID ]" },
-              { k: "VERIFICATION", v: cert.verifyUrl ? "AVAILABLE" : "[ NOT SET ]" },
+              { k: "RECORD", v: cert.id },
+              { k: "EVIDENCE", v: cert.evidence ? "ATTACHED" : "NO FILE" },
             ].map((f) => (
               <div key={f.k}>
                 <Label as="dt">{f.k}</Label>
@@ -142,29 +141,25 @@ function DocumentView({ cert, onClose }: { cert: Certification; onClose: () => v
 
 export function CertificationModule() {
   const [open, setOpen] = React.useState<Certification | null>(null);
-  const years = React.useMemo(
-    () => [...new Set(certifications.map((c) => c.issued))].sort(),
-    [],
-  );
 
   return (
     <Container>
-      <ModuleHeading index="04" name="CERTIFICATIONS" subtitle="CREDENTIAL DATABASE" />
+      <ModuleHeading index="03" name="CERTIFICATIONS" subtitle="CREDENTIAL DATABASE" />
 
       <p className="max-w-[58ch] py-8 text-[15px] leading-relaxed text-[var(--vk-fg-dim)]">
-        Formal credentials and the documents behind them. Each record opens as a
-        document view with its evidence attached where a file exists.
+        Courses, job simulations and work experience programmes, grouped by the
+        body that ran them. Each record opens as a document view with its
+        evidence attached where a file exists.
       </p>
 
-      <div className="grid grid-cols-2 gap-6 border-y border-[var(--vk-line)] py-6 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-6 border-y border-[var(--vk-line)] py-6 sm:grid-cols-3">
         {[
           { label: "RECORDS", value: String(certifications.length).padStart(2, "0") },
+          { label: "PROVIDERS", value: String(certificationGroups.length).padStart(2, "0") },
           {
             label: "WITH EVIDENCE",
             value: String(certifications.filter((c) => c.evidence).length).padStart(2, "0"),
           },
-          { label: "EARLIEST", value: years[0] ?? "—" },
-          { label: "LATEST", value: years[years.length - 1] ?? "—" },
         ].map((f) => (
           <div key={f.label}>
             <Label>{f.label}</Label>
@@ -176,49 +171,72 @@ export function CertificationModule() {
       </div>
 
       <div className="pt-14">
-        <SectionTitle right={`${String(certifications.length).padStart(2, "0")} RECORDS`}>
+        <SectionTitle right={`${String(certificationGroups.length).padStart(2, "0")} PROVIDERS`}>
           RECORDS
         </SectionTitle>
 
-        <ul className="mt-2">
-          {certifications.map((c) => (
-            <li key={c.id}>
-              <button
-                type="button"
-                onClick={() => setOpen(c)}
-                data-cursor="OPEN DOCUMENT"
-                data-cursor-sub={c.id}
-                className="group grid w-full gap-x-8 gap-y-3 border-b border-[var(--vk-line)] py-6 text-left transition-colors hover:bg-[var(--vk-bg-panel)] lg:grid-cols-[110px_minmax(0,1.3fr)_minmax(0,1fr)_90px_90px]"
-              >
-                <span className="vk-mono text-[10px] tracking-[0.14em] text-[var(--vk-fg-faint)] transition-colors group-hover:text-[var(--vk-accent)]">
-                  {c.id}
-                </span>
+        <div className="mt-2">
+          {certificationGroups.map((g) => (
+            <section
+              key={g.id}
+              className="grid gap-x-10 gap-y-4 border-b border-[var(--vk-line)] py-8 lg:grid-cols-[240px_minmax(0,1fr)]"
+            >
+              <header className="lg:sticky lg:top-[86px] lg:self-start">
+                <h3 className="vk-mono text-[11px] tracking-[0.18em] text-[var(--vk-fg-dim)]">
+                  {g.provider}
+                </h3>
+                {g.note && (
+                  <p className="mt-2 max-w-[28ch] text-[12px] leading-relaxed text-[var(--vk-fg-faint)]">
+                    {g.note}
+                  </p>
+                )}
+                <p className="vk-mono mt-3 text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
+                  {String(g.items.length).padStart(2, "0")}{" "}
+                  {g.items.length === 1 ? "RECORD" : "RECORDS"}
+                </p>
+              </header>
 
-                <span className="text-[18px] tracking-tight transition-transform duration-300 group-hover:translate-x-1">
-                  <Slot className="text-[var(--vk-fg)]">{c.name}</Slot>
-                </span>
+              <ul className="border-t border-[var(--vk-line)]">
+                {g.items.map((c) => (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(c)}
+                      data-cursor="OPEN DOCUMENT"
+                      data-cursor-sub={c.id}
+                      className="group grid w-full items-baseline gap-x-6 gap-y-2 border-b border-[var(--vk-line)] py-5 text-left transition-colors hover:bg-[var(--vk-bg-panel)] sm:grid-cols-[86px_minmax(0,1fr)_90px]"
+                    >
+                      <span className="vk-mono text-[10px] tracking-[0.14em] text-[var(--vk-fg-faint)] transition-colors group-hover:text-[var(--vk-accent)]">
+                        {c.id}
+                      </span>
 
-                <span className="vk-mono self-center text-[10px] tracking-[0.14em]">
-                  <Slot className="text-[var(--vk-fg-faint)]">{c.issuer}</Slot>
-                </span>
+                      <span className="min-w-0">
+                        <span className="block text-[17px] leading-snug tracking-tight text-[var(--vk-fg)] transition-transform duration-300 group-hover:translate-x-1">
+                          {c.name}
+                        </span>
+                        {c.summary && (
+                          <span className="mt-1 block text-[12px] leading-relaxed text-[var(--vk-fg-faint)]">
+                            {c.summary}
+                          </span>
+                        )}
+                      </span>
 
-                <span className="vk-mono self-center text-[10px] tracking-[0.14em] text-[var(--vk-fg-faint)]">
-                  {c.issued}
-                </span>
-
-                <span className="vk-mono self-center text-[9px] tracking-[0.14em] lg:text-right">
-                  <span
-                    className={
-                      c.evidence ? "text-[var(--vk-accent)]" : "text-[var(--vk-fg-ghost)]"
-                    }
-                  >
-                    {c.evidence ? "ATTACHED" : "NO FILE"}
-                  </span>
-                </span>
-              </button>
-            </li>
+                      <span className="vk-mono text-[9px] tracking-[0.14em] sm:text-right">
+                        <span
+                          className={
+                            c.evidence ? "text-[var(--vk-accent)]" : "text-[var(--vk-fg-ghost)]"
+                          }
+                        >
+                          {c.evidence ? "ATTACHED" : "NO FILE"}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
           ))}
-        </ul>
+        </div>
 
         <p className="vk-mono py-8 text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
           SELECT A RECORD TO OPEN THE DOCUMENT VIEW.
