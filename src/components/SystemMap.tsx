@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { domains, mapEdges, mapNodes, neighboursOf } from "@/lib/data/graph";
+import { domains, mapLinks, mapNodes, neighboursOf } from "@/lib/data/graph";
 import { Label, cx } from "@/components/ui";
 import { liveProjects } from "@/lib/data/projects";
 
@@ -44,26 +44,25 @@ export function SystemMap() {
           preserveAspectRatio="none"
           aria-hidden
         >
-          {mapEdges.map((e, i) => {
+          {mapLinks.map((e, i) => {
             const a = nodeById.get(e.from);
             const b = nodeById.get(e.to);
             if (!a || !b) return null;
             const active = lit ? lit.has(a.id) && lit.has(b.id) : false;
+            /* Secondary links stay hidden until one of their ends is focused. */
+            const opacity = e.secondary ? (active ? 0.9 : 0) : lit ? (active ? 1 : 0.14) : 0.7;
             return (
               <line
-                key={`${e.from}-${e.to}-${i}`}
+                key={`--`}
                 x1={a.x}
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
                 vectorEffect="non-scaling-stroke"
                 stroke={active ? "var(--vk-accent)" : "var(--vk-line-mid)"}
-                strokeWidth={active ? 1 : 1}
+                strokeWidth={1}
                 strokeDasharray={a.kind === "project" || b.kind === "project" ? "3 3" : undefined}
-                style={{
-                  opacity: lit ? (active ? 1 : 0.18) : 0.75,
-                  transition: "opacity 260ms linear, stroke 260ms linear",
-                }}
+                style={{ opacity, transition: "opacity 260ms linear, stroke 260ms linear" }}
               />
             );
           })}
