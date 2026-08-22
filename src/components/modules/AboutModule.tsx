@@ -13,8 +13,8 @@ export function AboutModule() {
           <div className="border border-[var(--vk-line)] bg-[var(--vk-bg-panel)]">
             <div className="flex h-9 items-center justify-between border-b border-[var(--vk-line)] px-4">
               <Label>RECORD</Label>
-              <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-accent)]">
-                VERIFIED
+              <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
+                READ ONLY
               </span>
             </div>
             <dl>
