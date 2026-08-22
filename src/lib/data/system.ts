@@ -17,13 +17,13 @@ export const system = {
    */
   birthDate: null as string | null,
   role: "STUDENT / BUILDER",
-  disciplines: ["MATHEMATICS", "SOFTWARE", "FINANCE", "AI"],
+  disciplines: ["MATHEMATICS", "ECONOMICS", "FINANCE", "AI / ML"],
   /** The one that renders as active. */
   state: "BUILDING" as "BUILDING" | "ANALYSING" | "LEARNING" | "EXPERIMENTING",
   states: ["BUILDING", "ANALYSING", "LEARNING", "EXPERIMENTING"] as const,
   /** ISO date of the last meaningful content update. */
   lastUpdate: "2026-08-22",
-  location: "[ LOCATION ]",
+  location: "LONDON, UNITED KINGDOM",
 };
 
 export const modules = [
@@ -46,14 +46,6 @@ export const modules = [
   },
   {
     index: "03",
-    id: "finance",
-    name: "FINANCE",
-    href: "/finance",
-    description: "FINANCIAL RESEARCH",
-    status: "ONLINE",
-  },
-  {
-    index: "04",
     id: "certifications",
     name: "CERTIFICATIONS",
     href: "/certifications",
@@ -61,7 +53,7 @@ export const modules = [
     status: "ONLINE",
   },
   {
-    index: "05",
+    index: "04",
     id: "about",
     name: "ABOUT",
     href: "/about",
@@ -69,7 +61,7 @@ export const modules = [
     status: "ONLINE",
   },
   {
-    index: "06",
+    index: "05",
     id: "contact",
     name: "CONTACT",
     href: "/contact",
@@ -94,7 +86,6 @@ export const boot = {
     { label: "CORE", ms: 120 },
     { label: "DATABASE", ms: 150 },
     { label: "PROJECT INDEX", ms: 190 },
-    { label: "RESEARCH MODULE", ms: 140 },
     { label: "IDENTITY MODULE", ms: 130 },
     { label: "NETWORK", ms: 170 },
   ],
