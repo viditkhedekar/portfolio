@@ -1,5 +1,17 @@
-import { Container, Label, ModuleHeading, SectionTitle, Slot } from "@/components/ui";
-import { achievements, research, school, subjects } from "@/lib/data/school";
+import { Container, Label, ModuleHeading, SectionTitle } from "@/components/ui";
+import { Disclosure } from "@/components/Disclosure";
+import {
+  achievementSections,
+  predicted,
+  qualification,
+  school,
+  subjects,
+} from "@/lib/data/school";
+
+function entryCount(id: string): number {
+  const section = achievementSections.find((s) => s.id === id);
+  return section ? section.groups.reduce((n, g) => n + g.entries.length, 0) : 0;
+}
 
 export function SchoolModule() {
   return (
@@ -17,24 +29,54 @@ export function SchoolModule() {
           <div key={f.label}>
             <Label>{f.label}</Label>
             <div
-              className={`vk-mono mt-3 text-[19px] tracking-tight ${
-                f.accent ? "text-[var(--vk-accent)]" : ""
+              className={`vk-mono mt-3 text-[19px] leading-snug tracking-tight ${
+                f.accent ? "text-[var(--vk-accent)]" : "text-[var(--vk-fg)]"
               }`}
             >
-              <Slot className="text-[var(--vk-fg)]">{f.value}</Slot>
+              {f.value}
             </div>
           </div>
         ))}
       </section>
 
-      {school.note && (
-        <p className="max-w-[58ch] py-8 text-[15px] leading-relaxed">
-          <Slot className="text-[var(--vk-fg-dim)]">{school.note}</Slot>
-        </p>
-      )}
+      <p className="max-w-[58ch] py-8 text-[15px] leading-relaxed text-[var(--vk-fg-dim)]">
+        {school.note}
+      </p>
+
+      {/* Grades and the project qualification */}
+      <section className="pt-10">
+        <SectionTitle right={school.since}>QUALIFICATIONS</SectionTitle>
+
+        <div className="mt-8 grid gap-px border border-[var(--vk-line)] bg-[var(--vk-line)] sm:grid-cols-2">
+          <div className="bg-[var(--vk-bg-panel)] p-6">
+            <Label>PREDICTED GRADES</Label>
+            <div className="vk-mono mt-4 text-[clamp(1.5rem,4vw,2.25rem)] leading-none tracking-[0.14em] text-[var(--vk-fg)]">
+              {predicted.grades}
+            </div>
+            <p className="vk-mono mt-4 text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
+              {predicted.caveat}
+            </p>
+          </div>
+
+          <div className="bg-[var(--vk-bg-panel)] p-6">
+            <Label>{qualification.name}</Label>
+            <div className="mt-4 flex items-baseline gap-4">
+              <span className="vk-mono text-[clamp(1.5rem,4vw,2.25rem)] leading-none tracking-tight text-[var(--vk-accent)]">
+                {qualification.grade}
+              </span>
+              <span className="vk-mono text-[12px] tracking-[0.14em] text-[var(--vk-fg-faint)]">
+                {qualification.mark}
+              </span>
+            </div>
+            <p className="mt-4 max-w-[38ch] text-[13px] leading-relaxed text-[var(--vk-fg-dim)]">
+              {qualification.detail}
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* Subjects */}
-      <section className="pt-10">
+      <section className="pt-20">
         <SectionTitle right={`${String(subjects.length).padStart(2, "0")} REGISTERED`}>
           SUBJECTS
         </SectionTitle>
@@ -52,87 +94,60 @@ export function SchoolModule() {
                 {String(i + 1).padStart(2, "0")}
               </div>
               <h3 className="mt-5 text-[17px] tracking-tight text-[var(--vk-fg)]">{s.name}</h3>
-              <div className="mt-4 flex items-baseline justify-between gap-4">
-                <span className="vk-mono text-[9px] tracking-[0.14em]">
-                  <Slot className="text-[var(--vk-fg-faint)]">{s.board}</Slot>
-                </span>
-                <span className="vk-mono text-[9px] tracking-[0.14em]">
-                  <Slot>{s.note}</Slot>
-                </span>
-              </div>
             </li>
           ))}
         </ul>
       </section>
 
-      {/* Achievements */}
-      <section className="pt-20">
-        <SectionTitle right="ACADEMIC RECORD">ACHIEVEMENTS</SectionTitle>
-        <ul className="mt-6">
-          {achievements.map((a, i) => (
-            <li
-              key={`${a.title}-${i}`}
-              className="grid gap-x-8 gap-y-2 border-b border-[var(--vk-line)] py-5 sm:grid-cols-[80px_minmax(0,1fr)_minmax(0,1fr)]"
-            >
-              <span className="vk-mono text-[10px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
-                {String(i + 1).padStart(2, "0")}
-              </span>
-              <span className="text-[16px] tracking-tight">
-                <Slot className="text-[var(--vk-fg)]">{a.title}</Slot>
-              </span>
-              <span className="flex items-baseline justify-between gap-4 text-[13px]">
-                <Slot className="text-[var(--vk-fg-faint)]">{a.detail}</Slot>
-                <span className="vk-mono text-[10px] tracking-[0.14em]">
-                  <Slot>{a.year}</Slot>
-                </span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* Independent research */}
+      {/* Record — collapsed by default */}
       <section className="py-20">
-        <SectionTitle right="OUTSIDE THE SYLLABUS">CURRENT RESEARCH</SectionTitle>
-        <ul className="mt-6">
-          {research.map((r, i) => (
-            <li
-              key={`${r.field}-${i}`}
-              className="grid gap-x-8 gap-y-3 border-b border-[var(--vk-line)] py-6 lg:grid-cols-[170px_minmax(0,1fr)_120px]"
+        <SectionTitle right="ACADEMIC RECORD">ACHIEVEMENTS</SectionTitle>
+
+        <div className="mt-2">
+          {achievementSections.map((section, i) => (
+            <Disclosure
+              key={section.id}
+              index={String(i + 1).padStart(2, "0")}
+              title={section.title}
+              summary={section.summary}
+              meta={`${String(entryCount(section.id)).padStart(2, "0")} ENTRIES`}
             >
-              <span className="vk-mono self-start border border-[var(--vk-line)] px-2 py-1 text-center text-[9px] tracking-[0.14em] text-[var(--vk-fg-faint)] lg:justify-self-start">
-                {r.field}
-              </span>
-              <div>
-                <h3 className="text-[16px] tracking-tight">
-                  <Slot className="text-[var(--vk-fg)]">{r.title}</Slot>
-                </h3>
-                <p className="mt-1.5 max-w-[54ch] text-[13px] leading-relaxed">
-                  <Slot className="text-[var(--vk-fg-faint)]">{r.note}</Slot>
-                </p>
+              <div className="space-y-10 pl-0 sm:pl-8">
+                {section.groups.map((group, gi) => (
+                  <div key={group.label ?? gi}>
+                    {group.label && (
+                      <div className="vk-mono mb-5 inline-block border border-[var(--vk-line)] px-2 py-1 text-[9px] tracking-[0.16em] text-[var(--vk-fg-faint)]">
+                        {group.label}
+                      </div>
+                    )}
+                    <ul className="border-t border-[var(--vk-line)]">
+                      {group.entries.map((e, ei) => (
+                        <li
+                          key={e.title}
+                          className="grid gap-x-8 gap-y-1.5 border-b border-[var(--vk-line)] py-4 sm:grid-cols-[40px_minmax(0,1fr)]"
+                        >
+                          <span className="vk-mono text-[10px] leading-6 tracking-[0.14em] text-[var(--vk-fg-ghost)]">
+                            {String(ei + 1).padStart(2, "0")}
+                          </span>
+                          <div>
+                            <p className="text-[15px] leading-snug tracking-tight text-[var(--vk-fg)]">
+                              {e.title}
+                            </p>
+                            {e.detail && (
+                              <p className="mt-1.5 max-w-[62ch] text-[13px] leading-relaxed text-[var(--vk-fg-faint)]">
+                                {e.detail}
+                              </p>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
-              <div className="lg:text-right">
-                {r.progress ? (
-                  <>
-                    <span className="vk-mono text-[10px] tracking-[0.14em] text-[var(--vk-fg-dim)]">
-                      {r.progress}%
-                    </span>
-                    <div className="mt-2 h-px w-full bg-[var(--vk-line)]">
-                      <div
-                        className="h-px bg-[var(--vk-accent)]"
-                        style={{ width: `${r.progress}%` }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
-                    [ PROGRESS ]
-                  </span>
-                )}
-              </div>
-            </li>
+            </Disclosure>
           ))}
-        </ul>
+        </div>
       </section>
     </Container>
   );
