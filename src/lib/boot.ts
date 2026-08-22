@@ -19,8 +19,18 @@ function readSession(): boolean {
 let pending: boolean | null = null;
 const listeners = new Set<() => void>();
 
+function prefersReducedMotion(): boolean {
+  try {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch {
+    return false;
+  }
+}
+
 function ensure(): boolean {
-  if (pending === null) pending = !readSession();
+  /* Reduced motion skips the sequence entirely rather than holding the
+     visitor at a splash screen with the animation stripped out. */
+  if (pending === null) pending = !readSession() && !prefersReducedMotion();
   return pending;
 }
 
