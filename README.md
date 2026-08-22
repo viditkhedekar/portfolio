@@ -38,6 +38,13 @@ terminal's `projects` and `open` commands, and the static routes.
 
 Set `archived: true` to move an entry into `/archive` instead.
 
+`tagline` is the short hook — it shows in the index row and as the large lead
+line on the file page. `summary` is the descriptive paragraph beneath it.
+
+The status filters and the stat tiles on `/projects` are built from the
+statuses actually present, so a status nothing uses never appears as an empty
+control.
+
 ### Adding media
 
 Drop files into `public/` and point a project's `media[].src` at them. Each
