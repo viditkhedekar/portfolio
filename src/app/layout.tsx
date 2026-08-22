@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { VKOSShell } from "@/components/VKOSShell";
-import { SystemFooter } from "@/components/SystemFooter";
 import { system } from "@/lib/data/system";
 
 const inter = Inter({
@@ -68,10 +67,7 @@ export default function RootLayout({
         <a href="#main" className="vk-skip">
           SKIP TO CONTENT
         </a>
-        <VKOSShell>
-          {children}
-          <SystemFooter />
-        </VKOSShell>
+        <VKOSShell>{children}</VKOSShell>
       </body>
     </html>
   );
