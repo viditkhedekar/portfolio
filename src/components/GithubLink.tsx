@@ -1,6 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import { githubUrl } from "@/lib/data/identity";
-import { Label, cx } from "@/components/ui";
+import { cx } from "@/components/ui";
 
 /** lucide-react ships no brand marks, so the GitHub glyph lives here. */
 function GithubMark({ size = 16 }: { size?: number }) {
@@ -26,10 +26,31 @@ export function GithubLink({
   variant = "panel",
   className,
 }: {
-  variant?: "panel" | "inline";
+  variant?: "panel" | "inline" | "header";
   className?: string;
 }) {
   if (!githubUrl) return null;
+
+  /* Header slot — present on every page, so it stays compact. */
+  if (variant === "header") {
+    return (
+      <a
+        href={githubUrl}
+        target="_blank"
+        rel="noreferrer noopener"
+        data-cursor="OPEN CHANNEL"
+        data-cursor-sub="GITHUB"
+        aria-label="GitHub profile (opens in a new tab)"
+        className={cx(
+          "vk-mono inline-flex items-center gap-2 border border-[var(--vk-accent-soft)] bg-[var(--vk-accent-ghost)] px-2.5 py-1.5 text-[9px] tracking-[0.14em] text-[var(--vk-accent)] transition-colors hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)]",
+          className,
+        )}
+      >
+        <GithubMark size={12} />
+        GITHUB
+      </a>
+    );
+  }
 
   if (variant === "inline") {
     return (
@@ -40,7 +61,7 @@ export function GithubLink({
         data-cursor="OPEN CHANNEL"
         data-cursor-sub="GITHUB"
         className={cx(
-          "vk-mono inline-flex h-9 items-center gap-2.5 border border-[var(--vk-line)] px-4 text-[10px] tracking-[0.16em] text-[var(--vk-fg-dim)] transition-colors hover:border-[var(--vk-accent)] hover:text-[var(--vk-accent)]",
+          "vk-mono inline-flex h-9 items-center gap-2.5 border border-[var(--vk-accent-soft)] bg-[var(--vk-accent-ghost)] px-4 text-[10px] tracking-[0.16em] text-[var(--vk-accent)] transition-colors hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)]",
           className,
         )}
       >
@@ -59,25 +80,27 @@ export function GithubLink({
       data-cursor="OPEN CHANNEL"
       data-cursor-sub="GITHUB"
       className={cx(
-        "group flex items-center justify-between gap-6 border border-[var(--vk-line)] p-6 transition-colors hover:border-[var(--vk-line-mid)] hover:bg-[var(--vk-bg-panel)]",
+        "group flex items-center justify-between gap-6 border border-[var(--vk-accent-soft)] bg-[var(--vk-accent-ghost)] p-6 transition-colors hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)] sm:p-7",
         className,
       )}
     >
-      <div className="flex min-w-0 items-center gap-5">
-        <span className="shrink-0 text-[var(--vk-fg-faint)] transition-colors group-hover:text-[var(--vk-accent)]">
-          <GithubMark size={22} />
+      <div className="flex min-w-0 items-center gap-5 sm:gap-6">
+        <span className="shrink-0 text-[var(--vk-accent)] drop-shadow-[0_0_10px_var(--vk-accent-faint)]">
+          <GithubMark size={30} />
         </span>
         <div className="min-w-0">
-          <Label>SOURCE</Label>
-          <p className="mt-2 text-[19px] tracking-tight text-[var(--vk-fg)]">
+          <span className="vk-mono text-[9px] tracking-[0.18em] text-[var(--vk-accent)]">
+            SOURCE
+          </span>
+          <p className="mt-2 text-[clamp(1.1rem,2.4vw,1.4rem)] tracking-tight text-[var(--vk-fg)]">
             github.com/viditkhedekar
           </p>
-          <p className="mt-1 text-[13px] text-[var(--vk-fg-faint)]">
+          <p className="mt-1.5 text-[13px] text-[var(--vk-fg-dim)]">
             Repositories behind the builds listed here.
           </p>
         </div>
       </div>
-      <span className="vk-mono shrink-0 text-[10px] tracking-[0.16em] text-[var(--vk-fg-ghost)] transition-colors group-hover:text-[var(--vk-accent)]">
+      <span className="vk-mono shrink-0 text-[10px] tracking-[0.16em] text-[var(--vk-accent)] transition-transform duration-300 group-hover:translate-x-1">
         OPEN →
       </span>
     </a>
