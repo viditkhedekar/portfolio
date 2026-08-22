@@ -48,7 +48,7 @@ export function TelemetryPanel({ className }: { className?: string }) {
       </div>
       <dl>
         <Readout label="SYSTEM STATUS" value="ONLINE" dot="ONLINE" accent />
-        <Readout label="PROJECTS" value={String(projectStats.total)} />
+        <Readout label="PROJECTS" value={String(projectStats.indexed)} />
         <Readout label="ACTIVE" value={String(projectStats.active)} />
         <Readout label="BUILDING" value={String(projectStats.building)} />
         <Readout label="ARCHIVED" value={String(projectStats.archived)} />
