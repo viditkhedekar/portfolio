@@ -4,6 +4,7 @@ import { ProjectExplorer } from "@/components/ProjectExplorer";
 import { archivedProjects, liveProjects, liveStatuses } from "@/lib/data/projects";
 import Link from "next/link";
 import { Label } from "@/components/ui";
+import { GithubLink } from "@/components/GithubLink";
 
 export const metadata: Metadata = {
   title: "Projects",
@@ -26,6 +27,13 @@ export default function ProjectsPage() {
     <Container>
       <ModuleHeading index="01" name="PROJECTS" subtitle="PROJECT INDEX" />
 
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--vk-line)] py-5">
+        <p className="max-w-[52ch] text-[14px] leading-relaxed text-[var(--vk-fg-dim)]">
+          Selected builds and experiments. Source for these lives on GitHub.
+        </p>
+        <GithubLink variant="inline" />
+      </div>
+
       <div className="grid grid-cols-2 gap-6 border-b border-[var(--vk-line)] py-6 sm:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label}>
@@ -41,7 +49,7 @@ export default function ProjectsPage() {
         <ProjectExplorer projects={liveProjects} />
       </div>
 
-      <div className="py-12">
+      <div className="pt-12">
         <Link
           href="/archive"
           data-cursor="ACCESS"
@@ -61,6 +69,10 @@ export default function ProjectsPage() {
             OPEN →
           </span>
         </Link>
+      </div>
+
+      <div className="pb-12 pt-4">
+        <GithubLink />
       </div>
     </Container>
   );
