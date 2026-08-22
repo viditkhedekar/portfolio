@@ -15,7 +15,7 @@ export default function ProjectsPage() {
     <Container>
       <ModuleHeading index="01" name="PROJECTS" subtitle="PROJECT INDEX" />
 
-      <div className="grid gap-6 border-b border-[var(--vk-line)] py-6 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-6 border-b border-[var(--vk-line)] py-6 sm:grid-cols-4">
         {[
           { label: "INDEXED", value: liveProjects.length },
           { label: "ACTIVE", value: projectStats.active },
