@@ -17,7 +17,7 @@ export default function ProjectsPage() {
 
       <div className="grid gap-6 border-b border-[var(--vk-line)] py-6 sm:grid-cols-4">
         {[
-          { label: "TOTAL FILES", value: projectStats.total },
+          { label: "INDEXED", value: liveProjects.length },
           { label: "ACTIVE", value: projectStats.active },
           { label: "BUILDING", value: projectStats.building },
           { label: "R&D", value: projectStats.rd },
