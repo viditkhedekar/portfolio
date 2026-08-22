@@ -1,9 +1,9 @@
 import { Container, Label } from "@/components/ui";
 import { ModuleNavigation } from "@/components/ModuleNavigation";
-import { SystemMap } from "@/components/SystemMap";
 import { SystemState, TelemetryPanel } from "@/components/TelemetryPanel";
 import { CurrentMission } from "@/components/CurrentMission";
-import { system } from "@/lib/data/system";
+import { modules, system } from "@/lib/data/system";
+import { GithubLink } from "@/components/GithubLink";
 
 const CONTEXT = ["PERSONAL SYSTEM", "RESEARCH", "PROJECTS", "EXPERIMENTS"];
 
@@ -91,21 +91,21 @@ export default function Home() {
             MODULE INDEX
           </h2>
           <div className="h-px flex-1 bg-[var(--vk-line)]" />
-          <span className="vk-label">06 MODULES</span>
+          <span className="vk-label">{String(modules.length).padStart(2, "0")} MODULES</span>
         </div>
         <div className="mt-8">
           <ModuleNavigation />
         </div>
       </section>
 
-      {/* ---------------------------------------------------- ARCHITECTURE */}
-      <div className="pt-20">
-        <SystemMap />
-      </div>
-
       {/* -------------------------------------------------------- MISSION  */}
       <div className="pt-20">
         <CurrentMission variant="feature" />
+      </div>
+
+      {/* --------------------------------------------------------- SOURCE  */}
+      <div className="pt-14">
+        <GithubLink />
       </div>
     </Container>
   );
