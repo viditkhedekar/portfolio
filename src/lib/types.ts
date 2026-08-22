@@ -29,7 +29,9 @@ export interface Project {
   category: string;
   status: ProjectStatus;
   year: string;
-  /** One line. Shown in the index. */
+  /** The short hook. Shown in the index and as the lead line on the file page. */
+  tagline?: string;
+  /** The descriptive paragraph. Shown under the tagline on the file page. */
   summary: string;
   technologies: string[];
   /** Long-form dossier sections. Any may be omitted. */
