@@ -2,10 +2,12 @@ import { Container, Label } from "@/components/ui";
 import { ModuleNavigation } from "@/components/ModuleNavigation";
 import { SystemState, TelemetryPanel } from "@/components/TelemetryPanel";
 import { CurrentMission } from "@/components/CurrentMission";
-import { modules, system } from "@/lib/data/system";
+import { system } from "@/lib/data/system";
+import { apps } from "@/lib/data/apps";
 import { GithubLink } from "@/components/GithubLink";
+import { HeroType } from "@/components/HeroType";
 
-const CONTEXT = ["PERSONAL SYSTEM", "RESEARCH", "PROJECTS", "EXPERIMENTS"];
+const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
 
 export default function Home() {
   return (
@@ -24,9 +26,10 @@ export default function Home() {
               </span>
             </div>
 
-            <h1 className="vk-display mt-7 text-[clamp(3.4rem,13vw,10.5rem)] text-[var(--vk-fg)]">
-              VKOS/01
-            </h1>
+            <HeroType
+              text="VKOS/01"
+              className="mt-7 text-[clamp(2.6rem,10.5vw,8.5rem)] leading-[1.05]"
+            />
 
             <p className="vk-mono mt-6 text-[11px] tracking-[0.22em] text-[var(--vk-fg-dim)]">
               {system.fullName}
@@ -85,13 +88,13 @@ export default function Home() {
       </div>
 
       {/* ---------------------------------------------------- MODULE INDEX */}
-      <section className="pt-16" aria-labelledby="modules-heading">
+      <section className="pt-16" aria-labelledby="apps-heading">
         <div className="flex items-center gap-4 border-b border-[var(--vk-line)] pb-3">
-          <h2 id="modules-heading" className="vk-label text-[var(--vk-fg-dim)]">
-            MODULE INDEX
+          <h2 id="apps-heading" className="vk-label text-[var(--vk-fg-dim)]">
+            APPLICATIONS
           </h2>
           <div className="h-px flex-1 bg-[var(--vk-line)]" />
-          <span className="vk-label">{String(modules.length).padStart(2, "0")} MODULES</span>
+          <span className="vk-label">{String(apps.length).padStart(2, "0")} INSTALLED</span>
         </div>
         <div className="mt-8">
           <ModuleNavigation />
