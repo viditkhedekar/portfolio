@@ -53,7 +53,7 @@ export function SystemMap() {
             const opacity = e.secondary ? (active ? 0.9 : 0) : lit ? (active ? 1 : 0.14) : 0.7;
             return (
               <line
-                key={`--`}
+                key={`${e.from}-${e.to}-${i}`}
                 x1={a.x}
                 y1={a.y}
                 x2={b.x}
