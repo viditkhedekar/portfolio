@@ -47,12 +47,13 @@ control.
 
 ### Adding media
 
-Drop files into `public/` and point a project's `media[].src` at them. Each
-frame is labelled as system output rather than as a screenshot:
+Drop files into `public/projects/` and point a project's `media[].src` at them.
+Each frame is labelled as system output rather than as a screenshot. Frames crop
+to fill; selecting one opens the capture uncropped at full size:
 
 ```ts
 media: [
-  { src: "/px-001/output.png", label: "SYSTEM OUTPUT", ref: "PX-001 / BUILD 042", alt: "…" },
+  { src: "/projects/px-001-landing.png", label: "LANDING", ref: "PX-001 / VIEW 01", alt: "…" },
 ]
 ```
 
@@ -80,15 +81,22 @@ Every other route is an **application**, resolved by `appForPath()` in
 `src/lib/data/apps.ts`:
 
 - **Window chrome** (`AppWindow`) wraps the page in a title bar carrying
-  `NAME.app` and the shell path. The three dots are decorative and
-  `aria-hidden` — navigation happens through the header, the dock and the
-  terminal, so nothing depends on a control that only looks clickable.
+  `NAME.app` and the shell path. The three controls are real: **close** drops
+  the app from the dock, **minimise** leaves it there dimmed and marked `MIN`,
+  and **maximise** widens the window. Each is a labelled button, so the chrome
+  is operable by keyboard and announced properly.
 - **A launch transition** (`AppLauncher`) plays a short `LAUNCHING NAME.app`
   splash on client-side navigation into an app. It deliberately does not run on
   a cold load, where the boot sequence already covers the same moment.
-- **The dock** (`Taskbar`) lists apps opened this session, backed by the
-  external store in `src/lib/apps-session.ts`. Desktop only, and unresolved
-  paths never join it — a 404 renders as `SYSTEM.app` but is not "running".
+- **The dock** (`Taskbar`) lists apps opened this session, backed by the window
+  store in `src/lib/apps-session.ts` (open / minimised / maximised). Clicking a
+  minimised chip restores it. The terminal has its own chip, and a quiet status
+  line rotates every 45s. Desktop only, and unresolved paths never join it — a
+  404 renders as `SYSTEM.app` but is not "running".
+- **The terminal opens itself once per session** on the desktop, just after
+  boot, like a login shell (`TerminalGreeter` + `src/lib/greeting.ts`). Click
+  anywhere outside to dismiss it and browse normally; it will not reopen until
+  a new session.
 
 Adding a module to `system.ts` therefore installs an app: icon, window, launch
 splash and dock entry all follow.
@@ -104,7 +112,9 @@ splash and dock entry all follow.
   `UNCONFIGURED` rather than as a broken link, so nothing is published until you
   fill it in.
 - **The terminal is secondary navigation.** `⌘K` / `Ctrl+K` opens it; every
-  destination is also reachable through normal links and keyboard focus.
+  destination is also reachable through normal links and keyboard focus. `help`
+  lists the documented commands and hides the rest behind a collapsed
+  "And some hidden gems..." block.
 - **The hero is typed, but the text is real.** `HeroType` keeps the full string
   in the DOM as visually-hidden text and animates an `aria-hidden` copy on top,
   so the heading survives without JavaScript and for screen readers.
