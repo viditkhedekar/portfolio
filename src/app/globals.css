@@ -241,6 +241,20 @@ body {
   animation: vk-flicker 6.5s linear infinite;
 }
 
+/* Barely-there grid inside an application window. Sits under the content and
+   reads as texture rather than as a visible grid. */
+.vk-window-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
 /* ---------- Application dock ---------- */
 
 /* Desktop only: keep the fixed dock clear of the page's last row. */
