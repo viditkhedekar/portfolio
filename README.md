@@ -1,8 +1,9 @@
 # VKOS/01
 
 `VIDIT KHEDEKAR OPERATING SYSTEM / 01` — a personal portfolio built as a
-fictional operating system: boot sequence, module index, project file explorer
-and an interactive terminal.
+fictional operating system: boot sequence, a desktop of application icons,
+window chrome, a running-apps dock, a project file explorer and an interactive
+terminal.
 
 Next.js 16 · React 19 · TypeScript · Tailwind CSS v4 · Framer Motion · Lucide.
 
@@ -26,6 +27,7 @@ never reads as a real claim.
 | `school.ts` | Level, predicted grades, subjects, and the collapsible achievement sections |
 | `certifications.ts` | Credential records grouped by provider, and evidence file paths |
 | `identity.ts` | The About statement blocks, the contact channels, and the GitHub URL |
+| `apps.ts` | The application registry. Derived from `system.ts`, plus ARCHIVE |
 
 ### Adding a project
 
@@ -69,6 +71,28 @@ Put the PDF or image in `public/certifications/` and set `evidence` plus
 sections render closed. They are built on `<details>`/`<summary>`, so they open
 without JavaScript and the module stays a server component.
 
+## The application metaphor
+
+`/` is the **desktop**: the typed hero, a grid of application icons and a recent
+files strip. It has no window chrome.
+
+Every other route is an **application**, resolved by `appForPath()` in
+`src/lib/data/apps.ts`:
+
+- **Window chrome** (`AppWindow`) wraps the page in a title bar carrying
+  `NAME.app` and the shell path. The three dots are decorative and
+  `aria-hidden` — navigation happens through the header, the dock and the
+  terminal, so nothing depends on a control that only looks clickable.
+- **A launch transition** (`AppLauncher`) plays a short `LAUNCHING NAME.app`
+  splash on client-side navigation into an app. It deliberately does not run on
+  a cold load, where the boot sequence already covers the same moment.
+- **The dock** (`Taskbar`) lists apps opened this session, backed by the
+  external store in `src/lib/apps-session.ts`. Desktop only, and unresolved
+  paths never join it — a 404 renders as `SYSTEM.app` but is not "running".
+
+Adding a module to `system.ts` therefore installs an app: icon, window, launch
+splash and dock entry all follow.
+
 ## Things worth knowing
 
 - **Counts are derived, never typed.** `PROJECTS`, `ACTIVE`, `ARCHIVED` and the
@@ -81,8 +105,12 @@ without JavaScript and the module stays a server component.
   fill it in.
 - **The terminal is secondary navigation.** `⌘K` / `Ctrl+K` opens it; every
   destination is also reachable through normal links and keyboard focus.
+- **The hero is typed, but the text is real.** `HeroType` keeps the full string
+  in the DOM as visually-hidden text and animates an `aria-hidden` copy on top,
+  so the heading survives without JavaScript and for screen readers.
 - **Reduced motion is respected.** `prefers-reduced-motion` skips the boot
-  sequence, the file-opening transition and the custom cursor.
+  sequence, the launch splash, the hero typing, the file-opening transition and
+  the custom cursor.
 
 ## Commands
 
