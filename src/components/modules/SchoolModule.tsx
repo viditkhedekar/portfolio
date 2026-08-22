@@ -7,7 +7,7 @@ export function SchoolModule() {
       <ModuleHeading index="02" name="SCHOOL" subtitle="ACADEMIC SYSTEM" />
 
       {/* Current level */}
-      <section className="grid gap-px border-b border-[var(--vk-line)] py-10 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid grid-cols-2 gap-x-6 gap-y-8 border-b border-[var(--vk-line)] py-10 lg:grid-cols-4">
         {[
           { label: "CURRENT LEVEL", value: school.currentLevel, accent: true },
           { label: "INSTITUTION", value: school.institution },
