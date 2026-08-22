@@ -18,24 +18,23 @@ const LAUNCH_MS = 620;
 export function AppLauncher() {
   const pathname = usePathname();
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
-  const previous = React.useRef<string | null>(null);
+  /* Seeded with the entry route, so a cold load never splashes. */
+  const [seen, setSeen] = React.useState(pathname);
   const [launching, setLaunching] = React.useState<string | null>(null);
 
+  /* Derived during render rather than in an effect: the splash has to be on
+     screen in the same commit as the new route, not one paint later. */
+  if (seen !== pathname) {
+    setSeen(pathname);
+    const app = reduced ? null : appForPath(pathname);
+    setLaunching(app ? app.file : null);
+  }
+
   React.useEffect(() => {
-    const from = previous.current;
-    previous.current = pathname;
-
-    /* First render of the session — nothing was navigated away from. */
-    if (from === null || from === pathname) return;
-    if (reduced) return;
-
-    const app = appForPath(pathname);
-    if (!app) return;
-
-    setLaunching(app.file);
+    if (!launching) return;
     const timer = window.setTimeout(() => setLaunching(null), LAUNCH_MS);
     return () => window.clearTimeout(timer);
-  }, [pathname, reduced]);
+  }, [launching]);
 
   return (
     <AnimatePresence>
