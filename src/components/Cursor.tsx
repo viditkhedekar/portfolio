@@ -82,7 +82,9 @@ export function Cursor() {
     <div
       ref={root}
       aria-hidden
-      className="pointer-events-none fixed left-0 top-0 z-[90] will-change-transform"
+      /* Above every overlay: the body forces `cursor: none`, so anything that
+         paints over this layer would leave the pointer invisible. */
+      className="pointer-events-none fixed left-0 top-0 z-[300] will-change-transform"
       style={{ opacity: visible ? 1 : 0, transition: "opacity 160ms linear" }}
     >
       <div
