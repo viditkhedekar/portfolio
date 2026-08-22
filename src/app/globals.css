@@ -39,6 +39,7 @@
   --vk-radius: 2px;
   --vk-gutter: 24px;
   --vk-header-h: 56px;
+  --vk-dock-h: 46px;
   --vk-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --vk-ease-io: cubic-bezier(0.65, 0, 0.35, 1);
 }
@@ -200,6 +201,55 @@ body {
   animation: vk-blink 1.05s step-end infinite;
 }
 
+/* ---------- Retro CRT hero ---------- */
+
+/* Thin, wide, phosphor-lit letterforms for the desktop hero. */
+.vk-crt {
+  font-family: var(--font-mono-jb), ui-monospace, monospace;
+  font-weight: 200;
+  letter-spacing: 0.06em;
+  color: var(--vk-accent);
+  text-shadow:
+    0 0 2px var(--vk-accent-soft),
+    0 0 18px var(--vk-accent-faint),
+    0 0 44px var(--vk-accent-ghost);
+}
+
+/* The block caret that trails the typed hero. */
+.vk-crt-caret {
+  display: inline-block;
+  width: 0.52em;
+  height: 0.82em;
+  margin-left: 0.1em;
+  vertical-align: baseline;
+  background: var(--vk-accent);
+  box-shadow: 0 0 12px var(--vk-accent-soft);
+  animation: vk-blink 1.05s step-end infinite;
+}
+
+/* A slow phosphor flicker, well under the threshold that reads as strobing. */
+@keyframes vk-flicker {
+  0%, 100% { opacity: 1; }
+  47% { opacity: 1; }
+  48% { opacity: 0.86; }
+  49% { opacity: 1; }
+  72% { opacity: 0.92; }
+  73% { opacity: 1; }
+}
+
+.vk-crt-flicker {
+  animation: vk-flicker 6.5s linear infinite;
+}
+
+/* ---------- Application dock ---------- */
+
+/* Desktop only: keep the fixed dock clear of the page's last row. */
+@media (min-width: 768px) {
+  body[data-dock="on"] {
+    padding-bottom: var(--vk-dock-h);
+  }
+}
+
 @keyframes vk-sweep {
   0% { transform: translateY(-100%); opacity: 0; }
   10% { opacity: 1; }
@@ -219,7 +269,9 @@ body {
     scroll-behavior: auto !important;
   }
   .vk-pulse,
-  .vk-caret {
+  .vk-caret,
+  .vk-crt-caret,
+  .vk-crt-flicker {
     animation: none !important;
     opacity: 1 !important;
   }
