@@ -3,18 +3,26 @@
 import * as React from "react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
+import { AppLauncher } from "@/components/AppLauncher";
+import { AppWindow } from "@/components/AppWindow";
 import { BootSequence } from "@/components/BootSequence";
 import { Cursor } from "@/components/Cursor";
 import { SystemHeader } from "@/components/SystemHeader";
+import { Taskbar } from "@/components/Taskbar";
 import { TerminalProvider } from "@/components/TerminalProvider";
+import { appForPath } from "@/lib/data/apps";
 import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot";
 
 /**
  * The persistent operating-system chrome: boot gate, header, cursor, terminal,
- * and the page transition. Everything below the header is `children`.
+ * launch transition and dock.
+ *
+ * `/` is the desktop and renders bare. Every other route is an application and
+ * renders inside window chrome.
  */
 export function VKOSShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const app = appForPath(pathname);
   const booting = React.useSyncExternalStore(
     subscribeBoot,
     getBootPending,
@@ -31,6 +39,7 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
     <TerminalProvider>
       {booting && <BootSequence />}
       <Cursor />
+      <AppLauncher />
 
       <div className="vk-app" data-ready={booting ? undefined : "1"}>
         <SystemHeader />
@@ -42,8 +51,9 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
           transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
           className="min-h-[calc(100vh-62px)] pt-[62px]"
         >
-          {children}
+          {app ? <AppWindow app={app}>{children}</AppWindow> : children}
         </motion.main>
+        <Taskbar />
       </div>
     </TerminalProvider>
   );
