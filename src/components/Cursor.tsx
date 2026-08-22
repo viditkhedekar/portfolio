@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useMediaQuery } from "@/lib/hooks";
 
 /**
  * Desktop-only crosshair cursor.
@@ -12,23 +13,12 @@ import * as React from "react";
  */
 export function Cursor() {
   const root = React.useRef<HTMLDivElement>(null);
-  const [enabled, setEnabled] = React.useState(false);
+  const fine = useMediaQuery("(hover: hover) and (pointer: fine)");
+  const calm = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const enabled = fine && !calm;
   const [visible, setVisible] = React.useState(false);
   const [readout, setReadout] = React.useState<{ label: string; sub?: string } | null>(null);
   const [pressed, setPressed] = React.useState(false);
-
-  React.useEffect(() => {
-    const fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-    const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setEnabled(fine.matches && !calm.matches);
-    sync();
-    fine.addEventListener("change", sync);
-    calm.addEventListener("change", sync);
-    return () => {
-      fine.removeEventListener("change", sync);
-      calm.removeEventListener("change", sync);
-    };
-  }, []);
 
   React.useEffect(() => {
     if (!enabled) {

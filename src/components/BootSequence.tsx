@@ -3,12 +3,11 @@
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { boot, system } from "@/lib/data/system";
-
-const STORAGE_KEY = "vkos.booted";
+import { markBooted } from "@/lib/boot";
 
 type Phase = "init" | "checks" | "operational" | "welcome" | "done";
 
-export function BootSequence({ onFinish }: { onFinish: () => void }) {
+export function BootSequence() {
   const [phase, setPhase] = React.useState<Phase>("init");
   const [checked, setChecked] = React.useState(0);
   const finished = React.useRef(false);
@@ -16,14 +15,10 @@ export function BootSequence({ onFinish }: { onFinish: () => void }) {
   const finish = React.useCallback(() => {
     if (finished.current) return;
     finished.current = true;
-    try {
-      sessionStorage.setItem(STORAGE_KEY, "1");
-    } catch {
-      /* private mode — boot again next load, harmless */
-    }
+    /* Play the exit, then release the interface. */
     setPhase("done");
-    window.setTimeout(onFinish, 420);
-  }, [onFinish]);
+    window.setTimeout(markBooted, 420);
+  }, []);
 
   /* Skip on any interaction. */
   React.useEffect(() => {
@@ -163,13 +158,4 @@ export function BootSequence({ onFinish }: { onFinish: () => void }) {
       )}
     </AnimatePresence>
   );
-}
-
-/** True when this session has already seen the boot sequence. */
-export function hasBooted(): boolean {
-  try {
-    return sessionStorage.getItem(STORAGE_KEY) === "1";
-  } catch {
-    return false;
-  }
 }

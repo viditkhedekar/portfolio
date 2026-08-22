@@ -8,26 +8,17 @@ import { Menu, X } from "lucide-react";
 import { modules, system } from "@/lib/data/system";
 import { StatusDot, cx } from "@/components/ui";
 import { useTerminal } from "@/components/TerminalProvider";
+import { useClock } from "@/lib/hooks";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
-function useNow() {
-  const [now, setNow] = React.useState<Date | null>(null);
-  React.useEffect(() => {
-    setNow(new Date());
-    const id = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(id);
-  }, []);
-  return now;
-}
-
 export function SystemHeader() {
   const pathname = usePathname();
-  const now = useNow();
-  const [open, setOpen] = React.useState(false);
+  const now = useClock();
+  /* The menu belongs to one pathname, so navigating closes it without an effect. */
+  const [menuAt, setMenuAt] = React.useState<string | null>(null);
+  const open = menuAt === pathname;
   const terminal = useTerminal();
-
-  React.useEffect(() => setOpen(false), [pathname]);
 
   const dateLabel = now
     ? `${String(now.getDate()).padStart(2, "0")} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`
@@ -128,7 +119,7 @@ export function SystemHeader() {
 
             <button
               type="button"
-              onClick={() => setOpen((v) => !v)}
+              onClick={() => setMenuAt(open ? null : pathname)}
               className="flex h-8 w-8 items-center justify-center border border-[var(--vk-line)] text-[var(--vk-fg-dim)] lg:hidden"
               aria-expanded={open}
               aria-label={open ? "Close module index" : "Open module index"}
@@ -180,7 +171,7 @@ export function SystemHeader() {
                 <button
                   type="button"
                   onClick={() => {
-                    setOpen(false);
+                    setMenuAt(null);
                     terminal.open();
                   }}
                   className="vk-mono w-full border border-[var(--vk-line)] py-3 text-[10px] tracking-[0.18em] text-[var(--vk-fg-dim)]"
