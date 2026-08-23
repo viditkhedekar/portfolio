@@ -6,6 +6,7 @@ import { system } from "@/lib/data/system";
 import { apps } from "@/lib/data/apps";
 import { GithubLink } from "@/components/GithubLink";
 import { HeroType } from "@/components/HeroType";
+import { TerminalHint } from "@/components/TerminalHint";
 
 const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
 
@@ -67,6 +68,7 @@ export default function Home() {
 
         {/* Instrument column */}
         <aside className="flex flex-col gap-px border-t border-[var(--vk-line)] py-10 lg:border-l lg:border-t-0 lg:py-12 lg:pl-8">
+          <TerminalHint />
           <TelemetryPanel />
           <SystemState className="mt-6" />
         </aside>
