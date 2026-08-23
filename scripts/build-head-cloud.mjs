@@ -23,7 +23,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-const TARGET_POINTS = 5200;
+const TARGET_POINTS = 12000;
 const OUTPUT = "public/head-cloud.bin";
 
 /**
@@ -210,6 +210,101 @@ function largestSubject(positions) {
   return best;
 }
 
+/* --------------------------------------------------------------- normals */
+
+/** Area-weighted vertex normals, accumulated from the faces that touch each. */
+function buildVertexNormals(positions, faces) {
+  const normals = new Float64Array(positions.length);
+  for (let t = 0; t < faces.length / 3; t += 1) {
+    const i = faces[t * 3];
+    const j = faces[t * 3 + 1];
+    const k = faces[t * 3 + 2];
+    const ux = positions[j * 3] - positions[i * 3];
+    const uy = positions[j * 3 + 1] - positions[i * 3 + 1];
+    const uz = positions[j * 3 + 2] - positions[i * 3 + 2];
+    const vx = positions[k * 3] - positions[i * 3];
+    const vy = positions[k * 3 + 1] - positions[i * 3 + 1];
+    const vz = positions[k * 3 + 2] - positions[i * 3 + 2];
+    /* Not normalised, so bigger triangles carry proportionally more weight. */
+    const nx = uy * vz - uz * vy;
+    const ny = uz * vx - ux * vz;
+    const nz = ux * vy - uy * vx;
+    for (const v of [i, j, k]) {
+      normals[v * 3] += nx;
+      normals[v * 3 + 1] += ny;
+      normals[v * 3 + 2] += nz;
+    }
+  }
+  for (let v = 0; v < normals.length / 3; v += 1) {
+    const len = Math.hypot(normals[v * 3], normals[v * 3 + 1], normals[v * 3 + 2]) || 1;
+    normals[v * 3] /= len;
+    normals[v * 3 + 1] /= len;
+    normals[v * 3 + 2] /= len;
+  }
+  return normals;
+}
+
+/**
+ * Blur the sampled normals against their neighbours.
+ *
+ * Even vertex normals keep a lot of scan noise, and noise in the normals is
+ * what makes a lit point cloud sparkle instead of reading as a surface. A
+ * voxel grid gives neighbours cheaply, without building a k-d tree.
+ */
+function smoothNormals(sampled, count, radius, passes) {
+  const cells = new Map();
+  const key = (x, y, z) =>
+    `${Math.floor(x / radius)},${Math.floor(y / radius)},${Math.floor(z / radius)}`;
+
+  for (let i = 0; i < count; i += 1) {
+    const k = key(sampled.x[i], sampled.y[i], sampled.z[i]);
+    let bucket = cells.get(k);
+    if (!bucket) cells.set(k, (bucket = []));
+    bucket.push(i);
+  }
+
+  for (let pass = 0; pass < passes; pass += 1) {
+    const nx = new Float64Array(count);
+    const ny = new Float64Array(count);
+    const nz = new Float64Array(count);
+
+    for (let i = 0; i < count; i += 1) {
+      const [cx, cy, cz] = key(sampled.x[i], sampled.y[i], sampled.z[i]).split(",").map(Number);
+      let sx = 0;
+      let sy = 0;
+      let sz = 0;
+      for (let dx = -1; dx <= 1; dx += 1) {
+        for (let dy = -1; dy <= 1; dy += 1) {
+          for (let dz = -1; dz <= 1; dz += 1) {
+            const bucket = cells.get(`${cx + dx},${cy + dy},${cz + dz}`);
+            if (!bucket) continue;
+            for (const j of bucket) {
+              /* Only blend with neighbours already facing a similar way, so
+                 the nose does not get averaged into the cheek beside it. */
+              const dot =
+                sampled.nx[i] * sampled.nx[j] +
+                sampled.ny[i] * sampled.ny[j] +
+                sampled.nz[i] * sampled.nz[j];
+              if (dot < 0.35) continue;
+              sx += sampled.nx[j];
+              sy += sampled.ny[j];
+              sz += sampled.nz[j];
+            }
+          }
+        }
+      }
+      const len = Math.hypot(sx, sy, sz) || 1;
+      nx[i] = sx / len;
+      ny[i] = sy / len;
+      nz[i] = sz / len;
+    }
+
+    sampled.nx = Array.from(nx);
+    sampled.ny = Array.from(ny);
+    sampled.nz = Array.from(nz);
+  }
+}
+
 /* -------------------------------------------------------------- sampling */
 
 function mulberry32(seed) {
@@ -223,7 +318,7 @@ function mulberry32(seed) {
 }
 
 /** Area-weighted surface sampling, so density does not follow mesh topology. */
-function sampleSurface(positions, uvs, faces, keep, count, rand) {
+function sampleSurface(positions, uvs, faces, keep, count, rand, vertexNormals) {
   const triangles = [];
   let total = 0;
 
@@ -247,7 +342,7 @@ function sampleSurface(positions, uvs, faces, keep, count, rand) {
   }
   if (triangles.length === 0) throw new Error("no triangles survived the crop");
 
-  const out = { x: [], y: [], z: [], u: [], v: [] };
+  const out = { x: [], y: [], z: [], u: [], v: [], nx: [], ny: [], nz: [] };
   for (let s = 0; s < count; s += 1) {
     const target = rand() * total;
     let lo = 0;
@@ -272,6 +367,19 @@ function sampleSurface(positions, uvs, faces, keep, count, rand) {
     out.z.push(positions[i * 3 + 2] * c + positions[j * 3 + 2] * a + positions[k * 3 + 2] * b);
     out.u.push(uvs[i * 2] * c + uvs[j * 2] * a + uvs[k * 2] * b);
     out.v.push(uvs[i * 2 + 1] * c + uvs[j * 2 + 1] * a + uvs[k * 2 + 1] * b);
+
+    /* Interpolated vertex normals. Raw face normals off a photogrammetry mesh
+       are high-frequency noise and light up like gravel; averaging them at the
+       vertices first is what makes the surface read. */
+    const nx = vertexNormals[i * 3] * c + vertexNormals[j * 3] * a + vertexNormals[k * 3] * b;
+    const ny =
+      vertexNormals[i * 3 + 1] * c + vertexNormals[j * 3 + 1] * a + vertexNormals[k * 3 + 1] * b;
+    const nz =
+      vertexNormals[i * 3 + 2] * c + vertexNormals[j * 3 + 2] * a + vertexNormals[k * 3 + 2] * b;
+    const len = Math.hypot(nx, ny, nz) || 1;
+    out.nx.push(nx / len);
+    out.ny.push(ny / len);
+    out.nz.push(nz / len);
   }
   return out;
 }
@@ -337,7 +445,11 @@ for (const i of subject.members) if (positions[i * 3 + 1] >= floor) keep.add(i);
 console.log(`head crop: ${keep.size} vertices above y=${floor.toFixed(3)}`);
 
 const rand = mulberry32(0x5eed);
-const sampled = sampleSurface(positions, uvs, faces, keep, TARGET_POINTS, rand);
+const vertexNormals = buildVertexNormals(positions, faces);
+const sampled = sampleSurface(positions, uvs, faces, keep, TARGET_POINTS, rand, vertexNormals);
+
+/* Radius is in scan units: roughly a centimetre on a head this size. */
+smoothNormals(sampled, TARGET_POINTS, 0.02, 3);
 
 /* Orient: yaw about the vertical, then pitch, then roll. */
 const yaw = (CALIBRATION.yaw * Math.PI) / 180;
@@ -347,21 +459,42 @@ const [cy, sy] = [Math.cos(yaw), Math.sin(yaw)];
 const [cp, sp] = [Math.cos(pitch), Math.sin(pitch)];
 const [cr, sr] = [Math.cos(roll), Math.sin(roll)];
 
-const oriented = [];
-for (let i = 0; i < TARGET_POINTS; i += 1) {
-  let x = sampled.x[i];
-  let y = sampled.y[i];
-  let z = sampled.z[i];
-
+/** Apply yaw, then pitch, then roll. Used for positions and normals alike. */
+const rotate = (x, y, z) => {
   const x1 = x * cy + z * sy;
   let z1 = -x * sy + z * cy;
   const y1 = y * cp - z1 * sp;
   z1 = y * sp + z1 * cp;
-  x = x1 * cr - y1 * sr;
-  y = x1 * sr + y1 * cr;
-  z = z1;
+  return [x1 * cr - y1 * sr, x1 * sr + y1 * cr, z1];
+};
 
-  oriented.push([x, y, z, sampled.u[i], sampled.v[i]]);
+/* Centre of the raw head, used only to force normals to point outward: mesh
+   winding from a scan is not reliably consistent. */
+const rawCentre = [0, 1, 2].map((axis) => {
+  const key = ["x", "y", "z"][axis];
+  const v = [...sampled[key]].sort((a, b) => a - b);
+  return v[Math.floor(v.length / 2)];
+});
+
+const oriented = [];
+for (let i = 0; i < TARGET_POINTS; i += 1) {
+  const [x, y, z] = rotate(sampled.x[i], sampled.y[i], sampled.z[i]);
+
+  let nx = sampled.nx[i];
+  let ny = sampled.ny[i];
+  let nz = sampled.nz[i];
+  const outward =
+    nx * (sampled.x[i] - rawCentre[0]) +
+    ny * (sampled.y[i] - rawCentre[1]) +
+    nz * (sampled.z[i] - rawCentre[2]);
+  if (outward < 0) {
+    nx = -nx;
+    ny = -ny;
+    nz = -nz;
+  }
+  const [rnx, rny, rnz] = rotate(nx, ny, nz);
+
+  oriented.push([x, y, z, sampled.u[i], sampled.v[i], rnx, rny, rnz]);
 }
 
 /* Centre on the median and scale so the head is 2 units tall. */
@@ -378,10 +511,14 @@ const decoded = decodeTexture(texture);
 let skinCount = 0;
 
 const xyz = new Int16Array(TARGET_POINTS * 3);
+const normals = new Int8Array(TARGET_POINTS * 3);
 const weights = new Uint8Array(TARGET_POINTS);
 
 for (let i = 0; i < TARGET_POINTS; i += 1) {
-  const [x, y, z, u, v] = oriented[i];
+  const [x, y, z, u, v, nx, ny, nz] = oriented[i];
+  normals[i * 3] = Math.max(-127, Math.min(127, Math.round(nx * 127)));
+  normals[i * 3 + 1] = Math.max(-127, Math.min(127, Math.round(ny * 127)));
+  normals[i * 3 + 2] = Math.max(-127, Math.min(127, Math.round(nz * 127)));
   const q = (value) => Math.max(-32767, Math.min(32767, Math.round(value * 16000)));
   xyz[i * 3] = q((x - centre[0]) * scale);
   xyz[i * 3 + 1] = q((y - centre[1]) * scale);
@@ -419,15 +556,17 @@ if (args.includes("--inspect")) {
   process.exit(0);
 }
 
-/* Header: magic, version, count. Then int16 xyz triples, then uint8 weights. */
+/* Header: magic, version, count. Then int16 xyz triples, int8 normal triples,
+   then one uint8 weight per point. */
 const header = Buffer.alloc(12);
 header.write("VKHC", 0, "ascii");
-header.writeUInt32LE(1, 4);
+header.writeUInt32LE(2, 4);
 header.writeUInt32LE(TARGET_POINTS, 8);
 
 const body = Buffer.concat([
   header,
   Buffer.from(xyz.buffer, xyz.byteOffset, xyz.byteLength),
+  Buffer.from(normals.buffer, normals.byteOffset, normals.byteLength),
   Buffer.from(weights.buffer),
 ]);
 
