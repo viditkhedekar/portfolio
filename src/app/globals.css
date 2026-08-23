@@ -27,6 +27,7 @@
   --vk-accent: #aee83c;
   --vk-accent-soft: rgba(174, 232, 60, 0.55);
   --vk-accent-faint: rgba(174, 232, 60, 0.14);
+  --vk-accent-line: rgba(174, 232, 60, 0.34); /* resting borders */
   --vk-accent-ghost: rgba(174, 232, 60, 0.06);
 
   /* Status */
