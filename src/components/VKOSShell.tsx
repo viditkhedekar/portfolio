@@ -10,7 +10,6 @@ import { Cursor } from "@/components/Cursor";
 import { SystemFooter } from "@/components/SystemFooter";
 import { SystemHeader } from "@/components/SystemHeader";
 import { Taskbar } from "@/components/Taskbar";
-import { TerminalGreeter } from "@/components/TerminalGreeter";
 import { TerminalProvider } from "@/components/TerminalProvider";
 import { appForPath } from "@/lib/data/apps";
 import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot";
@@ -42,7 +41,6 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
       {booting && <BootSequence />}
       <Cursor />
       <AppLauncher />
-      <TerminalGreeter />
 
       <div className="vk-app" data-ready={booting ? undefined : "1"}>
         <SystemHeader />
