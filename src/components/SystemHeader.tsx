@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -10,6 +9,7 @@ import { modules, system } from "@/lib/data/system";
 import { StatusDot, cx } from "@/components/ui";
 import { useTerminal } from "@/components/TerminalProvider";
 import { GithubLink } from "@/components/GithubLink";
+import { OperatorPortrait } from "@/components/OperatorPortrait";
 import { useClock } from "@/lib/hooks";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -35,32 +35,25 @@ export function SystemHeader() {
     <>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--vk-line)] bg-[var(--vk-bg)]/85 backdrop-blur-md">
         <div className="mx-auto flex h-[62px] w-full max-w-[1440px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
-          {/* Identity */}
-          <Link
-            href="/"
-            className="group flex shrink-0 items-center gap-3"
-            data-cursor="RETURN"
-            data-cursor-sub="SYSTEM ROOT"
-            aria-label="VKOS/01 home"
-          >
-            <Image
-              src="/operator.jpg"
-              alt=""
-              aria-hidden
-              width={192}
-              height={192}
-              priority
-              className="h-[30px] w-[30px] shrink-0 rounded-full object-cover opacity-85 transition-opacity duration-200 group-hover:opacity-100"
-            />
-            <span className="block">
+          {/* Identity. The photograph opens itself, so it sits beside the
+              link rather than inside it. */}
+          <div className="flex shrink-0 items-center gap-3">
+            <OperatorPortrait />
+            <Link
+              href="/"
+              className="group"
+              data-cursor="RETURN"
+              data-cursor-sub="SYSTEM ROOT"
+              aria-label="VKOS/01 home"
+            >
               <span className="vk-mono block text-[12px] tracking-[0.22em] text-[var(--vk-fg)] transition-colors group-hover:text-[var(--vk-accent)]">
                 {system.code}
               </span>
               <span className="vk-mono mt-[3px] block text-[9px] tracking-[0.18em] text-[var(--vk-fg-faint)]">
                 {system.operator}
               </span>
-            </span>
-          </Link>
+            </Link>
+          </div>
 
           {/* Module strip — desktop */}
           <nav aria-label="System modules" className="hidden flex-1 justify-center lg:flex">
