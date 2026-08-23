@@ -26,9 +26,6 @@ import { dirname, resolve } from "node:path";
 const TARGET_POINTS = 12000;
 const OUTPUT = "public/head-cloud.bin";
 
-/** How hard to push the mandible. 0 leaves the scan alone. */
-const JAW_GAIN = 0.3;
-
 /**
  * Calibration for the current scan.
  *
@@ -41,19 +38,8 @@ const CALIBRATION = {
   yaw: 75,
   pitch: 0,
   roll: 0,
-  /**
-   * The head, in the scan's own coordinates: a cylinder standing on `floor`,
-   * centred on `axis` in x and z. Measured off this scan by rendering it with
-   * its texture and reading the bounds; a new scan needs them measured again.
-   *
-   * A height cut alone is not enough here. He is shirtless, so his shoulder
-   * and the arm holding the phone are the same colour as his face and cannot
-   * be told apart by anything but position. The floor sits at the narrowest
-   * point of the neck, which a width-per-height profile of the scan finds
-   * unambiguously: the head holds ~0.44 across, the neck pinches to 0.26, and
-   * the shoulders flare straight back out below it.
-   */
-  head: { axis: [-0.25, 0.41], radius: 0.26, floor: 1.5, ceiling: 1.94 },
+  /** Fraction of the subject's height, measured down from the crown, to keep. */
+  keep: 0.62,
 };
 
 /* ------------------------------------------------------------------- glb */
@@ -450,19 +436,13 @@ console.log(
     `${subject.hi.map((v) => v.toFixed(2)).join(",")}`,
 );
 
-/* Crop to the head cylinder. */
-const { axis, radius, floor, ceiling } = CALIBRATION.head;
+/* Crop to the head, measuring down from the crown so the cut does not depend
+   on how much torso the scan happened to catch. */
+const crown = subject.hi[1];
+const floor = crown - (subject.hi[1] - subject.lo[1]) * CALIBRATION.keep;
 const keep = new Set();
-for (const i of subject.members) {
-  /* The ceiling shaves a thin sheet the solver left standing above the crown,
-     which is offset from the head's axis and would otherwise be mirrored. */
-  if (positions[i * 3 + 1] < floor || positions[i * 3 + 1] > ceiling) continue;
-  const dx = positions[i * 3] - axis[0];
-  const dz = positions[i * 3 + 2] - axis[1];
-  if (Math.hypot(dx, dz) > radius) continue;
-  keep.add(i);
-}
-console.log(`head crop: ${keep.size} vertices`);
+for (const i of subject.members) if (positions[i * 3 + 1] >= floor) keep.add(i);
+console.log(`head crop: ${keep.size} vertices above y=${floor.toFixed(3)}`);
 
 const rand = mulberry32(0x5eed);
 const vertexNormals = buildVertexNormals(positions, faces);
@@ -522,320 +502,52 @@ const median = (axis) => {
   const v = oriented.map((p) => p[axis]).sort((a, b) => a - b);
   return v[Math.floor(v.length / 2)];
 };
+const centre = [median(0), median(1), median(2)];
 const ys = oriented.map((p) => p[1]).sort((a, b) => a - b);
 const height = ys[Math.floor(ys.length * 0.99)] - ys[Math.floor(ys.length * 0.01)];
 const scale = 2 / (height || 1);
 
 const decoded = decodeTexture(texture);
+let skinCount = 0;
 
-/* Normalised working set. Everything past this point assumes the head is
-   centred on the origin, two units tall, facing +z, with the midline at x=0. */
-let cloud = oriented.map(([x, y, z, u, v, nx, ny, nz]) => {
-  let skin = false;
+const xyz = new Int16Array(TARGET_POINTS * 3);
+const normals = new Int8Array(TARGET_POINTS * 3);
+const weights = new Uint8Array(TARGET_POINTS);
+
+for (let i = 0; i < TARGET_POINTS; i += 1) {
+  const [x, y, z, u, v, nx, ny, nz] = oriented[i];
+  normals[i * 3] = Math.max(-127, Math.min(127, Math.round(nx * 127)));
+  normals[i * 3 + 1] = Math.max(-127, Math.min(127, Math.round(ny * 127)));
+  normals[i * 3 + 2] = Math.max(-127, Math.min(127, Math.round(nz * 127)));
+  const q = (value) => Math.max(-32767, Math.min(32767, Math.round(value * 16000)));
+  xyz[i * 3] = q((x - centre[0]) * scale);
+  xyz[i * 3 + 1] = q((y - centre[1]) * scale);
+  xyz[i * 3 + 2] = q((z - centre[2]) * scale);
+
+  let weight = 0.5;
   if (decoded) {
     const tu = Math.min(decoded.size - 1, Math.max(0, Math.floor((u - Math.floor(u)) * decoded.size)));
     const tv = Math.min(decoded.size - 1, Math.max(0, Math.floor((v - Math.floor(v)) * decoded.size)));
     const o = (tv * decoded.size + tu) * 3;
-    skin = isSkin(decoded.data[o], decoded.data[o + 1], decoded.data[o + 2]);
+    const skin = isSkin(decoded.data[o], decoded.data[o + 1], decoded.data[o + 2]);
+    if (skin) skinCount += 1;
+    /* Face brighter than hair: at this density the features are the likeness. */
+    weight = skin ? 1 : 0.42;
   }
-  return {
-    x: (x - median(0)) * scale,
-    y: (y - median(1)) * scale,
-    z: (z - median(2)) * scale,
-    nx,
-    ny,
-    nz,
-    skin,
-  };
-});
-
-/**
- * Find the sagittal plane by looking for the x offset the head mirrors best
- * about.
- *
- * Neither the median of the head nor the median of the skin finds it: hair
- * volume is lopsided, and he is shirtless so "skin" includes neck and ear.
- * Symmetry is the thing actually being looked for, so search for it directly.
- */
-function findMidline(points, span, step) {
-  const grid = 0.06;
-  const occupied = new Set();
-  for (const p of points) {
-    occupied.add(
-      `${Math.round(p.x / grid)},${Math.round(p.y / grid)},${Math.round(p.z / grid)}`,
-    );
-  }
-
-  let best = { offset: 0, score: -1 };
-  for (let offset = -span; offset <= span; offset += step) {
-    let hits = 0;
-    let total = 0;
-    for (const cell of occupied) {
-      const [cx, cy, cz] = cell.split(",").map(Number);
-      const mirrored = Math.round((2 * offset) / grid) - cx;
-      total += 1;
-      if (occupied.has(`${mirrored},${cy},${cz}`)) hits += 1;
-    }
-    const score = hits / total;
-    if (score > best.score) best = { offset, score };
-  }
-
-  console.log(
-    `midline: x=${best.offset.toFixed(3)} (${(best.score * 100).toFixed(0)}% of the head mirrors onto itself)`,
-  );
-  return best.offset;
-}
-
-const midline = findMidline(cloud, 0.5, 0.01);
-for (const p of cloud) p.x -= midline;
-
-/**
- * Drop thin flaps and floating débris left by the reconstruction.
- *
- * A scan always carries some stray geometry: a sheet where the solver bridged
- * two surfaces, a shred of background welded to the hair. It is easy to miss
- * on a shaded mesh and glaring on a point cloud, and mirroring the hair would
- * otherwise duplicate it. Real surface is dense; strays are not.
- */
-function removeStrays(points, radius, minimum) {
-  const cells = new Map();
-  const key = (p) =>
-    `${Math.floor(p.x / radius)},${Math.floor(p.y / radius)},${Math.floor(p.z / radius)}`;
-
-  for (const p of points) {
-    const k = key(p);
-    let bucket = cells.get(k);
-    if (!bucket) cells.set(k, (bucket = []));
-    bucket.push(p);
-  }
-
-  const kept = points.filter((p) => {
-    const [cx, cy, cz] = key(p).split(",").map(Number);
-    let neighbours = 0;
-    for (let dx = -1; dx <= 1; dx += 1) {
-      for (let dy = -1; dy <= 1; dy += 1) {
-        for (let dz = -1; dz <= 1; dz += 1) {
-          const bucket = cells.get(`${cx + dx},${cy + dy},${cz + dz}`);
-          if (!bucket) continue;
-          for (const q of bucket) {
-            const d = Math.hypot(p.x - q.x, p.y - q.y, p.z - q.z);
-            if (d <= radius) neighbours += 1;
-          }
-        }
-      }
-    }
-    return neighbours >= minimum;
-  });
-
-  console.log(`strays: dropped ${points.length - kept.length} of ${points.length}`);
-  return kept;
-}
-
-/**
- * Keep only the connected blob that is the head.
- *
- * Cropping by height alone also catches whatever else was near the head: in
- * this scan the arm holding the phone came along with it. Those pieces are
- * dense, so density culling will not touch them, but they are not joined to
- * the head once the torso below has been cut away.
- */
-function keepHead(points, radius) {
-  const cells = new Map();
-  const key = (p) =>
-    `${Math.floor(p.x / radius)},${Math.floor(p.y / radius)},${Math.floor(p.z / radius)}`;
-  for (const p of points) {
-    const k = key(p);
-    let bucket = cells.get(k);
-    if (!bucket) cells.set(k, (bucket = []));
-    bucket.push(p);
-  }
-
-  const seen = new Set();
-  let best = [];
-  for (const start of cells.keys()) {
-    if (seen.has(start)) continue;
-    const stack = [start];
-    seen.add(start);
-    const group = [];
-    while (stack.length) {
-      const cur = stack.pop();
-      group.push(...cells.get(cur));
-      const [cx, cy, cz] = cur.split(",").map(Number);
-      for (let dx = -1; dx <= 1; dx += 1) {
-        for (let dy = -1; dy <= 1; dy += 1) {
-          for (let dz = -1; dz <= 1; dz += 1) {
-            const k = `${cx + dx},${cy + dy},${cz + dz}`;
-            if (cells.has(k) && !seen.has(k)) {
-              seen.add(k);
-              stack.push(k);
-            }
-          }
-        }
-      }
-    }
-    if (group.length > best.length) best = group;
-  }
-
-  console.log(`head blob: kept ${best.length} of ${points.length}`);
-  return best;
-}
-
-/**
- * Trim each height slice back to its own silhouette.
- *
- * The reconstruction leaves thin sheets bridging the head to whatever was
- * behind it. They are dense, so density culling keeps them, and they are
- * joined to the head, so a component pass keeps them too. What gives them
- * away is that they stick out well past the head's own outline at that height.
- */
-function trimProfile(points, slack) {
-  const slices = new Map();
-  const step = 0.06;
-  for (const p of points) {
-    const k = Math.floor(p.y / step);
-    let bucket = slices.get(k);
-    if (!bucket) slices.set(k, (bucket = []));
-    bucket.push(p);
-  }
-
-  const limits = new Map();
-  for (const [k, bucket] of slices) {
-    const cx = bucket.reduce((a, p) => a + p.x, 0) / bucket.length;
-    const cz = bucket.reduce((a, p) => a + p.z, 0) / bucket.length;
-    const radii = bucket.map((p) => Math.hypot(p.x - cx, p.z - cz)).sort((a, b) => a - b);
-    limits.set(k, { cx, cz, limit: radii[Math.floor(radii.length * 0.9)] * slack });
-  }
-
-  const kept = points.filter((p) => {
-    const l = limits.get(Math.floor(p.y / step));
-    if (!l) return true;
-    return Math.hypot(p.x - l.cx, p.z - l.cz) <= l.limit;
-  });
-
-  console.log(`profile trim: dropped ${points.length - kept.length} of ${points.length}`);
-  return kept;
-}
-
-/**
- * Mirror the better half of the hair across the midline.
- *
- * One side of a hand-held scan is always reconstructed better than the other,
- * and hair is where that shows worst. Rather than average the two halves,
- * which keeps the flaws of both, the fuller side is kept and reflected.
- */
-function symmetriseHair(points) {
-  const hair = points.filter((p) => !p.skin);
-  const rest = points.filter((p) => p.skin);
-  const left = hair.filter((p) => p.x < 0);
-  const right = hair.filter((p) => p.x >= 0);
-  const better = right.length >= left.length ? right : left;
-
-  const mirrored = better.map((p) => ({
-    ...p,
-    x: -p.x,
-    nx: -p.nx,
-  }));
-
-  console.log(
-    `hair: mirrored the ${better === right ? "right" : "left"} side ` +
-      `(${better.length} points, was ${left.length}/${right.length})`,
-  );
-  return [...rest, ...better, ...mirrored];
-}
-
-/** Smoothstep bump: 1 at `centre`, falling to 0 at `centre ± width`. */
-function bump(value, centre, width) {
-  const t = Math.abs(value - centre) / width;
-  if (t >= 1) return 0;
-  const s = 1 - t;
-  return s * s * (3 - 2 * s);
-}
-
-/**
- * Push the mandible out so the jawline survives at point-cloud density.
- *
- * A scan records the jaw accurately, but accuracy is not the same as legible:
- * at a few thousand dots a soft jaw reads as no jaw at all. This widens the
- * mandible, squares the gonial angle behind it and brings the chin forward,
- * which is what the eye actually uses to find a jawline.
- */
-function sharpenJaw(points, gain) {
-  const lows = points.map((p) => p.y).sort((a, b) => a - b);
-  const chin = lows[Math.floor(lows.length * 0.01)];
-  const crown = lows[Math.floor(lows.length * 0.99)];
-  const span = crown - chin;
-
-  /* The mandible sits low on the head; the gonial angle sits behind it. */
-  const jawY = chin + span * 0.26;
-  const jawWidth = span * 0.3;
-
-  for (const p of points) {
-    const band = bump(p.y, jawY, jawWidth);
-    if (band <= 0) continue;
-
-    /* Only the outward-facing sides of the jaw, not the throat under it. */
-    const lateral = Math.min(1, Math.abs(p.nx) / 0.55);
-    const push = gain * band * lateral;
-    p.x *= 1 + push;
-
-    /* Chin forward, and only near the midline so the cheeks stay put. */
-    const central = 1 - Math.min(1, Math.abs(p.x) / 0.34);
-    p.z += gain * 0.28 * bump(p.y, chin + span * 0.1, span * 0.22) * central * Math.max(0, p.nz);
-
-    /* Squaring the corner: extra width at the back of the jaw. */
-    if (p.z < 0) p.x *= 1 + gain * 0.35 * band * Math.min(1, -p.z / 0.5);
-
-    /* Widening x flattens the surface, so the normal has to lean back. */
-    if (push > 0) {
-      p.nx /= 1 + push;
-      const len = Math.hypot(p.nx, p.ny, p.nz) || 1;
-      p.nx /= len;
-      p.ny /= len;
-      p.nz /= len;
-    }
-  }
-}
-
-cloud = trimProfile(cloud, 1.12);
-cloud = removeStrays(cloud, 0.09, 14);
-cloud = keepHead(cloud, 0.055);
-cloud = symmetriseHair(cloud);
-sharpenJaw(cloud, JAW_GAIN);
-
-const count = cloud.length;
-const skinCount = cloud.filter((p) => p.skin).length;
-
-const xyz = new Int16Array(count * 3);
-const normals = new Int8Array(count * 3);
-const weights = new Uint8Array(count);
-
-for (let i = 0; i < count; i += 1) {
-  const p = cloud[i];
-  const q = (value) => Math.max(-32767, Math.min(32767, Math.round(value * 16000)));
-  xyz[i * 3] = q(p.x);
-  xyz[i * 3 + 1] = q(p.y);
-  xyz[i * 3 + 2] = q(p.z);
-
-  const n = (value) => Math.max(-127, Math.min(127, Math.round(value * 127)));
-  normals[i * 3] = n(p.nx);
-  normals[i * 3 + 1] = n(p.ny);
-  normals[i * 3 + 2] = n(p.nz);
-
-  /* Face brighter than hair: at this density the features are the likeness. */
-  weights[i] = Math.round((decoded ? (p.skin ? 1 : 0.42) : 0.5) * 255);
+  weights[i] = Math.round(weight * 255);
 }
 
 console.log(
-  `cloud: ${count} points, ` +
-    `${decoded ? `${((skinCount / count) * 100).toFixed(0)}% skin` : "flat weights"}`,
+  `sampled ${TARGET_POINTS} points, ` +
+    `${decoded ? `${((skinCount / TARGET_POINTS) * 100).toFixed(0)}% skin` : "flat weights"}`,
 );
 
 if (args.includes("--inspect")) {
   const report = (axis, name) => {
-    const v = Array.from({ length: count }, (_, i) => xyz[i * 3 + axis] / 16000).sort(
+    const v = Array.from({ length: TARGET_POINTS }, (_, i) => xyz[i * 3 + axis] / 16000).sort(
       (a, b) => a - b,
     );
-    const at = (t) => v[Math.floor(v.length * t)].toFixed(2);
+    const at = (p) => v[Math.floor(v.length * p)].toFixed(2);
     console.log(`  ${name}: p1=${at(0.01)} p50=${at(0.5)} p99=${at(0.99)}`);
   };
   report(0, "x");
@@ -849,7 +561,7 @@ if (args.includes("--inspect")) {
 const header = Buffer.alloc(12);
 header.write("VKHC", 0, "ascii");
 header.writeUInt32LE(2, 4);
-header.writeUInt32LE(count, 8);
+header.writeUInt32LE(TARGET_POINTS, 8);
 
 const body = Buffer.concat([
   header,
@@ -860,4 +572,4 @@ const body = Buffer.concat([
 
 mkdirSync(dirname(OUTPUT), { recursive: true });
 writeFileSync(OUTPUT, body);
-console.log(`wrote ${OUTPUT} (${(body.length / 1024).toFixed(1)} kB, ${count} points)`);
+console.log(`wrote ${OUTPUT} (${(body.length / 1024).toFixed(1)} kB, ${TARGET_POINTS} points)`);
