@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -37,17 +38,28 @@ export function SystemHeader() {
           {/* Identity */}
           <Link
             href="/"
-            className="group shrink-0"
+            className="group flex shrink-0 items-center gap-3"
             data-cursor="RETURN"
             data-cursor-sub="SYSTEM ROOT"
             aria-label="VKOS/01 home"
           >
-            <div className="vk-mono text-[12px] tracking-[0.22em] text-[var(--vk-fg)] transition-colors group-hover:text-[var(--vk-accent)]">
-              {system.code}
-            </div>
-            <div className="vk-mono mt-[3px] text-[9px] tracking-[0.18em] text-[var(--vk-fg-faint)]">
-              {system.operator}
-            </div>
+            <Image
+              src="/operator.jpg"
+              alt=""
+              aria-hidden
+              width={192}
+              height={192}
+              priority
+              className="h-[30px] w-[30px] shrink-0 rounded-full object-cover opacity-85 transition-opacity duration-200 group-hover:opacity-100"
+            />
+            <span className="block">
+              <span className="vk-mono block text-[12px] tracking-[0.22em] text-[var(--vk-fg)] transition-colors group-hover:text-[var(--vk-accent)]">
+                {system.code}
+              </span>
+              <span className="vk-mono mt-[3px] block text-[9px] tracking-[0.18em] text-[var(--vk-fg-faint)]">
+                {system.operator}
+              </span>
+            </span>
           </Link>
 
           {/* Module strip — desktop */}
