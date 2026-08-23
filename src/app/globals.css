@@ -163,6 +163,19 @@ body {
 }
 
 /* Headings are machine output, so they take the terminal face. */
+/*
+ * Terminal output. The phosphor face is drawn large, so anything set in it
+ * steps up a few pixels from the size the bitmap chrome uses.
+ */
+.vk-term {
+  font-family: var(--font-term), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.vk-term[class] {
+  letter-spacing: 0.02em;
+}
+
 .vk-display {
   font-family: var(--font-term), ui-monospace, monospace;
   font-weight: 400;
