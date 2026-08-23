@@ -356,7 +356,9 @@ export function HeadCloud({ className }: { className?: string }) {
   return (
     <div
       ref={hostRef}
-      className={`relative h-[clamp(360px,52vh,560px)] w-full ${className ?? ""}`}
+      /* On a phone the band is only as wide as the screen, so height has to
+         follow width or the head floats in a tall empty box. */
+      className={`relative h-[clamp(240px,84vw,420px)] w-full lg:h-[clamp(360px,52vh,560px)] ${className ?? ""}`}
     >
       <canvas ref={canvasRef} className="block h-full w-full" aria-hidden="true" />
 
