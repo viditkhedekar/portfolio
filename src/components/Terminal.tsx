@@ -134,7 +134,7 @@ function GemsBlock() {
   return (
     <details className="group my-1">
       <summary
-        className="vk-mono flex cursor-pointer list-none items-center gap-2 text-[12px] leading-[1.65] text-[var(--vk-fg-faint)] transition-colors hover:text-[var(--vk-fg-dim)] [&::-webkit-details-marker]:hidden"
+        className="vk-term flex cursor-pointer list-none items-center gap-2 text-[15px] leading-[1.65] text-[var(--vk-fg-faint)] transition-colors hover:text-[var(--vk-fg-dim)] [&::-webkit-details-marker]:hidden"
         /* The transcript focuses the input on click; this must not steal it back. */
         onClick={(e) => e.stopPropagation()}
       >
@@ -148,7 +148,7 @@ function GemsBlock() {
         {GEMS.map((g) => (
           <div
             key={g.cmd}
-            className="vk-mono whitespace-pre-wrap text-[12px] leading-[1.65] text-[var(--vk-fg-dim)]"
+            className="vk-term whitespace-pre-wrap text-[15px] leading-[1.65] text-[var(--vk-fg-dim)]"
           >
             {`  ${g.cmd.padEnd(20)}${g.note}`}
           </div>
@@ -769,7 +769,7 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
                 ) : (
                   <div
                     key={i}
-                    className={`vk-mono whitespace-pre-wrap text-[12px] leading-[1.65] ${colorFor(l.kind)}`}
+                    className={`vk-term whitespace-pre-wrap text-[15px] leading-[1.65] ${colorFor(l.kind)}`}
                   >
                     {l.text || " "}
                   </div>
@@ -777,7 +777,7 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
               )}
 
               <div className="flex items-center gap-2">
-                <span className="vk-mono shrink-0 text-[12px] text-[var(--vk-accent)]">
+                <span className="vk-term shrink-0 text-[15px] text-[var(--vk-accent)]">
                   {promptFor(pathname)}
                 </span>
                 <input
@@ -790,7 +790,7 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
                   aria-label="Terminal input"
                   /* The native caret is the focus indicator here; a ring around
                      the full-width input reads as an error state. */
-                  className="vk-mono min-w-0 flex-1 bg-transparent text-[12px] text-[var(--vk-fg)] caret-[var(--vk-accent)] outline-none focus-visible:outline-none"
+                  className="vk-term min-w-0 flex-1 bg-transparent text-[15px] text-[var(--vk-fg)] caret-[var(--vk-accent)] outline-none focus-visible:outline-none"
                 />
               </div>
             </div>
