@@ -415,6 +415,46 @@ export function placeholderHead(
   return { data: data.slice(0, count * 4), count };
 }
 
+/* -------------------------------------------------------------- vkhc input */
+
+/**
+ * Read the binary written by `scripts/build-head-cloud.mjs`.
+ *
+ * Layout: "VKHC", uint32 version, uint32 count, then int16 xyz triples at
+ * 1/16000 of a unit, then one uint8 weight per point. Positions are already
+ * centred, scaled and oriented by the build script, so nothing here needs to
+ * know anything about scans.
+ */
+export function parseHeadCloud(buffer: ArrayBuffer): PointCloud {
+  const view = new DataView(buffer);
+  const magic = String.fromCharCode(
+    view.getUint8(0),
+    view.getUint8(1),
+    view.getUint8(2),
+    view.getUint8(3),
+  );
+  if (magic !== "VKHC") throw new Error("head cloud: bad magic");
+
+  const version = view.getUint32(4, true);
+  if (version !== 1) throw new Error(`head cloud: unsupported version ${version}`);
+
+  const count = view.getUint32(8, true);
+  const expected = 12 + count * 6 + count;
+  if (buffer.byteLength < expected) throw new Error("head cloud: truncated");
+
+  const data = new Float32Array(count * 4);
+  const weightsAt = 12 + count * 6;
+  for (let i = 0; i < count; i += 1) {
+    const at = 12 + i * 6;
+    data[i * 4] = view.getInt16(at, true) / 16000;
+    data[i * 4 + 1] = view.getInt16(at + 2, true) / 16000;
+    data[i * 4 + 2] = view.getInt16(at + 4, true) / 16000;
+    data[i * 4 + 3] = view.getUint8(weightsAt + i) / 255;
+  }
+
+  return { data, count };
+}
+
 /* --------------------------------------------------------------- ply input */
 
 /**
