@@ -75,7 +75,9 @@ export function resolve(
   arg: string,
 ): { href: string; path: string } | null {
   const raw = arg.trim();
-  const absolute = raw === "" || raw === "~" || raw === "/" || /^[~/]/.test(raw);
+  /* An empty argument means "here" — only ~ and / reset to the root, so a bare
+     `ls` lists the current directory rather than jumping home. */
+  const absolute = raw === "~" || raw === "/" || /^[~/]/.test(raw);
 
   const base = absolute ? [] : segmentsOf(pathname);
   const rest = raw.replace(/^~?\/?/, "");
