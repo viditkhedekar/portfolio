@@ -2,18 +2,26 @@
  * Geometry for the landing-page head.
  *
  * Two sources feed the same structure. `placeholderHead` sculpts a head from
- * maths so the page has something to render today; `parsePly` reads a real
- * photogrammetry scan once one exists. The viewer neither knows nor cares
- * which it was handed, so swapping in a scan is a one-line change.
+ * maths, which is what renders before the scan arrives and if it ever fails to
+ * load; `parseHeadCloud` reads the real scan, prepared offline by
+ * `scripts/build-head-cloud.mjs`. The viewer neither knows nor cares which it
+ * was handed.
  *
  * Units are normalised: the head sits centred on the origin, roughly 2 units
  * tall, facing +z, with +y up and +x to the subject's left as the viewer sees
  * it. The viewer scales from there.
  */
 
-/** Points are packed flat as x,y,z,weight. Weight drives size and alpha. */
+/**
+ * Points are packed flat as x,y,z,weight, with surface normals alongside.
+ *
+ * The normals are what let the renderer light the cloud. Without them a head
+ * reads as a lump of gravel, because a bare dot carries no information about
+ * which way the surface under it faces.
+ */
 export interface PointCloud {
   data: Float32Array;
+  normals: Float32Array;
   count: number;
 }
 
@@ -394,6 +402,7 @@ export function placeholderHead(
   const rand = mulberry32(0x564b0501);
 
   const data = new Float32Array(total * 4 * 2);
+  const normals = new Float32Array(total * 3 * 2);
   let count = 0;
   const b: Builder = {
     push: (x, y, z, w) => {
@@ -402,6 +411,12 @@ export function placeholderHead(
       data[count * 4 + 1] = y;
       data[count * 4 + 2] = z;
       data[count * 4 + 3] = w;
+      /* The sculpt is close enough to convex that the outward direction from
+         the origin is a serviceable normal. A real scan carries proper ones. */
+      const len = Math.hypot(x, y, z) || 1;
+      normals[count * 3] = x / len;
+      normals[count * 3 + 1] = y / len;
+      normals[count * 3 + 2] = z / len;
       count += 1;
     },
   };
@@ -412,7 +427,7 @@ export function placeholderHead(
   addGlasses(b, Math.floor(total * 0.05), o);
   addNeck(b, Math.floor(total * 0.07), rand);
 
-  return { data: data.slice(0, count * 4), count };
+  return { data: data.slice(0, count * 4), normals: normals.slice(0, count * 3), count };
 }
 
 /* -------------------------------------------------------------- vkhc input */
@@ -421,9 +436,9 @@ export function placeholderHead(
  * Read the binary written by `scripts/build-head-cloud.mjs`.
  *
  * Layout: "VKHC", uint32 version, uint32 count, then int16 xyz triples at
- * 1/16000 of a unit, then one uint8 weight per point. Positions are already
- * centred, scaled and oriented by the build script, so nothing here needs to
- * know anything about scans.
+ * 1/16000 of a unit, then int8 normal triples, then one uint8 weight per
+ * point. Positions are already centred, scaled and oriented by the build
+ * script, so nothing here needs to know anything about scans.
  */
 export function parseHeadCloud(buffer: ArrayBuffer): PointCloud {
   const view = new DataView(buffer);
@@ -436,182 +451,26 @@ export function parseHeadCloud(buffer: ArrayBuffer): PointCloud {
   if (magic !== "VKHC") throw new Error("head cloud: bad magic");
 
   const version = view.getUint32(4, true);
-  if (version !== 1) throw new Error(`head cloud: unsupported version ${version}`);
+  if (version !== 2) throw new Error(`head cloud: unsupported version ${version}`);
 
   const count = view.getUint32(8, true);
-  const expected = 12 + count * 6 + count;
-  if (buffer.byteLength < expected) throw new Error("head cloud: truncated");
+  const normalsAt = 12 + count * 6;
+  const weightsAt = normalsAt + count * 3;
+  if (buffer.byteLength < weightsAt + count) throw new Error("head cloud: truncated");
 
   const data = new Float32Array(count * 4);
-  const weightsAt = 12 + count * 6;
+  const normals = new Float32Array(count * 3);
   for (let i = 0; i < count; i += 1) {
     const at = 12 + i * 6;
     data[i * 4] = view.getInt16(at, true) / 16000;
     data[i * 4 + 1] = view.getInt16(at + 2, true) / 16000;
     data[i * 4 + 2] = view.getInt16(at + 4, true) / 16000;
     data[i * 4 + 3] = view.getUint8(weightsAt + i) / 255;
+
+    normals[i * 3] = view.getInt8(normalsAt + i * 3) / 127;
+    normals[i * 3 + 1] = view.getInt8(normalsAt + i * 3 + 1) / 127;
+    normals[i * 3 + 2] = view.getInt8(normalsAt + i * 3 + 2) / 127;
   }
 
-  return { data, count };
-}
-
-/* --------------------------------------------------------------- ply input */
-
-/**
- * Read vertex positions out of a PLY file, ASCII or binary little-endian.
- *
- * This is the hand-off point for a real scan: COLMAP, Polycam and Scaniverse
- * all export PLY, and a photogrammetry point cloud needs no meshing to be
- * useful here. Colour and normals are ignored; only position survives.
- */
-export function parsePly(buffer: ArrayBuffer): PointCloud {
-  const bytes = new Uint8Array(buffer);
-  const headerEnd = findHeaderEnd(bytes);
-  if (headerEnd < 0) throw new Error("ply: no end_header");
-
-  const header = new TextDecoder().decode(bytes.subarray(0, headerEnd));
-  const lines = header.split(/\r?\n/).map((l) => l.trim());
-
-  const format = lines.find((l) => l.startsWith("format"))?.split(/\s+/)[1];
-  if (format !== "ascii" && format !== "binary_little_endian") {
-    throw new Error(`ply: unsupported format ${format ?? "(none)"}`);
-  }
-
-  /* Walk the element list. Only the vertex element matters, but its property
-     layout has to be known in full to compute the binary stride. */
-  const sizes: Record<string, number> = {
-    char: 1, uchar: 1, int8: 1, uint8: 1,
-    short: 2, ushort: 2, int16: 2, uint16: 2,
-    int: 4, uint: 4, int32: 4, uint32: 4, float: 4, float32: 4,
-    double: 8, float64: 8,
-  };
-
-  let vertexCount = 0;
-  let inVertex = false;
-  let stride = 0;
-  const offsets: Record<string, { offset: number; type: string }> = {};
-
-  for (const line of lines) {
-    const parts = line.split(/\s+/);
-    if (parts[0] === "element") {
-      inVertex = parts[1] === "vertex";
-      if (inVertex) vertexCount = Number(parts[2]);
-      continue;
-    }
-    if (parts[0] === "property" && inVertex) {
-      if (parts[1] === "list") throw new Error("ply: list property on vertex");
-      const size = sizes[parts[1]];
-      if (!size) throw new Error(`ply: unknown type ${parts[1]}`);
-      offsets[parts[3]] = { offset: stride, type: parts[1] };
-      stride += size;
-    }
-  }
-
-  if (!offsets.x || !offsets.y || !offsets.z) throw new Error("ply: no xyz");
-  if (vertexCount === 0) return { data: new Float32Array(0), count: 0 };
-
-  const out = new Float32Array(vertexCount * 4);
-
-  if (format === "ascii") {
-    const body = new TextDecoder().decode(bytes.subarray(headerEnd));
-    const rows = body.split(/\r?\n/).filter((l) => l.trim().length > 0);
-    const order = Object.keys(offsets);
-    const xi = order.indexOf("x");
-    const yi = order.indexOf("y");
-    const zi = order.indexOf("z");
-    for (let i = 0; i < Math.min(vertexCount, rows.length); i += 1) {
-      const v = rows[i].trim().split(/\s+/);
-      out[i * 4] = Number(v[xi]);
-      out[i * 4 + 1] = Number(v[yi]);
-      out[i * 4 + 2] = Number(v[zi]);
-      out[i * 4 + 3] = 1;
-    }
-  } else {
-    const view = new DataView(buffer, headerEnd);
-    const read = (base: number, key: string) => {
-      const { offset, type } = offsets[key];
-      const at = base + offset;
-      return type === "double" || type === "float64"
-        ? view.getFloat64(at, true)
-        : view.getFloat32(at, true);
-    };
-    for (let i = 0; i < vertexCount; i += 1) {
-      const base = i * stride;
-      out[i * 4] = read(base, "x");
-      out[i * 4 + 1] = read(base, "y");
-      out[i * 4 + 2] = read(base, "z");
-      out[i * 4 + 3] = 1;
-    }
-  }
-
-  return { data: out, count: vertexCount };
-}
-
-function findHeaderEnd(bytes: Uint8Array): number {
-  const needle = "end_header";
-  const limit = Math.min(bytes.length, 65536);
-  outer: for (let i = 0; i < limit - needle.length; i += 1) {
-    for (let j = 0; j < needle.length; j += 1) {
-      if (bytes[i + j] !== needle.charCodeAt(j)) continue outer;
-    }
-    let k = i + needle.length;
-    while (k < bytes.length && bytes[k] !== 10) k += 1;
-    return k + 1;
-  }
-  return -1;
-}
-
-/* ------------------------------------------------------------- conditioning */
-
-/**
- * Centre a cloud on its median and scale it to a standard height.
- *
- * Median rather than mean, because a raw scan arrives with background débris
- * that would drag an average badly off-centre.
- */
-export function normalise(cloud: PointCloud, targetHeight = 2): PointCloud {
-  const { data, count } = cloud;
-  if (count === 0) return cloud;
-
-  const axis = (k: number) => {
-    const v = new Float64Array(count);
-    for (let i = 0; i < count; i += 1) v[i] = data[i * 4 + k];
-    v.sort();
-    return v;
-  };
-
-  const xs = axis(0);
-  const ys = axis(1);
-  const zs = axis(2);
-  const mid = (v: Float64Array) => v[Math.floor(count / 2)];
-  /* 5th to 95th percentile, so outliers do not set the scale. */
-  const span = (v: Float64Array) =>
-    v[Math.floor(count * 0.95)] - v[Math.floor(count * 0.05)];
-
-  const cx = mid(xs);
-  const cy = mid(ys);
-  const cz = mid(zs);
-  const scale = targetHeight / (span(ys) || 1);
-
-  const out = new Float32Array(count * 4);
-  for (let i = 0; i < count; i += 1) {
-    out[i * 4] = (data[i * 4] - cx) * scale;
-    out[i * 4 + 1] = (data[i * 4 + 1] - cy) * scale;
-    out[i * 4 + 2] = (data[i * 4 + 2] - cz) * scale;
-    out[i * 4 + 3] = data[i * 4 + 3];
-  }
-
-  return { data: out, count };
-}
-
-/** Thin a cloud to at most `limit` points, keeping the spatial distribution. */
-export function decimate(cloud: PointCloud, limit: number): PointCloud {
-  if (cloud.count <= limit) return cloud;
-  const stride = cloud.count / limit;
-  const out = new Float32Array(limit * 4);
-  for (let i = 0; i < limit; i += 1) {
-    const src = Math.floor(i * stride);
-    out.set(cloud.data.subarray(src * 4, src * 4 + 4), i * 4);
-  }
-  return { data: out, count: limit };
+  return { data, normals, count };
 }
