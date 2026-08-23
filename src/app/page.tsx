@@ -1,6 +1,5 @@
 import { Container, Label } from "@/components/ui";
 import { SystemState, TelemetryPanel } from "@/components/TelemetryPanel";
-import { CurrentMission } from "@/components/CurrentMission";
 import { system } from "@/lib/data/system";
 import { apps } from "@/lib/data/apps";
 import { GithubLink } from "@/components/GithubLink";
@@ -98,11 +97,6 @@ export default function Home() {
         <span className="vk-mono ml-auto hidden text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)] sm:inline">
           ⌘K TO OPEN TERMINAL
         </span>
-      </div>
-
-      {/* -------------------------------------------------------- MISSION  */}
-      <div className="pt-20">
-        <CurrentMission variant="feature" />
       </div>
 
       {/* --------------------------------------------------------- SOURCE  */}
