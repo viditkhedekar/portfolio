@@ -12,11 +12,11 @@
   --vk-bg-raised: #111315;
   --vk-bg-hover: #16181b;
 
-  /* Text */
+  /* Text — contrast ratios against --vk-bg noted for the dimmer steps. */
   --vk-fg: #e9eaec;
-  --vk-fg-dim: #8b9096;
-  --vk-fg-faint: #565b61;
-  --vk-fg-ghost: #34383c;
+  --vk-fg-dim: #9aa0a6;   /* 7.6:1 */
+  --vk-fg-faint: #6e747b; /* 4.2:1 — labels, inactive nav */
+  --vk-fg-ghost: #484d53; /* 2.3:1 — de-emphasised only, never body copy */
 
   /* Lines */
   --vk-line: rgba(255, 255, 255, 0.07);
@@ -33,7 +33,7 @@
   --vk-status-active: #aee83c;
   --vk-status-building: #e8c53c;
   --vk-status-rd: #6aa9f0;
-  --vk-status-archived: #6b7076;
+  --vk-status-archived: #848b92;
 
   /* Metrics */
   --vk-radius: 2px;
