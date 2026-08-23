@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { boot, system } from "@/lib/data/system";
 import { markBooted } from "@/lib/boot";
@@ -83,10 +84,23 @@ export function BootSequence() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="vk-mono text-[11px] tracking-[0.16em] text-[var(--vk-fg-dim)]"
+                  className="flex items-center gap-4"
                 >
-                  INITIALISING
-                  <span className="vk-caret">_</span>
+                  {/* The operator, shown only while the system claims to be
+                      starting itself. It is gone by the time the checks run. */}
+                  <Image
+                    src="/operator.jpg"
+                    alt=""
+                    aria-hidden
+                    width={192}
+                    height={192}
+                    priority
+                    className="h-[46px] w-[46px] shrink-0 rounded-full object-cover opacity-70"
+                  />
+                  <span className="vk-mono text-[11px] tracking-[0.16em] text-[var(--vk-fg-dim)]">
+                    INITIALISING
+                    <span className="vk-caret">_</span>
+                  </span>
                 </motion.div>
               )}
 
