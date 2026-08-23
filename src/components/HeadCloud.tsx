@@ -25,6 +25,10 @@ const DAMPING = 0.82;
 /* Idle, used on touch devices and before the pointer has ever moved. */
 const IDLE_SPEED = 0.16;
 const IDLE_YAW = 0.85;
+/* The scan is thinnest information straight on, where there is no silhouette
+   doing any work, so the idle sway is biased off-centre and the head is never
+   caught square to the viewer before the cursor arrives. */
+const IDLE_BIAS = 0.42;
 const IDLE_PITCH = 0.1;
 
 /* Projection. */
@@ -188,7 +192,7 @@ export function HeadCloud({ className }: { className?: string }) {
         targetYaw = nx * MAX_YAW;
         targetPitch = ny * MAX_PITCH;
       } else {
-        targetYaw = Math.sin(elapsed * IDLE_SPEED) * IDLE_YAW;
+        targetYaw = IDLE_BIAS + Math.sin(elapsed * IDLE_SPEED) * IDLE_YAW;
         targetPitch = Math.sin(elapsed * IDLE_SPEED * 0.63) * IDLE_PITCH;
       }
 
@@ -217,9 +221,12 @@ export function HeadCloud({ className }: { className?: string }) {
       const cosP = Math.cos(pitch);
       const sinP = Math.sin(pitch);
 
-      /* The band is wide and short, so height is what constrains the head.
-         Sizing off the shorter axis alone leaves it marooned in white space. */
-      const scale = Math.min(height * 0.62, width * 0.3);
+      /* Which axis constrains the head depends on the shape of its box. In a
+         wide, short band height is the limit and a generous width cap keeps
+         the head from swelling sideways; in the near-square slot at the centre
+         of the orbit that same cap would strand it in empty space. */
+      const room = width / height > 1.6 ? 0.3 : 0.46;
+      const scale = Math.min(height * 0.62, width * room);
       const originX = width / 2;
       const originY = height / 2 - scale * 0.12;
 
