@@ -6,6 +6,7 @@ import { system } from "@/lib/data/system";
 import { apps } from "@/lib/data/apps";
 import { GithubLink } from "@/components/GithubLink";
 import { ParticleHero } from "@/components/ParticleHero";
+import { HeadCloud } from "@/components/HeadCloud";
 import { TerminalHint } from "@/components/TerminalHint";
 
 const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
@@ -98,6 +99,11 @@ export default function Home() {
         <div className="mt-8">
           <ModuleNavigation />
         </div>
+      </section>
+
+      {/* ----------------------------------------------------------- HEAD  */}
+      <section className="mt-20 border-y border-[var(--vk-line)] py-10">
+        <HeadCloud />
       </section>
 
       {/* -------------------------------------------------------- MISSION  */}
