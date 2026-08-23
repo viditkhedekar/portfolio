@@ -416,3 +416,38 @@ html[data-boot="pending"] .vk-app {
   .vk-orbit-e { grid-area: e; }
   .vk-orbit-f { grid-area: f; }
 }
+
+/* ---------- Overlay entrance ---------- */
+
+/*
+ * Played on mount so the entrance needs no JavaScript timing. A state flag
+ * driving a transition has to paint one frame at opacity 0 first, which means
+ * waiting on requestAnimationFrame, and that never fires in a background tab.
+ */
+@keyframes vk-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vk-panel-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.vk-overlay-in {
+  animation: vk-overlay-in 180ms var(--vk-ease) both;
+}
+
+.vk-panel-in {
+  animation: vk-panel-in 200ms var(--vk-ease) both;
+}
