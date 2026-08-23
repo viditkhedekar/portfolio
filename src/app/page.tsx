@@ -5,7 +5,7 @@ import { CurrentMission } from "@/components/CurrentMission";
 import { system } from "@/lib/data/system";
 import { apps } from "@/lib/data/apps";
 import { GithubLink } from "@/components/GithubLink";
-import { HeroType } from "@/components/HeroType";
+import { ParticleHero } from "@/components/ParticleHero";
 import { TerminalHint } from "@/components/TerminalHint";
 
 const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
@@ -27,10 +27,7 @@ export default function Home() {
               </span>
             </div>
 
-            <HeroType
-              text="VKOS/01"
-              className="mt-7 text-[clamp(2.6rem,10.5vw,8.5rem)] leading-[1.05]"
-            />
+            <ParticleHero className="mt-6" />
 
             <p className="vk-mono mt-6 text-[11px] tracking-[0.22em] text-[var(--vk-fg-dim)]">
               {system.fullName}
