@@ -118,7 +118,7 @@ function surfacePoint(
 
   const r = 1 / Math.sqrt((dx / a) ** 2 + (dy / b) ** 2 + (dz / c) ** 2);
   let x = dx * r;
-  let y = dy * r;
+  const y = dy * r;
   let z = dz * r;
 
   const front = Math.max(0, dz);
