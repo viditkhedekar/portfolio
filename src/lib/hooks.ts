@@ -80,3 +80,19 @@ export function useMediaQuery(query: string): boolean {
     () => false,
   );
 }
+
+/** Never fires; the value it guards only ever changes at hydration. */
+const noSubscribe = () => () => {};
+
+/**
+ * False on the server and on the hydrating render, true afterwards.
+ *
+ * For work that needs a real DOM, such as portalling into document.body.
+ */
+export function useMounted(): boolean {
+  return React.useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false,
+  );
+}
