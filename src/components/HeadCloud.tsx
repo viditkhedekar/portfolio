@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useMediaQuery } from "@/lib/hooks";
-import { placeholderHead, type PointCloud } from "@/lib/headCloud";
+import { parseHeadCloud, placeholderHead, type PointCloud } from "@/lib/headCloud";
 
 /**
  * A head, drawn as a point cloud, that turns to face the cursor.
@@ -34,6 +34,15 @@ const FOCAL = 2.35;
 /** How fast the cloud brightens once the pointer is in the band. */
 const GLOW_RATE = 0.07;
 
+/* A fixed key light, up and to the left, slightly in front of the head. The
+   cloud is lit rather than flat-shaded: dots alone carry no sense of surface,
+   and it is the shading that turns a scatter of points into a face. */
+const LIGHT = (() => {
+  const [x, y, z] = [-0.42, 0.5, 0.76];
+  const len = Math.hypot(x, y, z);
+  return { x: x / len, y: y / len, z: z / len };
+})();
+
 /* Painter's ordering runs through fixed depth buckets rather than a real
    sort. At this point count the difference is invisible and the cost is not. */
 const BUCKETS = 48;
@@ -53,11 +62,15 @@ export function HeadCloud({ className }: { className?: string }) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const cloud: PointCloud = placeholderHead();
+    /* The sculpt renders immediately; the scan replaces it the moment it
+       lands. Swapping the reference is all it takes, since the pool is read
+       fresh every frame. */
+    let cloud: PointCloud = placeholderHead();
 
     let width = 0;
     let height = 0;
     let raf = 0;
+    let disposed = false;
     let visible = true;
     let last = performance.now();
     let elapsed = 0;
@@ -80,13 +93,40 @@ export function HeadCloud({ className }: { className?: string }) {
     const fg = parseHex(read("--vk-fg", "#e9eaec"));
     const accent = parseHex(read("--vk-accent", "#aee83c"));
 
-    /* Reused each frame so the render loop allocates nothing. */
-    const px = new Float32Array(cloud.count);
-    const py = new Float32Array(cloud.count);
-    const depth = new Float32Array(cloud.count);
+    /* Reused each frame so the render loop allocates nothing. Rebuilt only
+       when the cloud itself is swapped. */
     const bucketCount = new Int32Array(BUCKETS);
     const bucketStart = new Int32Array(BUCKETS);
-    const order = new Int32Array(cloud.count);
+    const cursorInto = new Int32Array(BUCKETS);
+    let px = new Float32Array(cloud.count);
+    let py = new Float32Array(cloud.count);
+    let depth = new Float32Array(cloud.count);
+    let facing = new Float32Array(cloud.count);
+    let lambert = new Float32Array(cloud.count);
+    let order = new Int32Array(cloud.count);
+
+    const swapCloud = (next: PointCloud) => {
+      cloud = next;
+      px = new Float32Array(next.count);
+      py = new Float32Array(next.count);
+      depth = new Float32Array(next.count);
+      facing = new Float32Array(next.count);
+      lambert = new Float32Array(next.count);
+      order = new Int32Array(next.count);
+    };
+
+    /* The scan is an optional upgrade, not a requirement: if it is missing or
+       malformed the sculpt simply stays on screen. */
+    const controller = new AbortController();
+    fetch("/head-cloud.bin", { signal: controller.signal })
+      .then((res) => (res.ok ? res.arrayBuffer() : Promise.reject(new Error(String(res.status)))))
+      .then((buffer) => {
+        if (disposed) return;
+        swapCloud(parseHeadCloud(buffer));
+      })
+      .catch(() => {
+        /* Keep the sculpt. */
+      });
 
     const measure = () => {
       const rect = host.getBoundingClientRect();
@@ -177,8 +217,9 @@ export function HeadCloud({ className }: { className?: string }) {
       const cosP = Math.cos(pitch);
       const sinP = Math.sin(pitch);
 
-      /* Fit the head to the shorter axis, with room for the neck. */
-      const scale = Math.min(width, height) * 0.34;
+      /* The band is wide and short, so height is what constrains the head.
+         Sizing off the shorter axis alone leaves it marooned in white space. */
+      const scale = Math.min(height * 0.62, width * 0.3);
       const originX = width / 2;
       const originY = height / 2 - scale * 0.12;
 
@@ -199,6 +240,18 @@ export function HeadCloud({ className }: { className?: string }) {
         py[i] = originY - y2 * perspective * scale;
         depth[i] = z2;
 
+        /* Normals ride the same rotation as the points they belong to. */
+        const nx = cloud.normals[i * 3];
+        const ny = cloud.normals[i * 3 + 1];
+        const nz = cloud.normals[i * 3 + 2];
+        const nx1 = nx * cosY + nz * sinY;
+        const nz1 = -nx * sinY + nz * cosY;
+        const ny2 = ny * cosP - nz1 * sinP;
+        const nz2 = ny * sinP + nz1 * cosP;
+
+        facing[i] = nz2;
+        lambert[i] = Math.max(0, nx1 * LIGHT.x + ny2 * LIGHT.y + nz2 * LIGHT.z);
+
         const b = clamp(Math.floor(((z2 + 1.6) / 3.2) * BUCKETS), 0, BUCKETS - 1);
         bucketCount[b] += 1;
       }
@@ -209,7 +262,7 @@ export function HeadCloud({ className }: { className?: string }) {
         bucketStart[b] = running;
         running += bucketCount[b];
       }
-      const cursorInto = bucketStart.slice();
+      cursorInto.set(bucketStart);
       for (let i = 0; i < cloud.count; i += 1) {
         const b = clamp(Math.floor((depth[i] + 1.6) / 3.2 * BUCKETS), 0, BUCKETS - 1);
         order[cursorInto[b]] = i;
@@ -219,19 +272,25 @@ export function HeadCloud({ className }: { className?: string }) {
       const lift = glow;
       for (let n = 0; n < cloud.count; n += 1) {
         const i = order[n];
-        const z2 = depth[i];
+        const towards = facing[i];
+
+        /* Back-facing points are behind the skull and would otherwise show
+           through the face. Culling them is what gives the head solidity. */
+        if (towards < 0.02) continue;
+
         const weight = cloud.data[i * 4 + 3];
 
-        /* Depth does the heavy lifting. Without normals this is what separates
-           the face from the back of the skull showing through it. */
-        const front = clamp((z2 + 1.05) / 2.1, 0, 1);
-        const alpha = clamp((0.05 + 0.75 * front ** 2.1) * weight * (0.55 + 0.45 * lift), 0, 1);
-        if (alpha < 0.012) continue;
+        /* Two terms: the key light picks out brow, nose and jaw, and a rim
+           term keeps the silhouette crisp where the surface turns away. */
+        const rim = 1 - towards;
+        const shade = 0.14 + 0.86 * lambert[i] ** 1.1;
+        const alpha = clamp((shade + 0.4 * rim ** 3) * (0.78 + 0.22 * weight) * (0.68 + 0.32 * lift), 0, 1);
+        if (alpha < 0.02) continue;
 
-        const radius = (0.55 + 1.05 * front) * (0.7 + 0.5 * weight);
+        const radius = 1.1 + 0.5 * towards;
 
         /* A trace of accent on the nearest dots once the pointer is close. */
-        const tint = lift * front ** 3 * 0.5;
+        const tint = lift * towards ** 3 * 0.5;
         const r = Math.round(fg[0] + (accent[0] - fg[0]) * tint);
         const g = Math.round(fg[1] + (accent[1] - fg[1]) * tint);
         const bl = Math.round(fg[2] + (accent[2] - fg[2]) * tint);
@@ -277,6 +336,8 @@ export function HeadCloud({ className }: { className?: string }) {
     raf = requestAnimationFrame(step);
 
     return () => {
+      disposed = true;
+      controller.abort();
       cancelAnimationFrame(raf);
       resize.disconnect();
       io.disconnect();
