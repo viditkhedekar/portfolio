@@ -1,12 +1,11 @@
 import { Container, Label } from "@/components/ui";
-import { ModuleNavigation } from "@/components/ModuleNavigation";
 import { SystemState, TelemetryPanel } from "@/components/TelemetryPanel";
 import { CurrentMission } from "@/components/CurrentMission";
 import { system } from "@/lib/data/system";
 import { apps } from "@/lib/data/apps";
 import { GithubLink } from "@/components/GithubLink";
 import { ParticleHero } from "@/components/ParticleHero";
-import { HeadCloud } from "@/components/HeadCloud";
+import { HeadOrbit } from "@/components/HeadOrbit";
 import { TerminalHint } from "@/components/TerminalHint";
 
 const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
@@ -14,8 +13,22 @@ const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
 export default function Home() {
   return (
     <Container className="pb-4">
+      {/* ----------------------------------------------------------- DESKTOP */}
+      <section className="pt-10 lg:pt-14" aria-labelledby="apps-heading">
+        <div className="flex items-center gap-4 border-b border-[var(--vk-line)] pb-3">
+          <h2 id="apps-heading" className="vk-label text-[var(--vk-fg-dim)]">
+            APPLICATIONS
+          </h2>
+          <div className="h-px flex-1 bg-[var(--vk-line)]" />
+          <span className="vk-label">{String(apps.length).padStart(2, "0")} INSTALLED</span>
+        </div>
+        <div className="mt-8">
+          <HeadOrbit />
+        </div>
+      </section>
+
       {/* ---------------------------------------------------- CONTROL ROOM */}
-      <section className="grid grid-cols-1 gap-px border-b border-[var(--vk-line)] lg:grid-cols-[minmax(0,1fr)_320px]">
+      <section className="mt-20 grid grid-cols-1 gap-px border-y border-[var(--vk-line)] lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="flex flex-col justify-between pb-10 pt-12 lg:pb-12 lg:pr-12 lg:pt-20">
           <div>
             <div className="flex items-center gap-3">
@@ -28,7 +41,7 @@ export default function Home() {
               </span>
             </div>
 
-            <ParticleHero className="mt-6" />
+            <ParticleHero className="mt-6" compact />
 
             <p className="vk-mono mt-6 text-[11px] tracking-[0.22em] text-[var(--vk-fg-dim)]">
               {system.fullName}
@@ -86,25 +99,6 @@ export default function Home() {
           ⌘K TO OPEN TERMINAL
         </span>
       </div>
-
-      {/* ---------------------------------------------------- MODULE INDEX */}
-      <section className="pt-16" aria-labelledby="apps-heading">
-        <div className="flex items-center gap-4 border-b border-[var(--vk-line)] pb-3">
-          <h2 id="apps-heading" className="vk-label text-[var(--vk-fg-dim)]">
-            APPLICATIONS
-          </h2>
-          <div className="h-px flex-1 bg-[var(--vk-line)]" />
-          <span className="vk-label">{String(apps.length).padStart(2, "0")} INSTALLED</span>
-        </div>
-        <div className="mt-8">
-          <ModuleNavigation />
-        </div>
-      </section>
-
-      {/* ----------------------------------------------------------- HEAD  */}
-      <section className="mt-20 border-y border-[var(--vk-line)] py-10">
-        <HeadCloud />
-      </section>
 
       {/* -------------------------------------------------------- MISSION  */}
       <div className="pt-20">
