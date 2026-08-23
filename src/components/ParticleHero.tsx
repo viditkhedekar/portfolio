@@ -27,9 +27,11 @@ const DAMPING = 0.86;
 const DRIFT_MIN = 1.1;
 const DRIFT_MAX = 2.8;
 
-/* Pointer */
-const REPEL_RADIUS = 96;
-const REPEL_FORCE = 26;
+/* Pointer. The force is a bounded per-frame acceleration: dividing by distance
+   instead would spike as particles approach the cursor and blow the cloud
+   apart. Against SPRING, this settles into a dent of roughly 15px. */
+const REPEL_RADIUS = 90;
+const REPEL_PUSH = 0.85;
 
 interface Particle {
   x: number;
@@ -138,11 +140,12 @@ export function ParticleHero({ className }: { className?: string }) {
       });
     };
 
-    const build = () => {
+    /** Size the backing store to the box. Returns false if there is no box yet. */
+    const measure = () => {
       const rect = host.getBoundingClientRect();
+      if (rect.width < 2 || rect.height < 2) return false;
       width = rect.width;
       height = rect.height;
-      if (width < 2 || height < 2) return;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.floor(width * dpr);
@@ -150,24 +153,32 @@ export function ParticleHero({ className }: { className?: string }) {
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return true;
+    };
 
-      if (particles.length === 0) {
-        particles = Array.from({ length: POOL }, () => ({
-          x: Math.random() * width,
-          y: Math.random() * height,
-          vx: 0,
-          vy: 0,
-          tx: width / 2,
-          ty: height / 2,
-          phase: Math.random() * Math.PI * 2,
-          driftSpeed: 0.35 + Math.random() * 0.55,
-          driftAmp: DRIFT_MIN + Math.random() * (DRIFT_MAX - DRIFT_MIN),
-          /* Varied alpha gives the cloud depth without varying hue. */
-          alpha: 0.25 + Math.random() * 0.75,
-          size: 1 + Math.random() * 0.9,
-        }));
-      }
+    /* The pool is created once and reused across forms and resizes, so the
+       cloud is never reset to a random scatter mid-life. */
+    const ensurePool = () => {
+      if (particles.length > 0) return;
+      particles = Array.from({ length: POOL }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: 0,
+        vy: 0,
+        tx: width / 2,
+        ty: height / 2,
+        phase: Math.random() * Math.PI * 2,
+        driftSpeed: 0.35 + Math.random() * 0.55,
+        driftAmp: DRIFT_MIN + Math.random() * (DRIFT_MAX - DRIFT_MIN),
+        /* Varied alpha gives the cloud depth without varying hue. */
+        alpha: 0.25 + Math.random() * 0.75,
+        size: 1 + Math.random() * 0.9,
+      }));
+    };
 
+    const build = () => {
+      if (!measure()) return;
+      ensurePool();
       assign(SEQUENCE[formIndex].text);
     };
 
@@ -190,9 +201,9 @@ export function ParticleHero({ className }: { className?: string }) {
           const dy = p.y - pointer.y;
           const dist = Math.hypot(dx, dy);
           if (dist < REPEL_RADIUS && dist > 0.01) {
-            const push = (1 - dist / REPEL_RADIUS) * (REPEL_FORCE / dist);
-            p.vx += dx * push;
-            p.vy += dy * push;
+            const push = (1 - dist / REPEL_RADIUS) * REPEL_PUSH;
+            p.vx += (dx / dist) * push;
+            p.vy += (dy / dist) * push;
           }
         }
 
@@ -207,6 +218,10 @@ export function ParticleHero({ className }: { className?: string }) {
 
     const frame = (t: number) => {
       if (disposed) return;
+      /* Self-heal: the host can still be unmeasurable at mount (layout not
+         settled, or the element briefly zero-width). Retry each frame until it
+         has a real box rather than relying on one measurement landing. */
+      if (particles.length === 0) build();
       if (holdUntil === 0) holdUntil = t + SEQUENCE[formIndex].hold;
       if (t >= holdUntil) {
         formIndex = (formIndex + 1) % SEQUENCE.length;
@@ -231,39 +246,45 @@ export function ParticleHero({ className }: { className?: string }) {
       pointer.active = false;
     };
 
-    /** Glyph metrics differ before the webfont lands, so sample after it does. */
-    const start = () => {
-      if (disposed) return;
-      build();
-
-      if (reduced) {
-        /* Settle straight onto the mark and paint one static frame. */
-        for (const p of particles) {
-          p.x = p.tx;
-          p.y = p.ty;
-        }
-        draw(0);
-        return;
+    const settle = () => {
+      for (const p of particles) {
+        p.x = p.tx;
+        p.y = p.ty;
       }
+      draw(0);
+    };
 
+    /* Started synchronously. Gating this behind a promise would leave the loop
+       stopped whenever an effect instance is torn down before it resolves. */
+    build();
+
+    if (reduced) {
+      settle();
+    } else {
+      /* rAF does not fire in a hidden tab, so paint once up front rather than
+         leaving the hero blank until the tab is focused. */
+      draw(0);
       window.addEventListener("pointermove", onPointerMove, { passive: true });
       document.addEventListener("pointerleave", onPointerLeave);
       raf = requestAnimationFrame(frame);
-    };
+    }
 
-    void document.fonts.ready.then(start);
+    /* Glyph metrics change once the webfont lands, so re-sample then. */
+    void document.fonts.ready.then(() => {
+      if (disposed) return;
+      build();
+      if (reduced) settle();
+      else draw(0);
+    });
 
     const onResize = () => {
       if (disposed) return;
-      particles = [];
+      const rect = host.getBoundingClientRect();
+      /* ResizeObserver fires on observe(); ignore that and any no-op. */
+      if (Math.abs(rect.width - width) < 1 && Math.abs(rect.height - height) < 1) return;
       build();
-      if (reduced) {
-        for (const p of particles) {
-          p.x = p.tx;
-          p.y = p.ty;
-        }
-        draw(0);
-      }
+      if (reduced) settle();
+      else draw(0);
     };
     const observer = new ResizeObserver(onResize);
     observer.observe(host);
