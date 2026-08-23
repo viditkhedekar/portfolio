@@ -1,25 +1,32 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { liveProjects, projectStats, projects, slugOf } from "@/lib/data/projects";
+import { projectStats, projects, slugOf } from "@/lib/data/projects";
 import { formatDot, modules, system, uptimeYears } from "@/lib/data/system";
 import { githubUrl } from "@/lib/data/identity";
 import { apps } from "@/lib/data/apps";
 import { getWindows } from "@/lib/apps-session";
+import { ROOT, fileAt, list, pwdOf, resolve, treeLines } from "@/lib/data/fs";
+import { channels } from "@/lib/data/identity";
 
 type LineKind = "input" | "out" | "dim" | "accent" | "error" | "gems";
 
 /** The collapsed list under `help`. Half real system commands, half jokes. */
 const GEMS: Array<{ cmd: string; note: string }> = [
-  { cmd: "whoami", note: "operator record" },
-  { cmd: "system", note: "kernel and build info" },
+  { cmd: "whoami", note: "print the operator record" },
+  { cmd: "uname -a", note: "kernel and build info" },
   { cmd: "ps", note: "running processes" },
+  { cmd: "top", note: "processes by load" },
+  { cmd: "df", note: "disk usage" },
+  { cmd: "env", note: "environment variables" },
   { cmd: "dmesg", note: "kernel log" },
   { cmd: "uptime", note: "years since first boot" },
   { cmd: "date", note: "current system time" },
   { cmd: "echo <text>", note: "repeat something back" },
+  { cmd: "kill <pid>", note: "end a process" },
+  { cmd: "github", note: "open the github profile" },
   { cmd: "sudo access_future", note: "try it" },
   { cmd: "coffee", note: "brew one" },
   { cmd: "matrix", note: "look busy" },
@@ -31,33 +38,91 @@ interface Line {
   text: string;
 }
 
-const PROMPT = "visitor@vkos:~$";
+/** The prompt reflects the current route, so it doubles as a location readout. */
+function promptFor(pathname: string): string {
+  return `visitor@vkos:${pwdOf(pathname)}$`;
+}
+
+/** Soft-wrap dossier prose to the transcript width. */
+function wrap(text: string, width = 58): string[] {
+  const out: string[] = [];
+  let line = "";
+  for (const word of text.split(/\s+/)) {
+    if (line && line.length + word.length + 1 > width) {
+      out.push(line);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  }
+  if (line) out.push(line);
+  return out;
+}
 
 const HELP: Line[] = [
   { kind: "dim", text: "AVAILABLE COMMANDS" },
   { kind: "out", text: "" },
-  { kind: "out", text: "  help              this list" },
-  { kind: "out", text: "  projects          load the project index" },
-  { kind: "out", text: "  open <id>         open a project file, e.g. open px-001" },
-  { kind: "out", text: "  school            academic system" },
-  { kind: "out", text: "  certifications    credential database" },
-  { kind: "out", text: "  about             identity file" },
-  { kind: "out", text: "  contact           communications system" },
-  { kind: "out", text: "  archive           archived builds" },
-  { kind: "out", text: "  github            open the github profile" },
+  { kind: "out", text: "  ls [path]         list a directory" },
+  { kind: "out", text: "  cd <path>         change directory" },
+  { kind: "out", text: "  pwd               print working directory" },
+  { kind: "out", text: "  tree              print the whole filesystem" },
+  { kind: "out", text: "  cat <file>        print a project dossier" },
+  { kind: "out", text: "  stat <file>       file metadata" },
+  { kind: "out", text: "  open <file>       open a project file" },
+  { kind: "out", text: "  find <term>       search files by name, tech or status" },
+  { kind: "out", text: "  man <command>     manual page for a command" },
+  { kind: "out", text: "  history           previous commands" },
   { kind: "out", text: "  status            system telemetry" },
+  { kind: "out", text: "  help              this list" },
   { kind: "out", text: "  clear             clear the buffer" },
   { kind: "out", text: "  exit              close the terminal" },
   { kind: "out", text: "" },
+  { kind: "dim", text: "Paths work like a shell: cd projects, cd .., cd ~, ls archive" },
+  { kind: "out", text: "" },
   { kind: "gems", text: "" },
 ];
+
+/** Manual pages for `man`. */
+const MAN: Record<string, string[]> = {
+  ls: ["ls [path]", "", "List the contents of a directory.", "With no path, lists the current one."],
+  cd: [
+    "cd <path>",
+    "",
+    "Change directory. This navigates the interface, so the",
+    "route and the prompt never disagree.",
+    "",
+    "  cd projects      a directory",
+    "  cd projects/px-001   a file",
+    "  cd ..            up one level",
+    "  cd ~             back to the desktop",
+  ],
+  pwd: ["pwd", "", "Print the working directory, read from the current route."],
+  tree: ["tree", "", "Print the whole filesystem as a tree."],
+  cat: ["cat <file>", "", "Print a project's dossier as plain text.", "", "  cat px-001"],
+  stat: ["stat <file>", "", "Print a project file's metadata: status, year, stack, links."],
+  open: ["open <file>", "", "Open a project file in the interface.", "Also accepts 'open github'."],
+  find: [
+    "find <term>",
+    "",
+    "Search project files by id, name, category, status or",
+    "technology. Case-insensitive.",
+    "",
+    "  find python",
+  ],
+  man: ["man <command>", "", "Print the manual page for a command."],
+  history: ["history", "", "List the commands entered this session."],
+  status: ["status", "", "Print system telemetry: files, modules, uptime."],
+  help: ["help", "", "List the available commands."],
+  clear: ["clear", "", "Clear the buffer. Ctrl+L does the same."],
+  exit: ["exit", "", "Close the terminal. Escape does the same."],
+};
 
 const BANNER: Line[] = [
   { kind: "accent", text: "VKOS/01 TERMINAL" },
   { kind: "dim", text: `${system.fullName}` },
   { kind: "out", text: "" },
-  { kind: "dim", text: "Type 'help' for available commands." },
-  { kind: "dim", text: "Or click anywhere outside to browse normally." },
+  { kind: "dim", text: "Type 'help' for available commands, or 'ls' to look around." },
+  { kind: "dim", text: "Click anywhere outside to browse normally." },
   { kind: "out", text: "" },
 ];
 
@@ -95,6 +160,7 @@ function GemsBlock() {
 
 export function Terminal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [lines, setLines] = React.useState<Line[]>(BANNER);
   const [value, setValue] = React.useState("");
   const [history, setHistory] = React.useState<string[]>([]);
@@ -132,14 +198,23 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
   const run = React.useCallback(
     (raw: string) => {
       const input = raw.trim();
-      push([{ kind: "input", text: `${PROMPT} ${input}` }]);
+      push([{ kind: "input", text: `${promptFor(pathname)} ${input}` }]);
       if (!input) return;
 
       setHistory((h) => [input, ...h]);
       setCursor(-1);
 
-      const [cmd, ...args] = input.toLowerCase().split(/\s+/);
+      const [cmdRaw, ...args] = input.split(/\s+/);
+      const cmd = cmdRaw.toLowerCase();
       const arg = args.join(" ");
+      const here = pwdOf(pathname);
+
+      /** A path argument that does not resolve. */
+      const noSuchPath = (what: string) =>
+        push([
+          { kind: "error", text: `${cmd}: ${what}: No such file or directory` },
+          { kind: "out", text: "" },
+        ]);
 
       switch (cmd) {
         case "help":
@@ -157,31 +232,195 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
           onClose();
           return;
 
-        case "projects":
-        case "ls": {
+        case "pwd":
+          push([{ kind: "out", text: here }, { kind: "out", text: "" }]);
+          return;
+
+        case "ls":
+        case "dir": {
+          const target = resolve(pathname, arg);
+          if (!target) {
+            noSuchPath(arg);
+            return;
+          }
+          const entries = list(target.path);
+          if (!entries) {
+            noSuchPath(arg);
+            return;
+          }
           push([
-            { kind: "accent", text: "PROJECT INDEX LOADED" },
-            { kind: "out", text: "" },
-            ...liveProjects.map<Line>((p) => ({
+            ...entries.map<Line>((n) => ({
               kind: "out",
-              text: `  ${p.id}   ${p.name.padEnd(24)} ${p.status}`,
+              text: `  ${(n.name + (n.kind === "dir" ? "/" : "")).padEnd(20)}${n.note}`,
             })),
             { kind: "out", text: "" },
-            { kind: "dim", text: `${projectStats.indexed} FILES / ${projectStats.archived} ARCHIVED` },
+            { kind: "dim", text: `${entries.length} ENTRIES IN ${target.path}` },
             { kind: "out", text: "" },
           ]);
-          go("/projects", "PROJECT INDEX");
           return;
         }
 
-        case "open": {
-          const found = projects.find(
-            (p) => p.id.toLowerCase() === arg || slugOf(p) === arg,
+        case "cd": {
+          const target = resolve(pathname, arg);
+          if (!target) {
+            push([
+              { kind: "error", text: `cd: ${arg}: No such file or directory` },
+              { kind: "dim", text: "Try 'ls' to see what is here." },
+              { kind: "out", text: "" },
+            ]);
+            return;
+          }
+          go(target.href, target.path);
+          return;
+        }
+
+        case "tree":
+          push([
+            ...treeLines().map<Line>((t) => ({ kind: "out", text: t })),
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "cat": {
+          if (!arg) {
+            push([
+              { kind: "error", text: "cat: missing operand" },
+              { kind: "out", text: "" },
+            ]);
+            return;
+          }
+          const found = fileAt(pathname, arg);
+          if (!found) {
+            noSuchPath(arg);
+            return;
+          }
+          const sections: Array<[string, string | undefined]> = [
+            ["OBJECTIVE", found.objective],
+            ["SYSTEM", found.system],
+            ["IMPLEMENTATION", found.implementation],
+            ["RESULT", found.result],
+            ["PROBLEMS", found.problems],
+            ["CURRENT STATE", found.currentState],
+            ["NEXT ITERATION", found.nextIteration],
+          ];
+          const body: Line[] = [];
+          sections.forEach(([title, text], i) => {
+            if (!text) return;
+            body.push({ kind: "accent", text: `${String(i + 1).padStart(2, "0")} ${title}` });
+            wrap(text).forEach((w) => body.push({ kind: "out", text: `   ${w}` }));
+            body.push({ kind: "out", text: "" });
+          });
+          push([
+            { kind: "accent", text: `${found.id}  ${found.name}` },
+            { kind: "dim", text: found.summary },
+            { kind: "out", text: "" },
+            ...body,
+          ]);
+          return;
+        }
+
+        case "stat": {
+          const found = fileAt(pathname, arg);
+          if (!found) {
+            noSuchPath(arg);
+            return;
+          }
+          push([
+            { kind: "accent", text: `File: ${slugOf(found)}` },
+            { kind: "out", text: "" },
+            { kind: "out", text: `  ID           ${found.id}` },
+            { kind: "out", text: `  NAME         ${found.name}` },
+            { kind: "out", text: `  CATEGORY     ${found.category}` },
+            { kind: "out", text: `  STATUS       ${found.status}` },
+            { kind: "out", text: `  YEAR         ${found.year}` },
+            { kind: "out", text: `  STACK        ${found.technologies.join(", ")}` },
+            ...(found.links ?? []).map<Line>((l) => ({
+              kind: "out",
+              text: `  LINK         ${l.href || l.label}`,
+            })),
+            { kind: "out", text: "" },
+          ]);
+          return;
+        }
+
+        case "find":
+        case "grep": {
+          const term = arg.toLowerCase();
+          if (!term) {
+            push([
+              { kind: "error", text: `${cmd}: missing search term` },
+              { kind: "out", text: "" },
+            ]);
+            return;
+          }
+          const hits = projects.filter((p) =>
+            [p.id, p.name, p.category, p.status, ...p.technologies]
+              .join(" ")
+              .toLowerCase()
+              .includes(term),
           );
+          if (hits.length === 0) {
+            push([
+              { kind: "dim", text: `No files match "${arg}".` },
+              { kind: "out", text: "" },
+            ]);
+            return;
+          }
+          push([
+            ...hits.map<Line>((p) => ({
+              kind: "out",
+              text:
+                `  ${(p.archived ? "archive/" : "projects/") + slugOf(p)}`.padEnd(28) + p.name,
+            })),
+            { kind: "out", text: "" },
+            { kind: "dim", text: `${hits.length} MATCH${hits.length === 1 ? "" : "ES"}` },
+            { kind: "out", text: "" },
+          ]);
+          return;
+        }
+
+        case "man": {
+          const page = MAN[arg.toLowerCase()];
+          if (!page) {
+            push([
+              { kind: "error", text: `No manual entry for ${arg || "(nothing)"}` },
+              { kind: "out", text: "" },
+            ]);
+            return;
+          }
+          push([
+            { kind: "accent", text: page[0] },
+            ...page.slice(1).map<Line>((l) => ({ kind: "out", text: l })),
+            { kind: "out", text: "" },
+          ]);
+          return;
+        }
+
+        case "history":
+          push([
+            ...[...history].reverse().map<Line>((h, i) => ({
+              kind: "out",
+              text: `  ${String(i + 1).padStart(3, " ")}  ${h}`,
+            })),
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "open": {
+          if (arg === "github") {
+            push([
+              { kind: "dim", text: "OPENING EXTERNAL CHANNEL..." },
+              { kind: "accent", text: githubUrl },
+              { kind: "out", text: "" },
+            ]);
+            window.open(githubUrl, "_blank", "noopener,noreferrer");
+            return;
+          }
+          const found = fileAt(pathname, arg);
           if (!found) {
             push([
-              { kind: "error", text: `FILE NOT FOUND: ${arg || "(no id given)"}` },
-              { kind: "dim", text: "Try 'projects' for the index." },
+              { kind: "error", text: `open: ${arg || "(no file given)"}: No such file` },
+              { kind: "dim", text: "Try 'ls projects' for the index." },
               { kind: "out", text: "" },
             ]);
             return;
@@ -198,22 +437,6 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
           return;
         }
 
-        case "school":
-          go("/school", "ACADEMIC SYSTEM");
-          return;
-        case "certifications":
-        case "certs":
-          go("/certifications", "CREDENTIAL DATABASE");
-          return;
-        case "about":
-          go("/about", "IDENTITY FILE");
-          return;
-        case "contact":
-          go("/contact", "COMMUNICATIONS SYSTEM");
-          return;
-        case "archive":
-          go("/archive", "ARCHIVE");
-          return;
         case "github":
           push([
             { kind: "dim", text: "OPENING EXTERNAL CHANNEL..." },
@@ -221,10 +444,6 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
             { kind: "out", text: "" },
           ]);
           window.open(githubUrl, "_blank", "noopener,noreferrer");
-          return;
-        case "home":
-        case "cd":
-          go("/", "SYSTEM ROOT");
           return;
 
         case "status":
@@ -248,26 +467,129 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
           push([
             { kind: "accent", text: system.operator },
             { kind: "out", text: "" },
-            { kind: "out", text: "  STUDENT" },
-            { kind: "out", text: "  BUILDER" },
-            { kind: "out", text: "  RESEARCHER" },
+            { kind: "out", text: `  ROLE           ${system.role}` },
+            { kind: "out", text: `  AGE            ${system.age}` },
+            { kind: "out", text: `  LOCATION       ${system.location}` },
+            { kind: "out", text: `  DISCIPLINES    ${system.disciplines.join(" / ")}` },
             { kind: "out", text: "" },
           ]);
           return;
 
-        case "system":
+        case "uname":
           push([
-            { kind: "accent", text: system.code },
-            { kind: "dim", text: system.fullName },
-            { kind: "out", text: "" },
-            { kind: "out", text: "  KERNEL         VKOS 1.0.0" },
-            { kind: "out", text: "  OPERATOR       " + system.operator },
-            { kind: "out", text: `  AGE            ${system.age}` },
-            { kind: "out", text: "  DISCIPLINES    " + system.disciplines.join(" / ") },
-            { kind: "out", text: `  MODULES        ${modules.length}` },
-            { kind: "out", text: `  BUILD          ${formatDot(system.lastUpdate)}` },
+            {
+              kind: "out",
+              text:
+                arg === "-a"
+                  ? `VKOS 1.0.0 vkos-shell ${formatDot(system.lastUpdate)} x86_64 ${system.operator}`
+                  : "VKOS",
+            },
             { kind: "out", text: "" },
           ]);
+          return;
+
+        case "env":
+          push([
+            { kind: "out", text: `OPERATOR=${system.operator}` },
+            { kind: "out", text: "SHELL=/bin/vksh" },
+            { kind: "out", text: "USER=visitor" },
+            { kind: "out", text: "HOME=~" },
+            { kind: "out", text: `PWD=${here}` },
+            { kind: "out", text: `EMAIL=${channels.find((c) => c.id === "email")?.handle ?? ""}` },
+            { kind: "out", text: "TERM=vkos-256color" },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "df":
+          push([
+            { kind: "out", text: "FILESYSTEM      SIZE  USED  AVAIL  USE%  MOUNTED ON" },
+            {
+              kind: "out",
+              text: `/dev/vkos1      ${String(projects.length).padStart(3, " ")}f  ${String(
+                projectStats.indexed,
+              ).padStart(3, " ")}f   ${String(projectStats.archived).padStart(3, " ")}f   ${String(
+                Math.round((projectStats.indexed / projects.length) * 100),
+              ).padStart(3, " ")}%  ~/projects`,
+            },
+            { kind: "out", text: "ambition          ∞     ∞      0  100%  /" },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "ps": {
+          const windows = getWindows();
+          const running = windows.open
+            .map((id) => apps.find((a) => a.id === id))
+            .filter((a): a is (typeof apps)[number] => Boolean(a));
+          push([
+            { kind: "accent", text: "PID   PROCESS" },
+            { kind: "out", text: "" },
+            { kind: "out", text: "  1   vkos-shell" },
+            { kind: "out", text: "  2   terminal" },
+            ...running.map<Line>((a, i) => ({
+              kind: "out",
+              text: `${String(i + 3).padStart(3, " ")}   ${a.file.toLowerCase()}${
+                windows.minimised.includes(a.id) ? "  (minimised)" : ""
+              }`,
+            })),
+            { kind: "out", text: "" },
+            { kind: "dim", text: `${running.length + 2} PROCESSES` },
+            { kind: "out", text: "" },
+          ]);
+          return;
+        }
+
+        case "top":
+          push([
+            { kind: "accent", text: "PID   PROCESS        CPU%   STATE" },
+            { kind: "out", text: "" },
+            { kind: "out", text: "  1   vkos-shell      0.4   sleeping" },
+            { kind: "out", text: "  2   terminal        1.1   running" },
+            { kind: "out", text: "  3   curiosity      98.2   running" },
+            { kind: "out", text: "  4   sleep           0.0   blocked" },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "kill":
+          push([
+            {
+              kind: "error",
+              text: arg ? `kill: (${arg}) - Operation not permitted` : "kill: usage: kill <pid>",
+            },
+            { kind: "dim", text: "Everything in here is load-bearing." },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "dmesg":
+          push([
+            { kind: "dim", text: "[    0.000000] vkos: kernel 1.0.0 booting" },
+            { kind: "dim", text: "[    0.120000] core: online" },
+            { kind: "dim", text: "[    0.270000] database: mounted read-only" },
+            { kind: "dim", text: `[    0.460000] index: ${projectStats.indexed} files registered` },
+            { kind: "dim", text: `[    0.590000] modules: ${modules.length} loaded` },
+            { kind: "dim", text: "[    0.760000] network: link up" },
+            { kind: "dim", text: "[    0.930000] operator: authenticated" },
+            { kind: "dim", text: "[    1.000000] vkos: all systems operational" },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "uptime":
+          push([
+            { kind: "out", text: `${uptimeYears()} YEARS, 0 REBOOTS.` },
+            { kind: "out", text: "" },
+          ]);
+          return;
+
+        case "date":
+          push([{ kind: "out", text: new Date().toUTCString() }, { kind: "out", text: "" }]);
+          return;
+
+        case "echo":
+          push([{ kind: "out", text: args.join(" ") }, { kind: "out", text: "" }]);
           return;
 
         case "sudo": {
@@ -297,58 +619,6 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
           ]);
           return;
         }
-
-        case "uptime":
-          push([
-            { kind: "out", text: `${uptimeYears()} YEARS, 0 REBOOTS.` },
-            { kind: "out", text: "" },
-          ]);
-          return;
-
-        case "date":
-          push([{ kind: "out", text: new Date().toUTCString() }, { kind: "out", text: "" }]);
-          return;
-
-        case "echo":
-          push([{ kind: "out", text: args.join(" ") }, { kind: "out", text: "" }]);
-          return;
-
-        case "ps": {
-          const windows = getWindows();
-          const running = windows.open
-            .map((id) => apps.find((a) => a.id === id))
-            .filter((a): a is (typeof apps)[number] => Boolean(a));
-          push([
-            { kind: "accent", text: "PID   PROCESS" },
-            { kind: "out", text: "" },
-            { kind: "out", text: "  1   vkos-shell" },
-            { kind: "out", text: "  2   terminal" },
-            ...running.map<Line>((a, i) => ({
-              kind: "out",
-              text: `${String(i + 3).padStart(3, " ")}   ${a.file.toLowerCase()}${
-                windows.minimised.includes(a.id) ? "  (minimised)" : ""
-              }`,
-            })),
-            { kind: "out", text: "" },
-            { kind: "dim", text: `${running.length + 2} PROCESSES` },
-            { kind: "out", text: "" },
-          ]);
-          return;
-        }
-
-        case "dmesg":
-          push([
-            { kind: "dim", text: "[    0.000000] vkos: kernel 1.0.0 booting" },
-            { kind: "dim", text: "[    0.120000] core: online" },
-            { kind: "dim", text: "[    0.270000] database: mounted read-only" },
-            { kind: "dim", text: `[    0.460000] index: ${projectStats.indexed} files registered` },
-            { kind: "dim", text: `[    0.590000] modules: ${modules.length} loaded` },
-            { kind: "dim", text: "[    0.760000] network: link up" },
-            { kind: "dim", text: "[    0.930000] operator: authenticated" },
-            { kind: "dim", text: "[    1.000000] vkos: all systems operational" },
-            { kind: "out", text: "" },
-          ]);
-          return;
 
         case "coffee":
           push([
@@ -394,15 +664,21 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
           ]);
           return;
 
-        default:
+        default: {
+          /* The old bare-word shortcuts are gone; point them at the shell. */
+          const asPath = ROOT.find((n) => n.name === cmd);
           push([
             { kind: "error", text: `COMMAND NOT RECOGNISED: ${cmd}` },
-            { kind: "dim", text: "Type 'help' for available commands." },
+            {
+              kind: "dim",
+              text: asPath ? `Did you mean 'cd ${cmd}'?` : "Type 'help' for available commands.",
+            },
             { kind: "out", text: "" },
           ]);
+        }
       }
     },
-    [go, onClose, push, router],
+    [go, history, onClose, pathname, push, router],
   );
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -501,7 +777,7 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
 
               <div className="flex items-center gap-2">
                 <span className="vk-mono shrink-0 text-[12px] text-[var(--vk-accent)]">
-                  {PROMPT}
+                  {promptFor(pathname)}
                 </span>
                 <input
                   ref={inputRef}
