@@ -101,7 +101,14 @@ function shuffle<T>(items: T[]): T[] {
   return out;
 }
 
-export function ParticleHero({ className }: { className?: string }) {
+export function ParticleHero({
+  className,
+  compact,
+}: {
+  className?: string;
+  /** Half height, for when the mark is no longer the main event. */
+  compact?: boolean;
+}) {
   const hostRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
@@ -305,7 +312,11 @@ export function ParticleHero({ className }: { className?: string }) {
       <div
         ref={hostRef}
         aria-hidden
-        className="h-[clamp(170px,24vw,320px)] w-full"
+        className={
+          compact
+            ? "h-[clamp(84px,11vw,140px)] w-full"
+            : "h-[clamp(170px,24vw,320px)] w-full"
+        }
       >
         <canvas ref={canvasRef} className="block" />
       </div>
