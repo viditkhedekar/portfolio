@@ -32,6 +32,12 @@ export function ProjectDetail({ project }: { project: Project }) {
   const prev = idx > 0 ? pool[idx - 1] : null;
   const next = idx >= 0 && idx < pool.length - 1 ? pool[idx + 1] : null;
 
+  /* The first live link is promoted to the title block; the metadata LINKS row
+     then only earns its place when there is more than one. */
+  const links = project.links ?? [];
+  const primary = links.find((l) => l.href);
+  const secondary = links.filter((l) => l !== primary);
+
   return (
     <Container>
       {/* Breadcrumb */}
@@ -65,6 +71,24 @@ export function ProjectDetail({ project }: { project: Project }) {
           <h1 className="vk-display mt-6 text-[clamp(2.2rem,6vw,4.5rem)]">
             <Slot className="text-[var(--vk-fg)]">{project.name}</Slot>
           </h1>
+
+          {primary && (
+            <a
+              href={primary.href}
+              target="_blank"
+              rel="noreferrer noopener"
+              data-cursor="OPEN"
+              data-cursor-sub={primary.label}
+              className="vk-display group mt-3 inline-flex items-center gap-3 text-[clamp(2.2rem,6vw,4.5rem)] text-[var(--vk-accent)] transition-opacity hover:opacity-80"
+            >
+              Visit site
+              <ArrowUpRight
+                size={46}
+                strokeWidth={1}
+                className="transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-1 group-hover:translate-x-1"
+              />
+            </a>
+          )}
           {project.tagline && (
             <p className="mt-6 max-w-[26ch] text-[clamp(1.15rem,2.4vw,1.6rem)] leading-[1.35] tracking-tight">
               <Slot className="text-[var(--vk-fg)]">{project.tagline}</Slot>
@@ -96,11 +120,11 @@ export function ProjectDetail({ project }: { project: Project }) {
               </span>
             }
           />
-          {project.links && project.links.length > 0 && (
+          {secondary.length > 0 && (
             <div className="pt-4">
               <Label>LINKS</Label>
               <ul className="mt-3 space-y-2">
-                {project.links.map((l, i) => (
+                {secondary.map((l, i) => (
                   <li key={`${l.label}-${i}`}>
                     {l.href ? (
                       <a
