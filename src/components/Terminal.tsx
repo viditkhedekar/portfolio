@@ -261,7 +261,8 @@ export function Terminal({ open, onClose }: { open: boolean; onClose: () => void
         }
 
         case "cd": {
-          const target = resolve(pathname, arg);
+          /* `cd` with no argument goes home, as it does in a real shell. */
+          const target = resolve(pathname, arg || "~");
           if (!target) {
             push([
               { kind: "error", text: `cd: ${arg}: No such file or directory` },
