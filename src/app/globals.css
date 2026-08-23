@@ -336,3 +336,50 @@ html[data-boot="pending"] .vk-app {
 .vk-skip:focus {
   transform: translateY(0);
 }
+
+/* ---------------------------------------------------------------- ORBIT  */
+
+/*
+ * The landing hero: the head in the middle with six application boxes set
+ * around it, two down each side and two beneath.
+ *
+ * Below `lg` there is nothing to orbit, so the areas are dropped and the boxes
+ * fall into a plain grid under the head. The head is first in the DOM so it
+ * leads on small screens without needing to be reordered.
+ */
+.vk-orbit {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .vk-orbit {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vk-orbit-head {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vk-orbit {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(0, 1fr);
+    grid-template-areas:
+      "a head head c"
+      "b head head d"
+      ". e    f    .";
+    gap: 16px 28px;
+    align-items: center;
+  }
+
+  .vk-orbit-head {
+    grid-area: head;
+  }
+  .vk-orbit-a { grid-area: a; }
+  .vk-orbit-b { grid-area: b; }
+  .vk-orbit-c { grid-area: c; }
+  .vk-orbit-d { grid-area: d; }
+  .vk-orbit-e { grid-area: e; }
+  .vk-orbit-f { grid-area: f; }
+}
