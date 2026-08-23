@@ -49,10 +49,10 @@ interface Particle {
   size: number;
 }
 
-/** The font family Next resolved for the mono face, usable in ctx.font. */
+/** The font family Next resolved for the bitmap face, usable in ctx.font. */
 function monoFamily(): string {
   const value = getComputedStyle(document.documentElement)
-    .getPropertyValue("--font-mono-jb")
+    .getPropertyValue("--font-pixel")
     .trim();
   return value ? `${value}, ui-monospace, monospace` : "ui-monospace, monospace";
 }
