@@ -1,7 +1,7 @@
 /**
  * VKOS/01 — system configuration.
  *
- * This is the single file to edit for identity, mission and boot copy.
+ * This is the single file to edit for identity and boot copy.
  * Anything in [ SQUARE BRACKETS ] is an unfilled placeholder.
  */
 
@@ -69,17 +69,6 @@ export const modules = [
     status: "OPEN",
   },
 ] as const;
-
-/** The persistent mission panel. Edit here; it renders everywhere. */
-export const mission = {
-  title: "[ CURRENT PROJECT NAME ]",
-  status: "R&D",
-  objective: "[ WHAT THIS PROJECT IS TRYING TO DO, IN ONE SENTENCE. ]",
-  nextTarget: "[ THE NEXT SPECIFIC THING TO IMPROVE. ]",
-  since: "[ MONTH YEAR ]",
-  /** Optional: link the panel to the relevant project file. */
-  projectId: "PX-001" as string | null,
-};
 
 export const boot = {
   checks: [
