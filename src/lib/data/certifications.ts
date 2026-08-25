@@ -9,13 +9,69 @@ import type { Certification, CertificationGroup } from "@/lib/types";
 
 export const certificationGroups: CertificationGroup[] = [
   {
-    id: "etonx",
-    provider: "ETONX",
-    note: "Online courses run by Eton College.",
+    id: "investin",
+    provider: "INVESTIN",
     items: [
-      { id: "CERT-001", name: "Public Speaking", issuer: "EtonX" },
-      { id: "CERT-002", name: "Critical Thinking", issuer: "EtonX" },
-      { id: "CERT-003", name: "Study Skills", issuer: "EtonX" },
+      {
+        id: "CERT-012",
+        name: "Young Investment Banker Work Experience",
+        issuer: "InvestIn",
+      },
+    ],
+  },
+  {
+    id: "coursera",
+    provider: "COURSERA",
+    items: [
+      {
+        id: "CERT-011",
+        name: "Crash Course on Python",
+        issuer: "Google",
+        summary: "Delivered by Google on Coursera.",
+      },
+    ],
+  },
+  {
+    id: "bcg",
+    provider: "BCG",
+    items: [
+      {
+        id: "CERT-010",
+        name: "Introduction to Strategy Consulting",
+        issuer: "BCG",
+        summary: "Job simulation.",
+      },
+    ],
+  },
+  {
+    id: "lloyds",
+    provider: "LLOYDS BANKING GROUP",
+    items: [
+      {
+        id: "CERT-009",
+        name: "Legal Work Experience",
+        issuer: "Lloyds Banking Group",
+        summary: "Two-day programme.",
+      },
+    ],
+  },
+  {
+    id: "amplifyme",
+    provider: "AMPLIFYME",
+    note: "Finance simulations run with investment banks.",
+    items: [
+      {
+        id: "CERT-007",
+        name: "Finance Accelerator",
+        issuer: "AmplifyME",
+        summary: "Run with Morgan Stanley and UBS.",
+      },
+      {
+        id: "CERT-008",
+        name: "M&A Finance Accelerator",
+        issuer: "AmplifyME",
+        summary: "Run with UBS.",
+      },
     ],
   },
   {
@@ -44,69 +100,13 @@ export const certificationGroups: CertificationGroup[] = [
     ],
   },
   {
-    id: "amplifyme",
-    provider: "AMPLIFYME",
-    note: "Finance simulations run with investment banks.",
+    id: "etonx",
+    provider: "ETONX",
+    note: "Online courses run by Eton College.",
     items: [
-      {
-        id: "CERT-007",
-        name: "Finance Accelerator",
-        issuer: "AmplifyME",
-        summary: "Run with Morgan Stanley and UBS.",
-      },
-      {
-        id: "CERT-008",
-        name: "M&A Finance Accelerator",
-        issuer: "AmplifyME",
-        summary: "Run with UBS.",
-      },
-    ],
-  },
-  {
-    id: "lloyds",
-    provider: "LLOYDS BANKING GROUP",
-    items: [
-      {
-        id: "CERT-009",
-        name: "Legal Work Experience",
-        issuer: "Lloyds Banking Group",
-        summary: "Two-day programme.",
-      },
-    ],
-  },
-  {
-    id: "bcg",
-    provider: "BCG",
-    items: [
-      {
-        id: "CERT-010",
-        name: "Introduction to Strategy Consulting",
-        issuer: "BCG",
-        summary: "Job simulation.",
-      },
-    ],
-  },
-  {
-    id: "coursera",
-    provider: "COURSERA",
-    items: [
-      {
-        id: "CERT-011",
-        name: "Crash Course on Python",
-        issuer: "Google",
-        summary: "Delivered by Google on Coursera.",
-      },
-    ],
-  },
-  {
-    id: "investin",
-    provider: "INVESTIN",
-    items: [
-      {
-        id: "CERT-012",
-        name: "Young Investment Banker Work Experience",
-        issuer: "InvestIn",
-      },
+      { id: "CERT-001", name: "Public Speaking", issuer: "EtonX" },
+      { id: "CERT-002", name: "Critical Thinking", issuer: "EtonX" },
+      { id: "CERT-003", name: "Study Skills", issuer: "EtonX" },
     ],
   },
 ];
