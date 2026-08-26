@@ -46,8 +46,8 @@ export const channels: Channel[] = [
   {
     id: "email",
     label: "EMAIL",
-    handle: "vidit.khedekar@gmail.com",
-    href: "mailto:vidit.khedekar@gmail.com",
+    handle: "vidit.khedekar.work@gmail.com",
+    href: "mailto:vidit.khedekar.work@gmail.com",
     primary: true,
   },
   {
