@@ -13,7 +13,7 @@ export const certificationGroups: CertificationGroup[] = [
     provider: "INVESTIN",
     items: [
       {
-        id: "CERT-012",
+        id: "CERT-001",
         name: "Young Investment Banker Work Experience",
         issuer: "InvestIn",
       },
@@ -24,7 +24,7 @@ export const certificationGroups: CertificationGroup[] = [
     provider: "COURSERA",
     items: [
       {
-        id: "CERT-011",
+        id: "CERT-002",
         name: "Crash Course on Python",
         issuer: "Google",
         summary: "Delivered by Google on Coursera.",
@@ -36,7 +36,7 @@ export const certificationGroups: CertificationGroup[] = [
     provider: "BCG",
     items: [
       {
-        id: "CERT-010",
+        id: "CERT-003",
         name: "Introduction to Strategy Consulting",
         issuer: "BCG",
         summary: "Job simulation.",
@@ -48,7 +48,7 @@ export const certificationGroups: CertificationGroup[] = [
     provider: "LLOYDS BANKING GROUP",
     items: [
       {
-        id: "CERT-009",
+        id: "CERT-004",
         name: "Legal Work Experience",
         issuer: "Lloyds Banking Group",
         summary: "Two-day programme.",
@@ -61,13 +61,13 @@ export const certificationGroups: CertificationGroup[] = [
     note: "Finance simulations run with investment banks.",
     items: [
       {
-        id: "CERT-007",
+        id: "CERT-005",
         name: "Finance Accelerator",
         issuer: "AmplifyME",
         summary: "Run with Morgan Stanley and UBS.",
       },
       {
-        id: "CERT-008",
+        id: "CERT-006",
         name: "M&A Finance Accelerator",
         issuer: "AmplifyME",
         summary: "Run with UBS.",
@@ -80,19 +80,19 @@ export const certificationGroups: CertificationGroup[] = [
     note: "Virtual work experience programmes.",
     items: [
       {
-        id: "CERT-004",
+        id: "CERT-007",
         name: "Legal Careers with TLT",
         issuer: "Springpod",
         summary: "Virtual work experience.",
       },
       {
-        id: "CERT-005",
+        id: "CERT-008",
         name: "Investment Banking",
         issuer: "Springpod",
         summary: "Virtual work experience.",
       },
       {
-        id: "CERT-006",
+        id: "CERT-009",
         name: "Technology",
         issuer: "Springpod",
         summary: "Virtual work experience.",
@@ -104,9 +104,9 @@ export const certificationGroups: CertificationGroup[] = [
     provider: "ETONX",
     note: "Online courses run by Eton College.",
     items: [
-      { id: "CERT-001", name: "Public Speaking", issuer: "EtonX" },
-      { id: "CERT-002", name: "Critical Thinking", issuer: "EtonX" },
-      { id: "CERT-003", name: "Study Skills", issuer: "EtonX" },
+      { id: "CERT-010", name: "Public Speaking", issuer: "EtonX" },
+      { id: "CERT-011", name: "Critical Thinking", issuer: "EtonX" },
+      { id: "CERT-012", name: "Study Skills", issuer: "EtonX" },
     ],
   },
 ];
