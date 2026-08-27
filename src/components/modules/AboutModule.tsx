@@ -5,7 +5,7 @@ import { uptimeYears } from "@/lib/data/system";
 export function AboutModule() {
   return (
     <Container>
-      <ModuleHeading index="04" name="ABOUT" subtitle="IDENTITY FILE" />
+      <ModuleHeading index="04" name="ABOUT" subtitle="IDENTITY FILE" photo />
 
       <div className="grid gap-12 py-12 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-20">
         {/* Record table */}
