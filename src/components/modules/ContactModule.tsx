@@ -22,7 +22,7 @@ export function ContactModule() {
 
   return (
     <Container>
-      <ModuleHeading index="05" name="CONTACT" subtitle="COMMUNICATIONS SYSTEM" />
+      <ModuleHeading index="05" name="CONTACT" subtitle="COMMUNICATIONS SYSTEM" photo />
 
       <div className="grid gap-12 py-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-20">
         <div>
