@@ -23,7 +23,7 @@ const FADE_MS = 180;
  * but never unmounts, leaving an invisible full-screen overlay swallowing every
  * click on the page.
  */
-export function OperatorPortrait() {
+export function OperatorPortrait({ size = 30 }: { size?: number }) {
   const [open, setOpen] = React.useState(false);
   const [closing, setClosing] = React.useState(false);
   const trigger = React.useRef<HTMLButtonElement>(null);
@@ -113,7 +113,8 @@ export function OperatorPortrait() {
           width={192}
           height={192}
           priority
-          className="h-[30px] w-[30px] rounded-full object-cover opacity-85 transition-opacity duration-200 hover:opacity-100"
+          style={{ height: size, width: size }}
+          className="rounded-full object-cover opacity-85 transition-opacity duration-200 hover:opacity-100"
         />
       </button>
 
