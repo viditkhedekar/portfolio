@@ -1,4 +1,5 @@
 import * as React from "react";
+import { OperatorPortrait } from "@/components/OperatorPortrait";
 
 export function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
@@ -40,13 +41,17 @@ export function ModuleHeading({
   index,
   name,
   subtitle,
+  photo,
 }: {
   index: string;
   name: string;
   subtitle: string;
+  /** Only ABOUT and CONTACT ask for this — the modules that are about him
+      personally rather than a record he keeps. */
+  photo?: boolean;
 }) {
-  return (
-    <header className="border-b border-[var(--vk-line)] pb-8 pt-10 sm:pt-14">
+  const text = (
+    <div>
       <div className="flex items-baseline gap-3">
         <span className="vk-mono text-[11px] tracking-[0.2em] text-[var(--vk-accent)]">
           {index}
@@ -57,6 +62,19 @@ export function ModuleHeading({
       <p className="vk-display mt-5 text-[clamp(2.1rem,6vw,4.25rem)] text-[var(--vk-fg)]">
         {subtitle}
       </p>
+    </div>
+  );
+
+  return (
+    <header className="border-b border-[var(--vk-line)] pb-8 pt-10 sm:pt-14">
+      {photo ? (
+        <div className="flex items-center gap-5">
+          <OperatorPortrait size={52} />
+          {text}
+        </div>
+      ) : (
+        text
+      )}
     </header>
   );
 }
