@@ -43,11 +43,11 @@ function span(zone: Zone, trailing = false): React.CSSProperties {
 function Row({ label, value, dim }: { label: string; value: string; dim?: boolean }) {
   return (
     <div className="flex items-baseline justify-between gap-4 border-t border-[var(--vk-line)] py-1.5">
-      <span className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)]">
+      <span className="vk-mono shrink-0 text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)]">
         {label}
       </span>
       <span
-        className={`vk-mono text-[11px] tracking-[0.14em] ${
+        className={`vk-mono text-right text-[11px] tracking-[0.14em] ${
           dim ? "text-[var(--vk-fg-faint)]" : "text-[var(--vk-fg-dim)]"
         }`}
       >
