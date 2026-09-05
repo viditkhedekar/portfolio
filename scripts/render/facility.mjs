@@ -38,15 +38,26 @@ const FIXTURE_Y = 9.5;
 /** Real lights are expensive and finite, so a pool follows the camera. */
 const LIGHT_POOL = 8;
 
+/**
+ * The five stations.
+ *
+ * `photo` is the project's own screenshot out of /public/projects. Hanging
+ * the real thing on the wall behind each console is worth more than any
+ * amount of invented instrumentation: it is the only surface in the hall that
+ * proves the project exists.
+ */
 const STATIONS = [
-  { id: "PX-001", name: "GROWTHKIT AI", kind: "network", sub: "CONTEXT // LOADED", z: -22, side: -1 },
-  { id: "PX-002", name: "PHYSIQAL PERFORMANCE", kind: "motion", sub: "MOTION ANALYSIS // ACTIVE", z: -46, side: 1 },
-  { id: "PX-003", name: "TACTIX XI", kind: "pitch", sub: "MATCH ENGINE // ACTIVE", z: -70, side: -1 },
-  { id: "PX-004", name: "BLACKOAK", kind: "market", sub: "BACKTEST ENGINE // READY", z: -94, side: 1 },
-  { id: "PX-005", name: "KEYNESIUM", kind: "model", sub: "GDP / INFLATION / UNEMPLOYMENT", z: -118, side: -1 },
+  { id: "PX-001", name: "GROWTHKIT AI", kind: "network", sub: "CONTEXT // LOADED", z: -22, side: -1, photo: "px-001-landing" },
+  { id: "PX-002", name: "PHYSIQAL PERFORMANCE", kind: "motion", sub: "MOTION ANALYSIS // ACTIVE", z: -46, side: 1, photo: "px-002-analysis" },
+  { id: "PX-003", name: "TACTIX XI", kind: "pitch", sub: "MATCH ENGINE // ACTIVE", z: -70, side: -1, photo: "px-003-tactics" },
+  { id: "PX-004", name: "BLACKOAK", kind: "market", sub: "BACKTEST ENGINE // READY", z: -94, side: 1, photo: "px-004-command-center" },
+  { id: "PX-005", name: "KEYNESIUM", kind: "model", sub: "GDP / INFLATION / UNEMPLOYMENT", z: -118, side: -1, photo: "px-005-shock" },
 ];
 
-export function buildFacility(THREE, scene) {
+/** The screenshots this scene wants, in load order. */
+export const PHOTOS = STATIONS.map((s) => s.photo);
+
+export function buildFacility(THREE, scene, photos = {}) {
   const group = new THREE.Group();
   scene.add(group);
 
@@ -305,6 +316,42 @@ export function buildFacility(THREE, scene) {
     );
     strip.position.set(0, 1.02, 1.28);
     inst.add(strip);
+
+    /* The project itself, mounted on the wall above the console and turned
+       in towards the aisle so the camera catches it side-on as it passes. */
+    const photo = photos[station.photo];
+    if (photo) {
+      const board = new THREE.Group();
+      board.position.set(station.side * 1.9, 5.1, -2.4);
+      board.rotation.y = station.side * 0.34;
+      inst.add(board);
+
+      const backing = new THREE.Mesh(new THREE.BoxGeometry(8.2, 5.2, 0.3), darkMat);
+      backing.position.z = -0.2;
+      board.add(backing);
+
+      const aspect = (photo.image?.width ?? 16) / (photo.image?.height ?? 9);
+      const h = 4.6;
+      const w = Math.min(7.8, h * aspect);
+      const print = new THREE.Mesh(
+        new THREE.PlaneGeometry(w, h),
+        /* Dimmed rather than emissive: it is a lit print on a wall, not
+           another screen, and five more screens would flatten the hall. */
+        new THREE.MeshBasicMaterial({ map: photo, color: 0xb4bec8 }),
+      );
+      board.add(print);
+
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.08, 0.12), steelMat);
+      trim.position.set(0, -h / 2 - 0.18, 0.1);
+      board.add(trim);
+
+      /* A picture light, which is also the only thing lifting the upper wall
+         out of the dark along this stretch. */
+      const wash = new THREE.SpotLight(0xbcd0e2, 60, 18, 0.8, 0.55, 2);
+      wash.position.set(0, 3.8, 3.2);
+      wash.target = board;
+      board.add(wash);
+    }
 
     for (const s of [-1, 1]) {
       const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 3.2, 8), steelMat);
