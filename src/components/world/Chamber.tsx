@@ -57,7 +57,8 @@ export function Chamber({ tier }: { tier: "high" | "low" }) {
   }, []);
 
   /* One drifting mote per line of the identity record. The count is borrowed
-     from the data so the chamber cannot get out of step with the file. */
+     from the data so the chamber cannot get out of step with the file.
+     Built around the origin: the group it hangs in supplies the offset. */
   const motes = React.useMemo(() => {
     const per = tier === "high" ? 40 : 14;
     const rand = rng(0x1de7);
@@ -65,11 +66,7 @@ export function Chamber({ tier }: { tier: "high" | "low" }) {
     for (let i = 0; i < identity.records.length * per; i++) {
       const a = rand() * Math.PI * 2;
       const r = 0.4 + rand() * 5.5;
-      pts.push(
-        MONOLITH_X + Math.cos(a) * r,
-        rand() * 6,
-        CENTRE_Z + Math.sin(a) * r,
-      );
+      pts.push(Math.cos(a) * r, rand() * 6, Math.sin(a) * r);
     }
     return cloud(pts);
   }, [tier]);
