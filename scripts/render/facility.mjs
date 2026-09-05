@@ -13,13 +13,8 @@
  * surfaces are lit, the lights cast shadows, and the haze is real geometry.
  */
 
-import {
-  floorRoughness,
-  floorTexture,
-  glowTexture,
-  panelTexture,
-  readoutTexture,
-} from "./textures.mjs";
+import { readoutTexture } from "./textures.mjs";
+import { addDust } from "./kit.mjs";
 
 /* The hall. Wide and tall enough that the walls leave the frame. */
 export const HALL = {
@@ -34,9 +29,6 @@ export const HALL = {
 const FIXTURE_STEP = 7;
 const FIXTURE_X = 5.4;
 const FIXTURE_Y = 9.5;
-
-/** Real lights are expensive and finite, so a pool follows the camera. */
-const LIGHT_POOL = 8;
 
 /**
  * The five stations.
@@ -57,51 +49,30 @@ const STATIONS = [
 /** The screenshots this scene wants, in load order. */
 export const PHOTOS = STATIONS.map((s) => s.photo);
 
-export function buildFacility(THREE, scene, photos = {}) {
+export function buildFacility(THREE, scene, kit, pool, photos = {}) {
   const group = new THREE.Group();
   scene.add(group);
 
-  const glow = glowTexture(THREE);
-  const panel = panelTexture(THREE);
-  const floorMap = floorTexture(THREE);
-  const floorRough = floorRoughness(THREE);
-
+  const { mat, haze } = kit;
   const length = HALL.from - HALL.to;
   const midZ = (HALL.from + HALL.to) / 2;
 
   /* ------------------------------------------------------------- shell */
 
-  panel.repeat.set(length / 8, HALL.height / 5);
-  floorMap.repeat.set(HALL.width / 4, length / 4);
-  floorRough.repeat.copy(floorMap.repeat);
+  /* The kit's materials, with their maps re-tiled for a room this size. A
+     shared material with one repeat would stretch the plating over a hundred
+     and sixty metres of wall. */
+  const wallMat = mat.wall.clone();
+  wallMat.map = kit.panel.clone();
+  wallMat.map.repeat.set(length / 8, HALL.height / 5);
 
-  const wallMat = new THREE.MeshStandardMaterial({
-    map: panel,
-    color: 0xd6dee6,
-    roughness: 0.7,
-    metalness: 0.3,
-    envMapIntensity: 0.9,
-  });
+  const floorMat = mat.floor.clone();
+  floorMat.map = kit.floorMap.clone();
+  floorMat.map.repeat.set(HALL.width / 4, length / 4);
+  floorMat.roughnessMap = kit.floorRough.clone();
+  floorMat.roughnessMap.repeat.copy(floorMat.map.repeat);
 
-  /* A polished deck. The metalness and the low roughness are doing the most
-     important job in the scene: every fixture overhead is smeared down the
-     floor as a long highlight, and that is most of what says "big room". */
-  const floorMat = new THREE.MeshStandardMaterial({
-    map: floorMap,
-    roughnessMap: floorRough,
-    color: 0xb6bec6,
-    roughness: 0.3,
-    metalness: 0.45,
-    envMapIntensity: 1.5,
-  });
-
-  const ceilMat = new THREE.MeshStandardMaterial({
-    map: panel,
-    color: 0x9aa3ac,
-    roughness: 0.9,
-    metalness: 0.1,
-    envMapIntensity: 0.7,
-  });
+  const ceilMat = mat.ceiling;
 
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(HALL.width, length), floorMat);
   floor.rotation.x = -Math.PI / 2;
@@ -124,18 +95,8 @@ export function buildFacility(THREE, scene, photos = {}) {
 
   /* ------------------------------------------------------------ structure */
 
-  const steelMat = new THREE.MeshStandardMaterial({
-    color: 0x8b949d,
-    roughness: 0.42,
-    metalness: 0.85,
-    envMapIntensity: 1.2,
-  });
-  const darkMat = new THREE.MeshStandardMaterial({
-    color: 0x4a535c,
-    roughness: 0.62,
-    metalness: 0.55,
-    envMapIntensity: 0.9,
-  });
+  const steelMat = mat.steel;
+  const darkMat = mat.dark;
 
   /* Portal arches. The rhythm of these is what the camera reads as speed, and
      the ones nearest the lens sweep past as foreground, which is the single
@@ -177,20 +138,12 @@ export function buildFacility(THREE, scene, photos = {}) {
 
   /* ------------------------------------------------------------- lighting */
 
-  const fixtureMat = new THREE.MeshBasicMaterial({ color: 0xdce8f2 });
+  const fixtureMat = mat.lamp;
   const fixtureGeo = new THREE.BoxGeometry(0.42, 0.16, 4.6);
   const housingGeo = new THREE.BoxGeometry(0.9, 0.5, 5.0);
 
-  const glowMat = new THREE.SpriteMaterial({
-    map: glow,
-    color: 0xbcd2e6,
-    transparent: true,
-    opacity: 0.5,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  });
+  const glowMat = haze(0xbcd2e6, 0.5);
 
-  const fixtures = [];
   for (let z = HALL.from; z >= HALL.to; z -= FIXTURE_STEP) {
     for (const side of [-1, 1]) {
       const x = side * FIXTURE_X;
@@ -216,7 +169,7 @@ export function buildFacility(THREE, scene, photos = {}) {
       wide.scale.set(15, 9, 1);
       group.add(wide);
 
-      fixtures.push({ x, y: FIXTURE_Y, z });
+      pool.add([x, FIXTURE_Y - 0.4, z], { intensity: 22, distance: 34 });
     }
   }
 
@@ -229,40 +182,9 @@ export function buildFacility(THREE, scene, photos = {}) {
     group.add(channel);
   }
 
-  /* The light pool: eight real lights that jump to whichever fixtures the
-     camera is nearest. A hall this long cannot afford a light per fixture,
-     and past twenty metres in this much haze nobody can tell. */
-  const pool = [];
-  for (let i = 0; i < LIGHT_POOL; i++) {
-    const light = new THREE.PointLight(0xc8dcf0, 0, 34, 2);
-    if (i < 3) {
-      light.castShadow = true;
-      light.shadow.mapSize.set(1024, 1024);
-      light.shadow.bias = -0.004;
-    }
-    group.add(light);
-    pool.push(light);
-  }
-
-  const ambient = new THREE.AmbientLight(0x38495a, 0.85);
-  group.add(ambient);
-
-  /* A cold fill from above and behind, so the shadowed sides of the structure
-     are not pure black and the space keeps its shape. */
-  const fill = new THREE.DirectionalLight(0x6f8fac, 0.55);
-  fill.position.set(-6, 14, 20);
-  group.add(fill);
-
   /* -------------------------------------------------------------- stations */
 
-  const accentGlowMat = new THREE.SpriteMaterial({
-    map: glow,
-    color: 0xaee83c,
-    transparent: true,
-    opacity: 0.26,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false,
-  });
+  const accentGlowMat = haze(0xaee83c, 0.26);
 
   for (const station of STATIONS) {
     const inst = new THREE.Group();
@@ -297,12 +219,12 @@ export function buildFacility(THREE, scene, photos = {}) {
     screen.position.set(0, 2.95, 0.2);
     inst.add(screen);
 
-    /* The screen has to throw light, or it looks like a poster. */
     /* The screen throws light, but a monitor is not a floodlight: at the
        first setting it washed ten metres of deck lime green. */
-    const spill = new THREE.PointLight(0xaee83c, 2.4, 8.5, 2);
-    spill.position.set(0, 2.9, 1.4);
-    inst.add(spill);
+    pool.add(
+      [station.side * 7.3, 2.9, station.z + 1.4],
+      { intensity: 2.4, distance: 8.5, color: 0xaee83c },
+    );
 
     const bloomCard = new THREE.Sprite(accentGlowMat);
     bloomCard.position.set(0, 2.95, 0.6);
@@ -346,11 +268,13 @@ export function buildFacility(THREE, scene, photos = {}) {
       board.add(trim);
 
       /* A picture light, which is also the only thing lifting the upper wall
-         out of the dark along this stretch. */
-      const wash = new THREE.SpotLight(0xbcd0e2, 60, 18, 0.8, 0.55, 2);
-      wash.position.set(0, 3.8, 3.2);
-      wash.target = board;
-      board.add(wash);
+         out of the dark along this stretch. A pool emitter rather than a
+         spotlight of its own: five more shadow-casting cones is not what this
+         scene should spend its light budget on. */
+      pool.add([station.side * 4.2, 7.4, station.z - 1.4], {
+        intensity: 20,
+        distance: 20,
+      });
     }
 
     for (const s of [-1, 1]) {
@@ -365,49 +289,14 @@ export function buildFacility(THREE, scene, photos = {}) {
 
   /* ------------------------------------------------------------------ dust */
 
-  const motes = new THREE.BufferGeometry();
-  const count = 1500;
-  const pos = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    pos[i * 3] = (Math.random() - 0.5) * (HALL.width - 1);
-    pos[i * 3 + 1] = Math.random() * HALL.height;
-    pos[i * 3 + 2] = HALL.to + Math.random() * length;
-  }
-  motes.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-  const dust = new THREE.Points(
-    motes,
-    new THREE.PointsMaterial({
-      color: 0x93a6b8,
-      size: 0.018,
-      sizeAttenuation: true,
-      transparent: true,
-      opacity: 0.32,
-      depthWrite: false,
-    }),
-  );
-  group.add(dust);
-
-  return {
-    group,
-    /** Snap the light pool to the fixtures nearest the camera. */
-    update(camera) {
-      const cz = camera.position.z;
-      const near = fixtures
-        .map((f) => ({ f, d: Math.abs(f.z - cz) }))
-        .sort((a, b) => a.d - b.d)
-        .slice(0, LIGHT_POOL);
-
-      pool.forEach((light, i) => {
-        const hit = near[i];
-        if (!hit) {
-          light.intensity = 0;
-          return;
-        }
-        light.position.set(hit.f.x, hit.f.y - 0.4, hit.f.z);
-        /* Fade the far end of the pool out rather than letting a light pop
-           on as it enters the set. */
-        light.intensity = 22 * Math.max(0, 1 - hit.d / 40);
-      });
+  addDust(THREE, group, {
+    count: 1500,
+    box: {
+      x: [-(HALL.width - 1) / 2, (HALL.width - 1) / 2],
+      y: [0, HALL.height],
+      z: [HALL.to, HALL.from],
     },
-  };
+  });
+
+  return { group };
 }
