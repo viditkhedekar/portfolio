@@ -95,7 +95,7 @@ export function buildChamber(THREE, scene, kit, pool) {
   under.position.set(standX, 1.83, standZ);
   group.add(under);
 
-  pool.add([standX, 2.4, standZ], { intensity: 9, distance: 11, color: 0xaee83c });
+  pool.add([standX, 2.4, standZ], { intensity: 4.5, distance: 7, color: 0xaee83c });
 
   /* One light directly over it, and the cone it makes in the haze. This is
      the only fixture in the room. */
@@ -117,7 +117,7 @@ export function buildChamber(THREE, scene, kit, pool) {
     new THREE.MeshBasicMaterial({
       color: 0x9fc0e0,
       transparent: true,
-      opacity: 0.055,
+      opacity: 0.022,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       side: THREE.DoubleSide,
@@ -140,6 +140,13 @@ export function buildChamber(THREE, scene, kit, pool) {
   puddle.position.set(standX, 0.05, standZ);
   puddle.scale.set(11, 11, 1);
   group.add(puddle);
+
+  /* A soft column of haze around the cone. The cone alone has a hard silhouette
+     and reads as a grey plastic lampshade rather than as light in the air. */
+  const shaft = new THREE.Sprite(haze(0xa8c6e4, 0.1));
+  shaft.position.set(standX, height / 2, standZ);
+  shaft.scale.set(6.5, height, 1);
+  group.add(shaft);
 
   /* ----------------------------------------------------------------- edges */
 
