@@ -244,3 +244,23 @@ export function sampleAir(p: number, out: Air): void {
 export function emptyAir(): Air {
   return { fog: [0, 0, 0], density: 0.02, key: 1 };
 }
+
+/* --------------------------------------------------------------- palette */
+
+/**
+ * The world's colours, as hex integers for three's materials.
+ *
+ * These are the CSS tokens in globals.css read back out: the interface and
+ * the environment have to agree, or the HUD looks pasted onto someone else's
+ * render.
+ */
+export const WORLD_COLOR = {
+  /** Structure at rest: trusses, walls, the far grid. */
+  structure: 0x272c31,
+  /** Structure the camera is close to, or that should read as nearer. */
+  edge: 0x4a5158,
+  /** The restrained lime. Used sparingly, and never on large surfaces. */
+  accent: 0xaee83c,
+  /** Suspended particulate. */
+  dust: 0x5c636b,
+} as const;
