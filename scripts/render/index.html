@@ -29,7 +29,7 @@
   import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
   import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
   import { buildEnvironment } from "./environment.mjs";
-  import { buildFacility } from "./facility.mjs";
+  import { PHOTOS, buildFacility } from "./facility.mjs";
   import { samplePath } from "./path.mjs";
 
   const hud = document.getElementById("hud");
@@ -65,7 +65,30 @@
   /* Reflections first: the materials read it off the scene when they compile. */
   scene.environment = buildEnvironment(THREE, renderer);
 
-  const world = buildFacility(THREE, scene);
+  /* The project screenshots have to be on disk before anything is built, so
+     each board knows its own aspect ratio. */
+  const loader = new THREE.TextureLoader();
+  const photos = {};
+  await Promise.all(
+    PHOTOS.map(
+      (name) =>
+        new Promise((resolve) => {
+          loader.load(
+            `/public/projects/${name}.png`,
+            (tex) => {
+              tex.colorSpace = THREE.SRGBColorSpace;
+              tex.anisotropy = 8;
+              photos[name] = tex;
+              resolve();
+            },
+            undefined,
+            () => resolve(),
+          );
+        }),
+    ),
+  );
+
+  const world = buildFacility(THREE, scene, photos);
 
   const composer = new EffectComposer(renderer);
   composer.setSize(state.width, state.height);
