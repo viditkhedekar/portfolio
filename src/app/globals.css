@@ -645,18 +645,18 @@ html[data-boot="pending"] .vk-head-layer {
 /* ---------- Zone panels ---------- */
 
 /*
- * A zone is a tall block of scroll whose panel is pinned to the middle of the
- * screen for the whole of it. Pinning rather than scrolling is what lets the
- * projects zone run for two screens of camera travel without its text sailing
- * past in the first half of it.
+ * A zone is a tall block of scroll that holds no content of its own. Its
+ * panel is staged: lifted onto a fixed layer by ZoneStage and cross-faded
+ * with its neighbours, so one panel sits in the frame for the whole of its
+ * environment instead of sliding away a fifth of the way through it.
  *
- * Heights come from the zone ranges in src/lib/world.ts, multiplied by one
- * travel constant, so the page and the camera path can never drift apart.
+ * Block heights come from the zone ranges in src/lib/world.ts multiplied by
+ * one travel constant, so the page and the camera path cannot drift apart.
  */
 :root {
-  /* Every zone's share of this has to come out at 100vh or more, or its
-     pinned panel stretches the block and the whole path slips. The smallest
-     share is 0.13, so this cannot go below 770vh. */
+  /* Every zone's share of this has to come out at 100vh or more, or the
+     no-JavaScript fallback below stretches the block and the whole path
+     slips. The smallest share is 0.13, so this cannot go below 770vh. */
   --vk-travel: 780vh;
 }
 
@@ -664,22 +664,25 @@ html[data-boot="pending"] .vk-head-layer {
   position: relative;
 }
 
-.vk-zone-sticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  height: 100svh;
+/*
+ * Fallback, and the base state: the panel simply sits in the flow, one
+ * screenful per zone, and the page reads top to bottom. This is what a
+ * visitor without JavaScript gets.
+ */
+.vk-zone-body {
   display: flex;
   align-items: center;
-  padding: 96px 20px;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: 84px 20px;
 }
 
 @media (min-width: 640px) {
-  .vk-zone-sticky { padding: 96px 32px; }
+  .vk-zone-body { padding: 92px 32px; }
 }
 
 @media (min-width: 1024px) {
-  .vk-zone-sticky { padding: 120px 48px; }
+  .vk-zone-body { padding: 100px 48px; }
 }
 
 .vk-zone-panel {
@@ -688,7 +691,7 @@ html[data-boot="pending"] .vk-head-layer {
   background: color-mix(in srgb, var(--vk-bg) 74%, transparent);
   backdrop-filter: blur(9px);
   border: 1px solid var(--vk-line);
-  padding: 26px 24px 24px;
+  padding: 24px 24px 22px;
 }
 
 @media (min-width: 1024px) {
@@ -697,19 +700,71 @@ html[data-boot="pending"] .vk-head-layer {
   }
 
   /* Alternating sides, so the camera's weave through the world is answered by
-     the reading matter and the centre of the frame never fills up. */
-  .vk-zone[data-side="right"] .vk-zone-sticky {
+     the reading matter and the centre of the frame never fills up. The extra
+     right-hand padding is the destination rail's lane. */
+  .vk-zone[data-side="right"] .vk-zone-body {
     justify-content: flex-end;
+    padding-right: 124px;
   }
 }
 
-/* The opening screen has no panel: the head has the frame to itself, and the
+/* The opening screen has no panel: the head has the frame to itself and the
    title sits underneath it. */
 .vk-zone-open {
-  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding-bottom: 108px;
+  padding-bottom: 104px;
   text-align: center;
+}
+
+/* ---------- Staged ---------- */
+
+/*
+ * With JavaScript, ZoneStage writes the current zone onto the wrapper and
+ * every panel moves onto one fixed layer. The layer takes no pointer events;
+ * only the panel that is actually showing does.
+ */
+[data-zone] .vk-zone-body {
+  position: fixed;
+  inset: 0;
+  min-height: 0;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 420ms var(--vk-ease),
+    transform 420ms var(--vk-ease);
+  z-index: 20;
+}
+
+[data-zone] .vk-zone-panel {
+  pointer-events: none;
+}
+
+/* CSS cannot compare one attribute against another, so the six pairings are
+   written out. The ids come from the zone list and do not change. */
+[data-zone="origin"] #origin > .vk-zone-body,
+[data-zone="projects"] #projects > .vk-zone-body,
+[data-zone="school"] #school > .vk-zone-body,
+[data-zone="certifications"] #certifications > .vk-zone-body,
+[data-zone="about"] #about > .vk-zone-body,
+[data-zone="contact"] #contact > .vk-zone-body {
+  opacity: 1;
+  transform: none;
+}
+
+[data-zone="projects"] #projects .vk-zone-panel,
+[data-zone="school"] #school .vk-zone-panel,
+[data-zone="certifications"] #certifications .vk-zone-panel,
+[data-zone="about"] #about .vk-zone-panel,
+[data-zone="contact"] #contact .vk-zone-panel {
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-zone] .vk-zone-body {
+    transform: none;
+    transition: opacity 200ms linear;
+  }
 }
