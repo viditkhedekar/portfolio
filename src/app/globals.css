@@ -432,6 +432,39 @@ html[data-boot="pending"] .vk-app {
   height: 100%;
 }
 
+/*
+ * Grading over the film.
+ *
+ * Three layers: a wash into the top and bottom edges where every HUD readout
+ * lives, and a vignette that pulls the corners down. Without it the corner
+ * text sits on whatever the render happened to put there, which in a corridor
+ * full of ceiling lights is a white blowout.
+ */
+.vk-film-grade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(5, 7, 10, 0.82) 0%,
+      rgba(5, 7, 10, 0.34) 12%,
+      rgba(5, 7, 10, 0) 26%
+    ),
+    linear-gradient(
+      to top,
+      rgba(5, 7, 10, 0.86) 0%,
+      rgba(5, 7, 10, 0.36) 13%,
+      rgba(5, 7, 10, 0) 30%
+    ),
+    radial-gradient(
+      126% 92% at 50% 46%,
+      rgba(5, 7, 10, 0) 38%,
+      rgba(5, 7, 10, 0.3) 74%,
+      rgba(5, 7, 10, 0.62) 100%
+    );
+}
+
 /* Loading, stated as quietly as possible: a hairline that fills and leaves. */
 .vk-film-load {
   position: absolute;
@@ -506,6 +539,10 @@ html[data-boot="pending"] .vk-head-layer {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   white-space: nowrap;
+  /* The readouts sit over a rendered room, not a flat colour. The grade does
+     most of the work; this covers the frames where a lamp lands behind a
+     corner anyway. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
 }
 
 .vk-hud-strong {
@@ -611,6 +648,7 @@ html[data-boot="pending"] .vk-head-layer {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--vk-fg-ghost);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   opacity: 0;
   transform: translateX(6px);
   transition:
