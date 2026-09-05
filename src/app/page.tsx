@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { WorldMount } from "@/components/world/WorldMount";
-import { WorldHUD } from "@/components/world/WorldHUD";
 import { StatusDot } from "@/components/ui";
 import { zones, type Zone } from "@/lib/world";
 import { modules, system } from "@/lib/data/system";
@@ -146,9 +144,8 @@ export default function Home() {
 
   return (
     <>
-      <WorldMount />
-      <WorldHUD />
-
+      {/* The world itself and the HUD over it are mounted by VKOSShell, which
+          keeps them clear of the boot fade. This is the readable half. */}
       <div className="vk-world-content">
         {/* -------------------------------------------------- OUTER FIELD */}
         <section
