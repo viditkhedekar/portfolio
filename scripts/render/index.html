@@ -1,0 +1,153 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>VKOS render harness</title>
+<style>
+  html, body { margin: 0; background: #05070a; overflow: hidden; }
+  canvas { display: block; }
+  #hud {
+    position: fixed; left: 10px; bottom: 10px; z-index: 5;
+    font: 11px ui-monospace, Menlo, monospace; color: #8fa0b0;
+    background: rgba(0,0,0,.6); padding: 6px 9px; border: 1px solid #222a31;
+  }
+</style>
+<div id="hud">idle</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "/three/build/three.module.js",
+    "three/addons/": "/three/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+  import * as THREE from "three";
+  import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+  import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+  import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+  import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+  import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
+  import { buildFacility } from "./facility.mjs";
+  import { samplePath } from "./path.mjs";
+
+  const hud = document.getElementById("hud");
+  const say = (m) => { hud.textContent = m; };
+
+  /*
+   * The harness renders at whatever size it is told to and never resizes
+   * itself to the window: a frame has to come out at the same dimensions
+   * every time, whatever the pane the browser happens to be in.
+   */
+  const state = { width: 1600, height: 900 };
+
+  const renderer = new THREE.WebGLRenderer({
+    antialias: false,
+    powerPreference: "high-performance",
+  });
+  renderer.setPixelRatio(1);
+  renderer.setSize(state.width, state.height, false);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  document.body.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x070a0d);
+  /* Fog is what turns a hundred and sixty metres of hall into somewhere with
+     a far end you cannot see. Density is the whole mood control. */
+  scene.fog = new THREE.FogExp2(0x0a0f14, 0.0165);
+
+  const camera = new THREE.PerspectiveCamera(52, state.width / state.height, 0.1, 400);
+
+  const world = buildFacility(THREE, scene);
+
+  const composer = new EffectComposer(renderer);
+  composer.setSize(state.width, state.height);
+  composer.addPass(new RenderPass(scene, camera));
+
+  /* Bloom is not decoration here. Every light source in the scene is a small
+     bright object in a dark, hazy room, and bloom is what makes those read as
+     emitting light rather than being painted a lighter colour. */
+  const bloom = new UnrealBloomPass(
+    new THREE.Vector2(state.width, state.height),
+    0.62, // strength
+    0.72, // radius
+    0.62, // threshold
+  );
+  composer.addPass(bloom);
+  composer.addPass(new OutputPass());
+  composer.addPass(new SMAAPass());
+
+  const look = new THREE.Vector3();
+  const pos = [0, 0, 0];
+  const target = [0, 0, 0];
+
+  function place(progress) {
+    samplePath(progress, pos, target);
+    camera.position.set(pos[0], pos[1], pos[2]);
+    look.set(target[0], target[1], target[2]);
+    camera.lookAt(look);
+    world.update(camera);
+  }
+
+  function draw(progress) {
+    place(progress);
+    composer.render();
+  }
+
+  async function post(dir, name, quality) {
+    const data = renderer.domElement.toDataURL("image/webp", quality);
+    const res = await fetch("/frame", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ dir, name, data }),
+    });
+    return res.json();
+  }
+
+  /** Everything the agent drives from outside. */
+  window.VK = {
+    ready: true,
+
+    resize(w, h) {
+      state.width = w;
+      state.height = h;
+      renderer.setSize(w, h, false);
+      composer.setSize(w, h);
+      bloom.resolution.set(w, h);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    },
+
+    /** One frame, at a scroll fraction, written to disk. */
+    async still(progress, name, quality = 0.9) {
+      draw(progress);
+      const out = await post("render-tests", name, quality);
+      say(`still ${name} · ${out.bytes} bytes`);
+      return out;
+    },
+
+    /** The whole flight. */
+    async sequence(frames, dir, quality) {
+      let total = 0;
+      for (let i = 0; i < frames; i++) {
+        draw(i / (frames - 1));
+        const name = String(i).padStart(4, "0") + ".webp";
+        const out = await post(dir, name, quality);
+        total += out.bytes;
+        if (i % 5 === 0) say(`frame ${i + 1}/${frames} · ${(total / 1048576).toFixed(2)} MB`);
+        /* Yield, or the tab is locked solid for the whole run and the browser
+           kills it. */
+        await new Promise((r) => setTimeout(r, 0));
+      }
+      say(`done · ${frames} frames · ${(total / 1048576).toFixed(2)} MB`);
+      window.VK.result = { frames, bytes: total };
+      return window.VK.result;
+    },
+  };
+
+  draw(0.5);
+  say("ready");
+</script>
