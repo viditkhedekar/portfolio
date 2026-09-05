@@ -654,7 +654,10 @@ html[data-boot="pending"] .vk-head-layer {
  * travel constant, so the page and the camera path can never drift apart.
  */
 :root {
-  --vk-travel: 620vh;
+  /* Every zone's share of this has to come out at 100vh or more, or its
+     pinned panel stretches the block and the whole path slips. The smallest
+     share is 0.13, so this cannot go below 770vh. */
+  --vk-travel: 780vh;
 }
 
 .vk-zone {
