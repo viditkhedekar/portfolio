@@ -674,15 +674,20 @@ html[data-boot="pending"] .vk-head-layer {
   align-items: center;
   min-height: 100vh;
   min-height: 100svh;
-  padding: 84px 20px;
+  /* The right-hand padding is the destination rail's lane. On a phone the
+     panel is otherwise full width and the rail draws straight across it. */
+  padding: 84px 56px 84px 20px;
 }
 
 @media (min-width: 640px) {
-  .vk-zone-body { padding: 92px 32px; }
+  .vk-zone-body { padding: 92px 72px 92px 32px; }
 }
 
 @media (min-width: 1024px) {
   .vk-zone-body { padding: 100px 48px; }
+
+  /* Wide enough that a left-hand panel never reaches the rail. */
+  .vk-zone[data-side="left"] .vk-zone-body { padding-right: 124px; }
 }
 
 .vk-zone-panel {
