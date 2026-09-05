@@ -645,30 +645,44 @@ html[data-boot="pending"] .vk-head-layer {
 /* ---------- Zone panels ---------- */
 
 /*
- * Each zone owns one screen of scroll and puts a single panel on it, held to
- * one side so the middle of the frame stays clear for the world and the head.
+ * A zone is a tall block of scroll whose panel is pinned to the middle of the
+ * screen for the whole of it. Pinning rather than scrolling is what lets the
+ * projects zone run for two screens of camera travel without its text sailing
+ * past in the first half of it.
+ *
+ * Heights come from the zone ranges in src/lib/world.ts, multiplied by one
+ * travel constant, so the page and the camera path can never drift apart.
  */
+:root {
+  --vk-travel: 620vh;
+}
+
 .vk-zone {
   position: relative;
-  min-height: 100vh;
-  min-height: 100svh;
+}
+
+.vk-zone-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
   display: flex;
   align-items: center;
   padding: 96px 20px;
 }
 
 @media (min-width: 640px) {
-  .vk-zone { padding: 96px 32px; }
+  .vk-zone-sticky { padding: 96px 32px; }
 }
 
 @media (min-width: 1024px) {
-  .vk-zone { padding: 120px 48px; }
+  .vk-zone-sticky { padding: 120px 48px; }
 }
 
 .vk-zone-panel {
   width: 100%;
   max-width: 420px;
-  background: color-mix(in srgb, var(--vk-bg) 72%, transparent);
+  background: color-mix(in srgb, var(--vk-bg) 74%, transparent);
   backdrop-filter: blur(9px);
   border: 1px solid var(--vk-line);
   padding: 26px 24px 24px;
@@ -679,21 +693,20 @@ html[data-boot="pending"] .vk-head-layer {
     max-width: 460px;
   }
 
-  /* Alternating sides, so the camera's weave through the world is answered
-     by the reading matter and the centre never fills up. */
-  .vk-zone[data-side="right"] {
+  /* Alternating sides, so the camera's weave through the world is answered by
+     the reading matter and the centre of the frame never fills up. */
+  .vk-zone[data-side="right"] .vk-zone-sticky {
     justify-content: flex-end;
   }
 }
 
-/* The opening screen has no panel: the head has the frame to itself. */
+/* The opening screen has no panel: the head has the frame to itself, and the
+   title sits underneath it. */
 .vk-zone-open {
-  min-height: 100vh;
-  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding-bottom: 96px;
+  padding-bottom: 108px;
   text-align: center;
 }
