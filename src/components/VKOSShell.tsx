@@ -11,7 +11,6 @@ import { OperatorHead } from "@/components/OperatorHead";
 import { SystemFooter } from "@/components/SystemFooter";
 import { SystemHeader } from "@/components/SystemHeader";
 import { Taskbar } from "@/components/Taskbar";
-import { TerminalGreeter } from "@/components/TerminalGreeter";
 import { TerminalProvider } from "@/components/TerminalProvider";
 import { WorldHUD } from "@/components/world/WorldHUD";
 import { WorldMount } from "@/components/world/WorldMount";
@@ -26,6 +25,11 @@ import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot"
  * because the HUD is its interface and a second set of navigation over the
  * top of it would be two operating systems arguing. Every other route is an
  * application and renders inside window chrome as before.
+ *
+ * The terminal no longer greets anyone on arrival. It used to open itself
+ * once per session on the desktop, which worked when the desktop was a page;
+ * over a camera arriving out of the dark it is a window unfolding across the
+ * one shot the site gets. It is still a keystroke away on every route.
  *
  * The head is mounted here rather than on any page. It is the one element
  * that survives navigation, and it has to: it opens centred on the landing
@@ -53,7 +57,6 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
       {booting && <BootSequence />}
       <Cursor />
       <AppLauncher />
-      <TerminalGreeter />
 
       {/* The world and the head sit outside `.vk-app` deliberately. That
           element fades on boot, and an element with a fractional opacity
