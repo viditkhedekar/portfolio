@@ -40,6 +40,12 @@ export interface Zone {
    * The landing page sizes its sections from these, so a zone's panel is on
    * screen for exactly as long as its environment is. Widening a range gives
    * that environment more scroll without touching anything else.
+   *
+   * One constraint: a panel is pinned to a full screen, so no zone may work
+   * out shorter than the viewport or the browser will stretch it and every
+   * range after it will slide. Keep the smallest share above
+   * `100vh / --vk-travel`, which is where the travel constant in globals.css
+   * comes from.
    */
   range: [number, number];
   /** Centre of the environment on the path, used to place scene objects. */
@@ -57,7 +63,7 @@ export const zones: Zone[] = [
     index: null,
     location: "OUTER FIELD",
     href: null,
-    range: [0, 0.12],
+    range: [0, 0.13],
     z: 0,
   },
   {
@@ -65,7 +71,7 @@ export const zones: Zone[] = [
     index: M.projects.index,
     location: "PROJECT FACILITY",
     href: M.projects.href,
-    range: [0.12, 0.42],
+    range: [0.13, 0.4],
     z: -46,
   },
   {
@@ -73,7 +79,7 @@ export const zones: Zone[] = [
     index: M.school.index,
     location: "ACADEMIC OBSERVATORY",
     href: M.school.href,
-    range: [0.42, 0.6],
+    range: [0.4, 0.56],
     z: -112,
   },
   {
@@ -81,7 +87,7 @@ export const zones: Zone[] = [
     index: M.certifications.index,
     location: "CREDENTIAL VAULT",
     href: M.certifications.href,
-    range: [0.6, 0.75],
+    range: [0.56, 0.71],
     z: -170,
   },
   {
@@ -89,7 +95,7 @@ export const zones: Zone[] = [
     index: M.about.index,
     location: "IDENTITY CHAMBER",
     href: M.about.href,
-    range: [0.75, 0.88],
+    range: [0.71, 0.85],
     z: -222,
   },
   {
@@ -97,7 +103,7 @@ export const zones: Zone[] = [
     index: M.contact.index,
     location: "COMMUNICATIONS ARRAY",
     href: M.contact.href,
-    range: [0.88, 1],
+    range: [0.85, 1],
     z: -272,
   },
 ];
@@ -143,33 +149,33 @@ interface Waypoint {
 const path: Waypoint[] = [
   /* Outer field. Sitting still in the dark, facing the distance. */
   { at: 0.0, pos: [0, 1.3, 16], look: [0, 1.1, -10] },
-  { at: 0.08, pos: [0, 1.5, 6], look: [0, 1.2, -24] },
+  { at: 0.09, pos: [0, 1.5, 6], look: [0, 1.2, -24] },
 
   /* Approach. The facility resolves out of the fog. */
-  { at: 0.16, pos: [1.8, 2.3, -10], look: [0, 1.4, -42] },
-  { at: 0.23, pos: [0.4, 1.7, -26], look: [0, 1.4, -56] },
+  { at: 0.17, pos: [1.8, 2.3, -10], look: [0, 1.4, -42] },
+  { at: 0.24, pos: [0.4, 1.7, -26], look: [0, 1.4, -56] },
 
   /* Through the hall, weaving between the stations. */
   { at: 0.3, pos: [-1.7, 1.5, -38], look: [1.0, 1.5, -62] },
-  { at: 0.36, pos: [1.5, 1.6, -52], look: [-1.0, 1.5, -74] },
-  { at: 0.4, pos: [0, 1.8, -62], look: [0, 2.2, -84] },
+  { at: 0.35, pos: [1.5, 1.6, -52], look: [-1.0, 1.5, -74] },
+  { at: 0.39, pos: [0, 1.8, -62], look: [0, 2.2, -84] },
 
   /* Climb out of the facility and up into the observatory. */
-  { at: 0.47, pos: [0, 3.6, -82], look: [0, 5.0, -104] },
-  { at: 0.53, pos: [-1.2, 5.4, -100], look: [0.6, 4.8, -122] },
-  { at: 0.58, pos: [1.0, 4.6, -118], look: [0, 3.4, -140] },
+  { at: 0.45, pos: [0, 3.6, -82], look: [0, 5.0, -104] },
+  { at: 0.5, pos: [-1.2, 5.4, -100], look: [0.6, 4.8, -122] },
+  { at: 0.55, pos: [1.0, 4.6, -118], look: [0, 3.4, -140] },
 
   /* Descend into the vault, running along the face of the records wall. */
-  { at: 0.64, pos: [2.4, 2.4, -142], look: [-1.4, 2.0, -164] },
-  { at: 0.7, pos: [-2.0, 2.0, -160], look: [1.2, 1.9, -182] },
-  { at: 0.74, pos: [0, 1.9, -178], look: [0, 1.7, -200] },
+  { at: 0.61, pos: [2.4, 2.4, -142], look: [-1.4, 2.0, -164] },
+  { at: 0.66, pos: [-2.0, 2.0, -160], look: [1.2, 1.9, -182] },
+  { at: 0.7, pos: [0, 1.9, -178], look: [0, 1.7, -200] },
 
   /* The chamber. Everything quietens and the camera settles level. */
-  { at: 0.8, pos: [0, 1.5, -204], look: [0, 1.5, -228] },
-  { at: 0.88, pos: [0, 1.5, -228], look: [0, 1.6, -252] },
+  { at: 0.77, pos: [0, 1.5, -204], look: [0, 1.5, -228] },
+  { at: 0.85, pos: [0, 1.5, -228], look: [0, 1.6, -252] },
 
   /* The array. The last move is upward, into the transmission. */
-  { at: 0.94, pos: [0, 1.6, -252], look: [0, 2.6, -276] },
+  { at: 0.92, pos: [0, 1.6, -252], look: [0, 2.6, -276] },
   { at: 1.0, pos: [0, 2.2, -266], look: [0, 5.0, -288] },
 ];
 
@@ -219,12 +225,12 @@ export interface Air {
 }
 
 const AIR: Record<ZoneId, Air> = {
-  origin: { fog: [0.031, 0.035, 0.039], density: 0.02, key: 0.35 },
+  origin: { fog: [0.031, 0.035, 0.039], density: 0.019, key: 0.8 },
   projects: { fog: [0.04, 0.045, 0.05], density: 0.026, key: 1.0 },
-  school: { fog: [0.035, 0.04, 0.052], density: 0.012, key: 0.7 },
-  certifications: { fog: [0.045, 0.045, 0.043], density: 0.03, key: 0.8 },
-  about: { fog: [0.028, 0.03, 0.032], density: 0.038, key: 0.45 },
-  contact: { fog: [0.03, 0.038, 0.036], density: 0.022, key: 0.6 },
+  school: { fog: [0.035, 0.04, 0.052], density: 0.012, key: 0.9 },
+  certifications: { fog: [0.045, 0.045, 0.043], density: 0.028, key: 0.95 },
+  about: { fog: [0.028, 0.03, 0.032], density: 0.034, key: 0.6 },
+  contact: { fog: [0.03, 0.038, 0.036], density: 0.02, key: 0.8 },
 };
 
 /** Atmosphere at a scroll fraction, blended across the zone boundary. */
@@ -262,11 +268,11 @@ export function emptyAir(): Air {
  */
 export const WORLD_COLOR = {
   /** Structure at rest: trusses, walls, the far grid. */
-  structure: 0x272c31,
+  structure: 0x3d444b,
   /** Structure the camera is close to, or that should read as nearer. */
-  edge: 0x4a5158,
+  edge: 0x767f89,
   /** The restrained lime. Used sparingly, and never on large surfaces. */
   accent: 0xaee83c,
   /** Suspended particulate. */
-  dust: 0x5c636b,
+  dust: 0x79818b,
 } as const;
