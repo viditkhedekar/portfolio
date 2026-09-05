@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { rectFrame, ring, segments } from "@/components/world/geometry";
 import { WORLD_COLOR } from "@/lib/world";
-import { air } from "@/components/world/Rig";
+import { air, worldTime } from "@/components/world/Rig";
 import { channels } from "@/lib/data/identity";
 
 /**
@@ -89,7 +89,7 @@ export function Comms({ tier }: { tier: "high" | "low" }) {
   const dishMat = React.useRef<THREE.LineBasicMaterial>(null);
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime;
+    const t = worldTime(state);
 
     /* Pulses climb out along the dish axis and fade as they go. Staggered so
        one is always leaving and the array never looks idle. */
