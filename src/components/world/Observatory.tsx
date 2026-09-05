@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { cloud, rectFrame, ring, rng, segments } from "@/components/world/geometry";
 import { WORLD_COLOR } from "@/lib/world";
-import { air } from "@/components/world/Rig";
+import { air, worldTime } from "@/components/world/Rig";
 import { subjects } from "@/lib/data/school";
 
 /**
@@ -81,7 +81,7 @@ export function Observatory({ tier }: { tier: "high" | "low" }) {
   const ringMat = React.useRef<THREE.LineBasicMaterial>(null);
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime;
+    const t = worldTime(state);
 
     ringRefs.current.forEach((r, i) => {
       if (r) r.rotation.y = t * TILTS[i][1];
