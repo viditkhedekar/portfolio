@@ -13,7 +13,7 @@ import { SystemHeader } from "@/components/SystemHeader";
 import { Taskbar } from "@/components/Taskbar";
 import { TerminalProvider } from "@/components/TerminalProvider";
 import { WorldHUD } from "@/components/world/WorldHUD";
-import { WorldMount } from "@/components/world/WorldMount";
+import { FilmWorld } from "@/components/world/FilmWorld";
 import { appForPath } from "@/lib/data/apps";
 import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot";
 
@@ -63,7 +63,7 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
           becomes the containing block for the fixed layers inside it, which
           would stretch the canvas to the height of the whole document. Both
           carry their own boot fade instead. */}
-      {world && <WorldMount />}
+      {world && <FilmWorld />}
       {world && <WorldHUD />}
       <OperatorHead />
 
