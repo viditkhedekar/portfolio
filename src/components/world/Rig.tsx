@@ -21,6 +21,10 @@ import { emptyAir, sampleAir, samplePath } from "@/lib/world";
  * The fog and the background are declared rather than assigned onto the
  * scene, so every per-frame write in here goes through a ref to an object
  * three owns.
+ *
+ * The pointer is read from the window rather than from the canvas: the canvas
+ * sits behind the page with pointer events switched off, so it never sees a
+ * pointermove of its own.
  */
 
 /**
@@ -47,6 +51,17 @@ export function Rig({ reduced }: { reduced: boolean }) {
   const lean = React.useRef({ x: 0, y: 0 });
   const fog = React.useRef<THREE.FogExp2>(null);
   const background = React.useRef<THREE.Color>(null);
+  const pointer = React.useRef({ x: 0, y: 0 });
+
+  React.useEffect(() => {
+    if (reduced) return;
+    const onMove = (e: PointerEvent) => {
+      pointer.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.current.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [reduced]);
 
   useFrame((state) => {
     const p = scrollState.eased;
@@ -57,8 +72,8 @@ export function Rig({ reduced }: { reduced: boolean }) {
     /* Pointer parallax, chased rather than snapped so a flick of the mouse
        does not jolt the whole world. */
     if (!reduced) {
-      lean.current.x += (state.pointer.x * PARALLAX_X - lean.current.x) * PARALLAX_CHASE;
-      lean.current.y += (state.pointer.y * PARALLAX_Y - lean.current.y) * PARALLAX_CHASE;
+      lean.current.x += (pointer.current.x * PARALLAX_X - lean.current.x) * PARALLAX_CHASE;
+      lean.current.y += (pointer.current.y * PARALLAX_Y - lean.current.y) * PARALLAX_CHASE;
     }
 
     const camera = state.camera;
