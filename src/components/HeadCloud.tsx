@@ -51,7 +51,17 @@ const LIGHT = (() => {
    sort. At this point count the difference is invisible and the cost is not. */
 const BUCKETS = 48;
 
-export function HeadCloud({ className }: { className?: string }) {
+export function HeadCloud({
+  className,
+  chrome = true,
+}: {
+  className?: string;
+  /** The OPERATOR / VISUAL labels and the yaw readout around the canvas.
+      Off when the head is furniture rather than a panel, as it is in the
+      sticky corner marker, where the labels would shrink to illegible
+      smudges along with everything else. */
+  chrome?: boolean;
+}) {
   const hostRef = React.useRef<HTMLDivElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const readoutRef = React.useRef<HTMLSpanElement>(null);
@@ -353,35 +363,45 @@ export function HeadCloud({ className }: { className?: string }) {
     };
   }, [reduced, coarse]);
 
+  /* The chrome is the labelled panel treatment. Without it this is just the
+     canvas, sized entirely by whatever is mounting it. */
+  const size = chrome
+    ? "relative h-[clamp(240px,84vw,420px)] w-full lg:h-[clamp(360px,52vh,560px)]"
+    : "relative";
+
   return (
     <div
       ref={hostRef}
       /* On a phone the band is only as wide as the screen, so height has to
          follow width or the head floats in a tall empty box. */
-      className={`relative h-[clamp(240px,84vw,420px)] w-full lg:h-[clamp(360px,52vh,560px)] ${className ?? ""}`}
+      className={`${size} ${className ?? ""}`}
     >
       <canvas ref={canvasRef} className="block h-full w-full" aria-hidden="true" />
 
-      <div className="pointer-events-none absolute left-0 top-0 flex items-center gap-3">
-        <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)]">
-          OPERATOR
-        </span>
-        <span className="h-px w-8 bg-[var(--vk-line-mid)]" />
-        <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
-          VISUAL
-        </span>
-      </div>
+      {chrome && (
+        <>
+          <div className="pointer-events-none absolute left-0 top-0 flex items-center gap-3">
+            <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)]">
+              OPERATOR
+            </span>
+            <span className="h-px w-8 bg-[var(--vk-line-mid)]" />
+            <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
+              VISUAL
+            </span>
+          </div>
 
-      <span
-        ref={readoutRef}
-        className="vk-mono pointer-events-none absolute bottom-0 right-0 text-[10px] tracking-[0.18em] text-[var(--vk-fg-ghost)] tabular-nums"
-      >
-        YAW 0° · PITCH 0°
-      </span>
+          <span
+            ref={readoutRef}
+            className="vk-mono pointer-events-none absolute bottom-0 right-0 text-[10px] tracking-[0.18em] text-[var(--vk-fg-ghost)] tabular-nums"
+          >
+            YAW 0° · PITCH 0°
+          </span>
 
-      <span className="sr-only">
-        A rotating point-cloud portrait of the operator that follows the cursor.
-      </span>
+          <span className="sr-only">
+            A rotating point-cloud portrait of the operator that follows the cursor.
+          </span>
+        </>
+      )}
     </div>
   );
 }
