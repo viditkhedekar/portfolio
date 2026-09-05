@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { boxFrame, cloud, ring, rng, segments } from "@/components/world/geometry";
 import { WORLD_COLOR } from "@/lib/world";
-import { air } from "@/components/world/Rig";
+import { air, worldTime } from "@/components/world/Rig";
 import { identity } from "@/lib/data/identity";
 
 /**
@@ -88,7 +88,7 @@ export function Chamber({ tier }: { tier: "high" | "low" }) {
   const haloMat = React.useRef<THREE.LineBasicMaterial>(null);
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime;
+    const t = worldTime(state);
 
     /* The motes rise and wrap. Slow enough that the room still reads as still. */
     const p = moteRef.current;
