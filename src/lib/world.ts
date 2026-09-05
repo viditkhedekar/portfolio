@@ -34,7 +34,13 @@ export interface Zone {
   location: string;
   /** Where the module lives, or null when there is nothing to open. */
   href: string | null;
-  /** Scroll fraction this zone owns, [start, end). */
+  /**
+   * Scroll fraction this zone owns, [start, end).
+   *
+   * The landing page sizes its sections from these, so a zone's panel is on
+   * screen for exactly as long as its environment is. Widening a range gives
+   * that environment more scroll without touching anything else.
+   */
   range: [number, number];
   /** Centre of the environment on the path, used to place scene objects. */
   z: number;
@@ -51,7 +57,7 @@ export const zones: Zone[] = [
     index: null,
     location: "OUTER FIELD",
     href: null,
-    range: [0, 0.1],
+    range: [0, 0.12],
     z: 0,
   },
   {
@@ -59,7 +65,7 @@ export const zones: Zone[] = [
     index: M.projects.index,
     location: "PROJECT FACILITY",
     href: M.projects.href,
-    range: [0.1, 0.4],
+    range: [0.12, 0.42],
     z: -46,
   },
   {
@@ -67,7 +73,7 @@ export const zones: Zone[] = [
     index: M.school.index,
     location: "ACADEMIC OBSERVATORY",
     href: M.school.href,
-    range: [0.4, 0.58],
+    range: [0.42, 0.6],
     z: -112,
   },
   {
@@ -75,7 +81,7 @@ export const zones: Zone[] = [
     index: M.certifications.index,
     location: "CREDENTIAL VAULT",
     href: M.certifications.href,
-    range: [0.58, 0.74],
+    range: [0.6, 0.75],
     z: -170,
   },
   {
@@ -83,7 +89,7 @@ export const zones: Zone[] = [
     index: M.about.index,
     location: "IDENTITY CHAMBER",
     href: M.about.href,
-    range: [0.74, 0.88],
+    range: [0.75, 0.88],
     z: -222,
   },
   {
