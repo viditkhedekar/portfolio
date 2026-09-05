@@ -165,6 +165,16 @@ export function buildComms(THREE, scene, kit, pool) {
   rig.add(dish);
 
   /* Feed horn on its tripod, at the focus. */
+  /* Uplighters at the rim. Without them the dish is a black disc against the
+     sky, which is a shape rather than an object. */
+  for (let i = 0; i < 5; i++) {
+    const a = -0.4 + (i / 4) * (Math.PI + 0.8);
+    pool.add([Math.cos(a) * 9, 13.5, to + 26 + Math.sin(a) * 9 + 2], {
+      intensity: 30,
+      distance: 26,
+    });
+  }
+
   const horn = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.8, 16), mat.dark);
   horn.position.set(0, 21.6, 3.6);
   horn.rotation.x = 2.1;
@@ -203,7 +213,8 @@ export function buildComms(THREE, scene, kit, pool) {
     pool.add([x, 1.4, to + 26 + z], { intensity: 4, distance: 8, color: 0xaee83c });
   });
 
-  /* Landing lights marking the apron out to the open end. */
+  /* Landing lights marking the apron out to the open end, and a mast light
+     every third pair so the deck out here is not pitch black. */
   for (let i = 0; i < 9; i++) {
     const z = from - roofLength - i * 6;
     for (const side of [-1, 1]) {
@@ -213,6 +224,26 @@ export function buildComms(THREE, scene, kit, pool) {
       );
       pip.position.set(side * 20, 0.16, z);
       group.add(pip);
+
+      if (i % 3 === 0) {
+        const post = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.12, 0.16, 5.5, 8),
+          mat.steel,
+        );
+        post.position.set(side * 22, 2.75, z);
+        group.add(post);
+
+        const head = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.2, 0.5), mat.lamp);
+        head.position.set(side * 21.4, 5.4, z);
+        group.add(head);
+
+        const glow = new THREE.Sprite(haze(0xbcd2e6, 0.3));
+        glow.position.set(side * 21.4, 5.2, z);
+        glow.scale.set(6, 4, 1);
+        group.add(glow);
+
+        pool.add([side * 20.5, 4.8, z], { intensity: 24, distance: 34 });
+      }
     }
   }
 
