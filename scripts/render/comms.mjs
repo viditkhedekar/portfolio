@@ -1,0 +1,227 @@
+/**
+ * 05 — COMMUNICATIONS ARRAY.
+ *
+ * The building opens out and stops having a ceiling. A hangar with the far
+ * end cut away to the night, and a dish on a mast pointing out of it.
+ *
+ * This is the only room whose subject is outside itself, and the camera's
+ * last move is upward, following the transmission rather than arriving
+ * anywhere. It is the end of the path, so it gets the one view in the whole
+ * world with sky in it at eye level.
+ */
+
+import { addDust } from "./kit.mjs";
+
+export const COMMS = { from: -490, to: -580, width: 54, height: 26 };
+
+/** Real channels, mirrored from src/lib/data/identity.ts. */
+const CHANNELS = ["EMAIL", "LINKEDIN", "GITHUB"];
+
+export function buildComms(THREE, scene, kit, pool) {
+  const { mat, haze } = kit;
+  const group = new THREE.Group();
+  scene.add(group);
+
+  const { from, to, width, height } = COMMS;
+  const length = from - to;
+  const midZ = (from + to) / 2;
+
+  /* ---------------------------------------------------------------- shell */
+
+  const deck = mat.floor.clone();
+  deck.map = kit.floorMap.clone();
+  deck.map.repeat.set(width / 5, length / 5);
+  deck.roughnessMap = kit.floorRough.clone();
+  deck.roughnessMap.repeat.copy(deck.map.repeat);
+
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(width, length), deck);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.z = midZ;
+  floor.receiveShadow = true;
+  group.add(floor);
+
+  const wall = mat.wall.clone();
+  wall.map = kit.panel.clone();
+  wall.map.repeat.set(length / 8, height / 5);
+
+  for (const side of [-1, 1]) {
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(length, height), wall);
+    face.rotation.y = (side * -Math.PI) / 2;
+    face.position.set((side * width) / 2, height / 2, midZ);
+    face.receiveShadow = true;
+    group.add(face);
+  }
+
+  /* Roof over the near half only. The far half is open, and the line where it
+     stops is the most important edge in the room. */
+  const roofLength = length * 0.45;
+  const roof = new THREE.Mesh(new THREE.PlaneGeometry(width, roofLength), mat.ceiling);
+  roof.rotation.x = Math.PI / 2;
+  roof.position.set(0, height, from - roofLength / 2);
+  group.add(roof);
+
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(width, 1.4, 1.6), mat.steel);
+  edge.position.set(0, height - 0.4, from - roofLength);
+  edge.castShadow = true;
+  group.add(edge);
+
+  /* Roof trusses, and the gantry lights hung off them. */
+  for (let z = from; z >= from - roofLength; z -= 9) {
+    const truss = new THREE.Mesh(new THREE.BoxGeometry(width, 0.7, 0.9), mat.steel);
+    truss.position.set(0, height - 1.1, z);
+    group.add(truss);
+
+    for (const x of [-13, 13]) {
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.16, 0.5), mat.lamp);
+      lamp.position.set(x, height - 1.7, z);
+      group.add(lamp);
+
+      const near = new THREE.Sprite(haze(0xbcd2e6, 0.34));
+      near.position.set(x, height - 2.0, z);
+      near.scale.set(9, 4, 1);
+      group.add(near);
+
+      pool.add([x, height - 2.4, z], { intensity: 26, distance: 40 });
+    }
+  }
+
+  /* ----------------------------------------------------------------- night */
+
+  /* Beyond the open end: ground haze and a star field. Deliberately sparse,
+     because the point of the opening is that there is nothing out there. */
+  const skyGeo = new THREE.BufferGeometry();
+  const count = 1800;
+  const pos = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    pos[i * 3] = (Math.random() - 0.5) * 460;
+    pos[i * 3 + 1] = Math.random() * 190 - 10;
+    pos[i * 3 + 2] = to - Math.random() * 320;
+  }
+  skyGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  group.add(
+    new THREE.Points(
+      skyGeo,
+      new THREE.PointsMaterial({
+        color: 0xc6d8ea,
+        size: 0.6,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.85,
+        depthWrite: false,
+      }),
+    ),
+  );
+
+  /* --------------------------------------------------------------- the dish */
+
+  const rig = new THREE.Group();
+  rig.position.set(0, 0, to + 26);
+  group.add(rig);
+
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.3, 17, 16), mat.steel);
+  mast.position.y = 8.5;
+  mast.castShadow = true;
+  rig.add(mast);
+
+  const collar = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 3.1, 1.1, 32), mat.dark);
+  collar.position.y = 0.55;
+  rig.add(collar);
+
+  /* Guy wires. Thin, and the only diagonals in the room. */
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+    const anchor = new THREE.Vector3(Math.cos(a) * 12, 0, Math.sin(a) * 12);
+    const top = new THREE.Vector3(0, 13.5, 0);
+    const dir = new THREE.Vector3().subVectors(anchor, top);
+    const wire = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.05, 0.05, dir.length(), 6),
+      mat.steel,
+    );
+    wire.position.copy(top).addScaledVector(dir, 0.5);
+    wire.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    rig.add(wire);
+  }
+
+  /* The dish. A lathe rather than a cone, so its section is a real parabola
+     and the rim catches light the way a dish does. */
+  const profile = [];
+  for (let i = 0; i <= 24; i++) {
+    const r = (i / 24) * 11;
+    profile.push(new THREE.Vector2(r, (r * r) / 26));
+  }
+  const dish = new THREE.Mesh(
+    new THREE.LatheGeometry(profile, 64),
+    new THREE.MeshStandardMaterial({
+      color: 0xc9d4de,
+      roughness: 0.28,
+      metalness: 0.9,
+      envMapIntensity: 1.6,
+      side: THREE.DoubleSide,
+    }),
+  );
+  dish.position.y = 18;
+  dish.rotation.x = -1.05;
+  dish.castShadow = true;
+  rig.add(dish);
+
+  /* Feed horn on its tripod, at the focus. */
+  const horn = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.8, 16), mat.dark);
+  horn.position.set(0, 21.6, 3.6);
+  horn.rotation.x = 2.1;
+  rig.add(horn);
+
+  const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 12), mat.accent);
+  beacon.position.set(0, 22.6, 3.9);
+  rig.add(beacon);
+
+  const beaconHaze = new THREE.Sprite(haze(0xaee83c, 0.5));
+  beaconHaze.position.copy(beacon.position);
+  beaconHaze.scale.set(9, 9, 1);
+  rig.add(beaconHaze);
+
+  pool.add([0, 22.6, to + 30], { intensity: 26, distance: 40, color: 0xaee83c });
+
+  /* ------------------------------------------------------------- channels */
+
+  /* One console per open channel, at the foot of the mast. */
+  CHANNELS.forEach((_, i) => {
+    const a = (i / CHANNELS.length) * Math.PI * 2 + Math.PI * 0.75;
+    const x = Math.cos(a) * 9;
+    const z = Math.sin(a) * 9;
+
+    const box = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.5, 1.4), mat.dark);
+    box.position.set(x, 0.75, z);
+    box.rotation.y = -a;
+    box.castShadow = true;
+    rig.add(box);
+
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.36), mat.accent);
+    face.position.set(x * 0.9, 1.1, z * 0.9);
+    face.rotation.y = -a + Math.PI / 2;
+    rig.add(face);
+
+    pool.add([x, 1.4, to + 26 + z], { intensity: 4, distance: 8, color: 0xaee83c });
+  });
+
+  /* Landing lights marking the apron out to the open end. */
+  for (let i = 0; i < 9; i++) {
+    const z = from - roofLength - i * 6;
+    for (const side of [-1, 1]) {
+      const pip = new THREE.Mesh(
+        new THREE.SphereGeometry(0.16, 10, 8),
+        new THREE.MeshBasicMaterial({ color: 0xaee83c }),
+      );
+      pip.position.set(side * 20, 0.16, z);
+      group.add(pip);
+    }
+  }
+
+  addDust(THREE, group, {
+    count: 2400,
+    box: { x: [-width / 2, width / 2], y: [0, height], z: [to, from] },
+    size: 0.026,
+    opacity: 0.24,
+  });
+
+  return { group };
+}
