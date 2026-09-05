@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as THREE from "three";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, type RootState } from "@react-three/fiber";
 import { scrollState } from "@/lib/scroll";
 import { emptyAir, sampleAir, samplePath } from "@/lib/world";
 
@@ -36,6 +36,21 @@ import { emptyAir, sampleAir, samplePath } from "@/lib/world";
  */
 export const air = emptyAir();
 
+/** Set by the rig from the visitor's motion preference. */
+const gate = { still: false };
+
+/**
+ * Elapsed time for scene animation.
+ *
+ * Frozen flat when reduced motion is asked for, which stops the rings
+ * turning, the pulses leaving and the dust drifting while leaving the camera
+ * free to follow the scroll: that movement is the visitor's own, and taking
+ * it away would leave them scrolling a still photograph.
+ */
+export function worldTime(state: RootState): number {
+  return gate.still ? 0 : state.clock.elapsedTime;
+}
+
 /** How far the pointer can lean the camera, in metres. */
 const PARALLAX_X = 0.55;
 const PARALLAX_Y = 0.3;
@@ -52,6 +67,10 @@ export function Rig({ reduced }: { reduced: boolean }) {
   const fog = React.useRef<THREE.FogExp2>(null);
   const background = React.useRef<THREE.Color>(null);
   const pointer = React.useRef({ x: 0, y: 0 });
+
+  React.useEffect(() => {
+    gate.still = reduced;
+  }, [reduced]);
 
   React.useEffect(() => {
     if (reduced) return;
