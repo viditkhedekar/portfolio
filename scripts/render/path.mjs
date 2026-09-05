@@ -30,12 +30,13 @@ const path = [
 
   /* Link into the drum. */
   { at: 0.5, pos: [0, 2.2, -162], look: [0, 2.6, -188] },
-  { at: 0.53, pos: [0, 2.6, -194], look: [0, 8, -224] },
+  { at: 0.53, pos: [0, 2.6, -194], look: [0, 8, -222] },
 
-  /* The observatory. The camera climbs and the armillary comes level. */
-  { at: 0.57, pos: [0.5, 7, -212], look: [0, 16, -232] },
-  { at: 0.61, pos: [5, 14, -224], look: [-3, 17.5, -238] },
-  { at: 0.645, pos: [-4, 12, -242], look: [1.5, 8, -258] },
+  /* The observatory. The camera climbs and circles the armillary at a
+     distance: close to it, the core is a white disc and nothing else. */
+  { at: 0.57, pos: [2.5, 5.5, -207], look: [0, 15, -230] },
+  { at: 0.61, pos: [12, 11, -212], look: [-2, 16.5, -234] },
+  { at: 0.645, pos: [-8, 13, -246], look: [2, 8, -260] },
 
   /* Down the far side and into the archive. */
   { at: 0.68, pos: [0, 3.2, -262], look: [0, 2.6, -288] },
@@ -48,13 +49,13 @@ const path = [
   { at: 0.86, pos: [0, 2.4, -386], look: [0, 2.4, -414] },
 
   /* The chamber. Level, slow, and passing the file rather than facing it. */
-  { at: 0.9, pos: [0.8, 2.1, -422], look: [-2.5, 2.5, -448] },
-  { at: 0.93, pos: [1.6, 2.0, -444], look: [-3.6, 2.6, -462] },
-  { at: 0.955, pos: [0, 2.2, -466], look: [0, 2.4, -492] },
+  { at: 0.9, pos: [1.2, 2.1, -424], look: [-2.2, 2.6, -450] },
+  { at: 0.93, pos: [1.6, 2.0, -440], look: [-4.2, 2.8, -456] },
+  { at: 0.955, pos: [0.4, 2.2, -464], look: [0, 2.4, -490] },
 
   /* Out under the open end, and the last move is upward. */
-  { at: 0.98, pos: [0, 2.8, -498], look: [0, 8, -526] },
-  { at: 1.0, pos: [0, 4.2, -516], look: [0, 17, -549] },
+  { at: 0.98, pos: [0, 3.2, -500], look: [0, 7, -528] },
+  { at: 1.0, pos: [0, 5.0, -512], look: [0, 15, -548] },
 ];
 
 /**
@@ -78,8 +79,8 @@ const air = [
   { at: 0.86, fog: 0x0d1013, density: 0.021, exposure: 1.0 },
   { at: 0.9, fog: 0x080b0e, density: 0.042, exposure: 0.92 },
   { at: 0.95, fog: 0x080b0e, density: 0.042, exposure: 0.92 },
-  { at: 0.975, fog: 0x0a1014, density: 0.016, exposure: 1.05 },
-  { at: 1.0, fog: 0x0a1014, density: 0.011, exposure: 1.12 },
+  { at: 0.975, fog: 0x030507, density: 0.014, exposure: 1.05 },
+  { at: 1.0, fog: 0x020406, density: 0.009, exposure: 1.1 },
 ];
 
 function smoothstep(t) {
