@@ -92,6 +92,10 @@ export function FilmWorld() {
   return (
     <div className="vk-world" aria-hidden="true">
       <canvas ref={canvasRef} className="vk-film" />
+      {/* Grading. The film is a photograph of a real room, which means it has
+          bright areas exactly where the HUD has to be readable. This is the
+          same trick the corner readouts would otherwise need a box for. */}
+      <div className="vk-film-grade" />
       <FilmProgress />
     </div>
   );
