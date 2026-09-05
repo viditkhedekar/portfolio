@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { cloud, grid, rng } from "@/components/world/geometry";
 import { WORLD_COLOR } from "@/lib/world";
-import { air } from "@/components/world/Rig";
+import { air, worldTime } from "@/components/world/Rig";
 
 /**
  * The floor and the air between the environments.
@@ -63,7 +63,7 @@ export function Terrain({ tier }: { tier: "high" | "low" }) {
        turn is enough for the air to feel occupied. */
     const p = dustRef.current;
     if (p) {
-      const t = state.clock.elapsedTime;
+      const t = worldTime(state);
       p.position.y = Math.sin(t * 0.11) * 0.5;
       p.rotation.y = t * 0.004;
     }
