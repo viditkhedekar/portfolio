@@ -143,17 +143,20 @@ export function buildObservatory(THREE, scene, kit, pool) {
   }
 
   /* The lit core the rings are about. */
+  /* Bright, not blinding. The first pass ran this at a hundred and twenty and
+     it lit the fog in the whole drum, turning a thirty metre room into a flat
+     yellow wash with three wires across it. */
   const bulb = new THREE.Mesh(
-    new THREE.SphereGeometry(1.5, 32, 24),
-    new THREE.MeshBasicMaterial({ color: 0xe8f4c8 }),
+    new THREE.SphereGeometry(1.2, 32, 24),
+    new THREE.MeshBasicMaterial({ color: 0xdfeaf6 }),
   );
   core.add(bulb);
 
-  const bulbHaze = new THREE.Sprite(haze(0xc4e07a, 0.5));
-  bulbHaze.scale.set(26, 26, 1);
+  const bulbHaze = new THREE.Sprite(haze(0xbcd2e6, 0.26));
+  bulbHaze.scale.set(12, 12, 1);
   core.add(bulbHaze);
 
-  pool.add([cx, cy + 17, cz], { intensity: 120, distance: 70, color: 0xd8ecb0 });
+  pool.add([cx, cy + 17, cz], { intensity: 32, distance: 50, color: 0xcfe0f0 });
 
   /* An armature holding the whole assembly off the floor. */
   const spine = new THREE.Mesh(
