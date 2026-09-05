@@ -67,8 +67,8 @@ export function Terrain({ tier }: { tier: "high" | "low" }) {
       p.position.y = Math.sin(t * 0.11) * 0.5;
       p.rotation.y = t * 0.004;
     }
-    if (floorMat.current) floorMat.current.opacity = 0.3 * air.key;
-    if (innerMat.current) innerMat.current.opacity = 0.16 * air.key;
+    if (floorMat.current) floorMat.current.opacity = 0.5 * air.key;
+    if (innerMat.current) innerMat.current.opacity = 0.24 * air.key;
   });
 
   return (
@@ -78,7 +78,7 @@ export function Terrain({ tier }: { tier: "high" | "low" }) {
           ref={floorMat}
           color={WORLD_COLOR.structure}
           transparent
-          opacity={0.3}
+          opacity={0.5}
           fog
         />
       </lineSegments>
@@ -88,7 +88,7 @@ export function Terrain({ tier }: { tier: "high" | "low" }) {
           ref={innerMat}
           color={WORLD_COLOR.structure}
           transparent
-          opacity={0.16}
+          opacity={0.24}
           fog
         />
       </lineSegments>
