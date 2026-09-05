@@ -9,7 +9,6 @@ import { modules, system } from "@/lib/data/system";
 import { StatusDot, cx } from "@/components/ui";
 import { useTerminal } from "@/components/TerminalProvider";
 import { GithubLink } from "@/components/GithubLink";
-import { OperatorPortrait } from "@/components/OperatorPortrait";
 import { useClock } from "@/lib/hooks";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -35,10 +34,13 @@ export function SystemHeader() {
     <>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--vk-line)] bg-[var(--vk-bg)]/85 backdrop-blur-md">
         <div className="mx-auto flex h-[62px] w-full max-w-[1440px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
-          {/* Identity. The photograph opens itself, so it sits beside the
-              link rather than inside it. */}
-          <div className="flex shrink-0 items-center gap-3">
-            <OperatorPortrait />
+          {/* Identity. The parked head sits in this corner, fixed above the
+              header, so the slot it occupies is held open here rather than
+              filled: `--vk-head-w` is published by the head itself. */}
+          <div
+            className="flex shrink-0 items-center gap-3"
+            style={{ marginLeft: "calc(var(--vk-head-w, 46px) + 12px)" }}
+          >
             <Link
               href="/"
               className="group"
