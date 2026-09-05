@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { segments } from "@/components/world/geometry";
 import { WORLD_COLOR } from "@/lib/world";
-import { air } from "@/components/world/Rig";
+import { air, worldTime } from "@/components/world/Rig";
 import { certifications } from "@/lib/data/certifications";
 
 /**
@@ -111,7 +111,7 @@ export function Vault() {
   const sweepRef = React.useRef<THREE.LineSegments>(null);
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime;
+    const t = worldTime(state);
 
     /* Both walls are driven from the one group ref. Reffing a material inside
        a map only ever captures the last element, and here that would leave one
