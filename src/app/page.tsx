@@ -1,108 +1,295 @@
-import { Container, Label } from "@/components/ui";
-import { SystemState, TelemetryPanel } from "@/components/TelemetryPanel";
-import { system } from "@/lib/data/system";
-import { apps } from "@/lib/data/apps";
-import { GithubLink } from "@/components/GithubLink";
-import { ParticleHero } from "@/components/ParticleHero";
-import { HeadOrbit } from "@/components/HeadOrbit";
-import { TerminalHint } from "@/components/TerminalHint";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { WorldMount } from "@/components/world/WorldMount";
+import { WorldHUD } from "@/components/world/WorldHUD";
+import { StatusDot } from "@/components/ui";
+import { zones, type Zone } from "@/lib/world";
+import { modules, system } from "@/lib/data/system";
+import { liveProjects, projectStats } from "@/lib/data/projects";
+import { qualification, school, subjects } from "@/lib/data/school";
+import { certificationGroups, certifications } from "@/lib/data/certifications";
+import { channels, identity } from "@/lib/data/identity";
 
-const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
+/**
+ * VKOS/01 — the landing page.
+ *
+ * One document. Scrolling it flies a camera through a single continuous
+ * world, and this file is the readable half of that: six blocks of scroll,
+ * each pinning one panel to the middle of the screen for exactly as long as
+ * its environment is on camera.
+ *
+ * Everything here is a teaser. Counts and names are read from the data files
+ * so a panel can never contradict the module it opens, and the module pages
+ * are where the actual material lives.
+ *
+ * If the world failed to load, this page is still a complete, ordered
+ * description of the whole system. That is the test it has to pass.
+ */
 
-export default function Home() {
+/** Zone lookup, so a section can be written in the order it is read. */
+const Z: Record<string, Zone> = Object.fromEntries(zones.map((z) => [z.id, z]));
+
+/** Height of a zone's scroll block, from the share of the path it owns. */
+function span(zone: Zone, trailing = false): React.CSSProperties {
+  const share = zone.range[1] - zone.range[0];
+  return {
+    minHeight: trailing
+      ? `calc(${share} * var(--vk-travel) + 100vh)`
+      : `calc(${share} * var(--vk-travel))`,
+  };
+}
+
+/* ------------------------------------------------------------------ parts */
+
+function Row({ label, value, dim }: { label: string; value: string; dim?: boolean }) {
   return (
-    <Container className="pb-4">
-      {/* ----------------------------------------------------------- DESKTOP */}
-      <section className="pt-10 lg:pt-14" aria-labelledby="apps-heading">
-        <div className="flex items-center gap-4 border-b border-[var(--vk-line)] pb-3">
-          <h2 id="apps-heading" className="vk-label text-[var(--vk-fg-dim)]">
-            APPLICATIONS
-          </h2>
-          <div className="h-px flex-1 bg-[var(--vk-line)]" />
-          <span className="vk-label">{String(apps.length).padStart(2, "0")} INSTALLED</span>
-        </div>
-        <div className="mt-8">
-          <HeadOrbit />
-        </div>
-      </section>
+    <div className="flex items-baseline justify-between gap-4 border-t border-[var(--vk-line)] py-2">
+      <span className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)]">
+        {label}
+      </span>
+      <span
+        className={`vk-mono text-[11px] tracking-[0.14em] ${
+          dim ? "text-[var(--vk-fg-faint)]" : "text-[var(--vk-fg-dim)]"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
 
-      {/* ---------------------------------------------------- CONTROL ROOM */}
-      <section className="mt-20 grid grid-cols-1 gap-px border-y border-[var(--vk-line)] lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="flex flex-col justify-between pb-10 pt-12 lg:pb-12 lg:pr-12 lg:pt-20">
-          <div>
-            <div className="flex items-center gap-3">
-              <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
-                SYSTEM
-              </span>
-              <span className="h-px w-8 bg-[var(--vk-line-mid)]" />
-              <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)]">
-                ROOT
-              </span>
-            </div>
+function Panel({
+  zone,
+  title,
+  children,
+}: {
+  zone: Zone;
+  title: string;
+  children: React.ReactNode;
+}) {
+  const app = modules.find((m) => m.id === zone.id);
 
-            <ParticleHero className="mt-6" compact />
-
-            <p className="vk-mono mt-6 text-[11px] tracking-[0.22em] text-[var(--vk-fg-dim)]">
-              {system.fullName}
-            </p>
-          </div>
-
-          <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:mt-20">
-            <div>
-              <Label>OPERATOR</Label>
-              <p className="mt-3 text-[26px] tracking-tight text-[var(--vk-fg)]">
-                {system.operator}
-              </p>
-              <p className="vk-mono mt-2 text-[10px] tracking-[0.18em] text-[var(--vk-fg-faint)]">
-                {system.role} · AGE {system.age}
-              </p>
-            </div>
-
-            <div>
-              <Label>DISCIPLINES</Label>
-              <ul className="mt-3 space-y-1.5">
-                {system.disciplines.map((d, i) => (
-                  <li key={d} className="flex items-baseline gap-3">
-                    <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <span className="vk-mono text-[12px] tracking-[0.16em] text-[var(--vk-fg-dim)]">
-                      {d}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Instrument column */}
-        <aside className="flex flex-col gap-px border-t border-[var(--vk-line)] py-10 lg:border-l lg:border-t-0 lg:py-12 lg:pl-8">
-          <TerminalHint />
-          <TelemetryPanel />
-          <SystemState className="mt-6" />
-        </aside>
-      </section>
-
-      {/* ------------------------------------------------------ CONTEXT BAR */}
-      <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-b border-[var(--vk-line)] py-4">
-        {CONTEXT.map((c) => (
-          <span
-            key={c}
-            className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)]"
-          >
-            {c}
+  return (
+    <div className="vk-zone-panel">
+      <div className="flex items-baseline gap-3">
+        <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-accent)]">
+          {zone.index}
+        </span>
+        <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">/</span>
+        <h2 className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-dim)]">
+          {app?.name ?? zone.location}
+        </h2>
+        <span className="ml-auto flex items-center gap-2">
+          <StatusDot status={app?.status ?? "ONLINE"} />
+          <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
+            {app?.status}
           </span>
-        ))}
-        <span className="vk-mono ml-auto hidden text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)] sm:inline">
-          ⌘K TO OPEN TERMINAL
         </span>
       </div>
 
-      {/* --------------------------------------------------------- SOURCE  */}
-      <div className="pt-14">
-        <GithubLink />
+      <p className="vk-display mt-4 text-[clamp(1.7rem,4.2vw,2.5rem)] text-[var(--vk-fg)]">
+        {title}
+      </p>
+
+      <div className="mt-6">{children}</div>
+
+      {zone.href ? (
+        <Link
+          href={zone.href}
+          data-cursor="ACCESS MODULE"
+          data-cursor-sub={`${zone.index} / ${app?.name}`}
+          className="group mt-7 flex items-center justify-between border border-[var(--vk-accent-line)] bg-[var(--vk-accent-ghost)] px-4 py-3 transition-colors duration-200 hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)]"
+        >
+          <span className="vk-mono text-[10px] tracking-[0.18em] text-[var(--vk-accent-soft)] transition-colors group-hover:text-[var(--vk-accent)]">
+            OPEN {app?.name}
+          </span>
+          <ArrowRight
+            aria-hidden="true"
+            size={13}
+            strokeWidth={1.5}
+            className="text-[var(--vk-accent-soft)] transition-transform duration-200 group-hover:translate-x-1"
+          />
+        </Link>
+      ) : null}
+    </div>
+  );
+}
+
+function Section({
+  zone,
+  side,
+  trailing,
+  children,
+}: {
+  zone: Zone;
+  side: "left" | "right";
+  trailing?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      id={zone.id}
+      data-side={side}
+      className="vk-zone"
+      style={span(zone, trailing)}
+      aria-label={zone.location}
+    >
+      <div className="vk-zone-sticky">{children}</div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------- page */
+
+export default function Home() {
+  const providers = certificationGroups.length;
+
+  return (
+    <>
+      <WorldMount />
+      <WorldHUD />
+
+      <div className="vk-world-content">
+        {/* -------------------------------------------------- OUTER FIELD */}
+        <section
+          id="origin"
+          className="vk-zone"
+          style={span(Z.origin)}
+          aria-label={Z.origin.location}
+        >
+          <div className="vk-zone-sticky vk-zone-open">
+            <h1 className="vk-display text-[clamp(2.4rem,9vw,5rem)] leading-none text-[var(--vk-fg)]">
+              {system.code}
+            </h1>
+            <p className="vk-mono mt-4 text-[10px] tracking-[0.22em] text-[var(--vk-fg-faint)]">
+              {system.fullName}
+            </p>
+            <p className="vk-mono mt-8 text-[11px] tracking-[0.18em] text-[var(--vk-fg-dim)]">
+              {system.operator}
+              <span className="mx-2 text-[var(--vk-fg-ghost)]">/</span>
+              {system.role}
+            </p>
+            <p className="vk-mono mt-10 text-[9px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
+              SCROLL TO TRAVEL
+              <span className="mx-2">·</span>
+              <span className="hidden sm:inline">⌘K FOR TERMINAL</span>
+            </p>
+          </div>
+        </section>
+
+        {/* ----------------------------------------------------- PROJECTS */}
+        <Section zone={Z.projects} side="left">
+          <Panel zone={Z.projects} title="Five stations, five builds.">
+            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
+              Each station in the facility is a project that exists. The panels
+              show what the thing does; the file has the objective, the system,
+              what broke and where it goes next.
+            </p>
+            <div className="mt-5">
+              {liveProjects.map((p) => (
+                <Row key={p.id} label={p.id} value={p.name.toUpperCase()} />
+              ))}
+              <Row
+                label="INDEXED"
+                value={`${String(projectStats.indexed).padStart(2, "0")} FILES`}
+                dim
+              />
+            </div>
+          </Panel>
+        </Section>
+
+        {/* ------------------------------------------------------- SCHOOL */}
+        <Section zone={Z.school} side="right">
+          <Panel zone={Z.school} title="The academic system.">
+            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
+              One marker on the inner ring for every subject in progress.
+            </p>
+            <div className="mt-5">
+              <Row label="LEVEL" value={school.currentLevel} />
+              <Row
+                label="SUBJECTS"
+                value={String(subjects.length).padStart(2, "0")}
+              />
+              <Row label="YEAR" value={school.yearGroup} />
+              <Row label="COMPLETION" value={school.completion} />
+              <Row label={qualification.name} value={qualification.grade} dim />
+            </div>
+          </Panel>
+        </Section>
+
+        {/* ----------------------------------------------- CERTIFICATIONS */}
+        <Section zone={Z.certifications} side="left">
+          <Panel zone={Z.certifications} title="The credential vault.">
+            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
+              Every lit slot on the wall is a record that is actually on file.
+              The empty ones are not padding, they are room.
+            </p>
+            <div className="mt-5">
+              <Row
+                label="RECORDS"
+                value={String(certifications.length).padStart(2, "0")}
+              />
+              <Row label="PROVIDERS" value={String(providers).padStart(2, "0")} />
+              {certificationGroups.map((g) => (
+                <Row
+                  key={g.id}
+                  label={g.provider}
+                  value={String(g.items.length).padStart(2, "0")}
+                  dim
+                />
+              ))}
+            </div>
+          </Panel>
+        </Section>
+
+        {/* -------------------------------------------------------- ABOUT */}
+        <Section zone={Z.about} side="right">
+          <Panel zone={Z.about} title="The identity file.">
+            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
+              {identity.statement}
+            </p>
+            <div className="mt-5">
+              <Row label="NAME" value={identity.name} />
+              <Row label="AGE" value={String(identity.age)} />
+              <Row label="ROLE" value={identity.role} />
+              <Row label="BASED" value={identity.based} />
+            </div>
+          </Panel>
+        </Section>
+
+        {/* ------------------------------------------------------ CONTACT */}
+        <Section zone={Z.contact} side="left" trailing>
+          <Panel zone={Z.contact} title="Communications.">
+            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
+              One marker at the foot of the mast for each channel that is open.
+            </p>
+            <div className="mt-5">
+              {channels.map((c) => (
+                <Row
+                  key={c.id}
+                  label={c.label}
+                  value={c.href ? "OPEN" : "UNCONFIGURED"}
+                  dim={!c.href}
+                />
+              ))}
+            </div>
+
+            {/* The landing page has no footer, so the two routes that are not
+                stations on the path are reachable from the last panel. */}
+            <div className="mt-6 flex items-center gap-5 border-t border-[var(--vk-line)] pt-4">
+              <Link
+                href="/archive"
+                className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)] transition-colors hover:text-[var(--vk-fg-dim)]"
+              >
+                ARCHIVE
+              </Link>
+              <span className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)]">
+                VKOS 1.0.0
+              </span>
+            </div>
+          </Panel>
+        </Section>
       </div>
-    </Container>
+    </>
   );
 }
