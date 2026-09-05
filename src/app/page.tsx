@@ -169,8 +169,11 @@ export default function Home() {
             </p>
             <p className="vk-mono mt-10 text-[9px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
               SCROLL TO TRAVEL
-              <span className="mx-2">·</span>
-              <span className="hidden sm:inline">⌘K FOR TERMINAL</span>
+              {/* Separator and hint travel together, or a phone is left with a
+                  dangling middle dot. */}
+              <span className="hidden sm:inline">
+                <span className="mx-2">·</span>⌘K FOR TERMINAL
+              </span>
             </p>
           </div>
         </section>
