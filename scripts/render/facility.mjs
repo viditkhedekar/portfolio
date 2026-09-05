@@ -66,9 +66,10 @@ export function buildFacility(THREE, scene) {
 
   const wallMat = new THREE.MeshStandardMaterial({
     map: panel,
-    color: 0x9aa3ac,
-    roughness: 0.82,
-    metalness: 0.12,
+    color: 0xd6dee6,
+    roughness: 0.7,
+    metalness: 0.3,
+    envMapIntensity: 0.9,
   });
 
   /* A polished deck. The metalness and the low roughness are doing the most
@@ -77,16 +78,18 @@ export function buildFacility(THREE, scene) {
   const floorMat = new THREE.MeshStandardMaterial({
     map: floorMap,
     roughnessMap: floorRough,
-    color: 0x8d949b,
-    roughness: 0.34,
-    metalness: 0.62,
+    color: 0xb6bec6,
+    roughness: 0.3,
+    metalness: 0.45,
+    envMapIntensity: 1.5,
   });
 
   const ceilMat = new THREE.MeshStandardMaterial({
     map: panel,
-    color: 0x6d757d,
-    roughness: 0.94,
-    metalness: 0.06,
+    color: 0x9aa3ac,
+    roughness: 0.9,
+    metalness: 0.1,
+    envMapIntensity: 0.7,
   });
 
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(HALL.width, length), floorMat);
@@ -111,14 +114,16 @@ export function buildFacility(THREE, scene) {
   /* ------------------------------------------------------------ structure */
 
   const steelMat = new THREE.MeshStandardMaterial({
-    color: 0x545c65,
-    roughness: 0.55,
-    metalness: 0.75,
+    color: 0x8b949d,
+    roughness: 0.42,
+    metalness: 0.85,
+    envMapIntensity: 1.2,
   });
   const darkMat = new THREE.MeshStandardMaterial({
-    color: 0x2a3037,
-    roughness: 0.7,
-    metalness: 0.4,
+    color: 0x4a535c,
+    roughness: 0.62,
+    metalness: 0.55,
+    envMapIntensity: 0.9,
   });
 
   /* Portal arches. The rhythm of these is what the camera reads as speed, and
@@ -205,9 +210,9 @@ export function buildFacility(THREE, scene) {
   }
 
   /* Inset floor channels, running the whole length under each fixture run. */
-  const channelMat = new THREE.MeshBasicMaterial({ color: 0x3f5a22 });
+  const channelMat = new THREE.MeshBasicMaterial({ color: 0x1d2b0d });
   for (const side of [-1, 1]) {
-    const channel = new THREE.Mesh(new THREE.PlaneGeometry(0.16, length), channelMat);
+    const channel = new THREE.Mesh(new THREE.PlaneGeometry(0.1, length), channelMat);
     channel.rotation.x = -Math.PI / 2;
     channel.position.set(side * 8.6, 0.012, midZ);
     group.add(channel);
@@ -228,12 +233,12 @@ export function buildFacility(THREE, scene) {
     pool.push(light);
   }
 
-  const ambient = new THREE.AmbientLight(0x2c3742, 0.5);
+  const ambient = new THREE.AmbientLight(0x38495a, 0.85);
   group.add(ambient);
 
   /* A cold fill from above and behind, so the shadowed sides of the structure
      are not pure black and the space keeps its shape. */
-  const fill = new THREE.DirectionalLight(0x5f7f9c, 0.35);
+  const fill = new THREE.DirectionalLight(0x6f8fac, 0.55);
   fill.position.set(-6, 14, 20);
   group.add(fill);
 
@@ -243,7 +248,7 @@ export function buildFacility(THREE, scene) {
     map: glow,
     color: 0xaee83c,
     transparent: true,
-    opacity: 0.34,
+    opacity: 0.26,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -282,13 +287,15 @@ export function buildFacility(THREE, scene) {
     inst.add(screen);
 
     /* The screen has to throw light, or it looks like a poster. */
-    const spill = new THREE.PointLight(0xaee83c, 5.5, 13, 2);
+    /* The screen throws light, but a monitor is not a floodlight: at the
+       first setting it washed ten metres of deck lime green. */
+    const spill = new THREE.PointLight(0xaee83c, 2.4, 8.5, 2);
     spill.position.set(0, 2.9, 1.4);
     inst.add(spill);
 
     const bloomCard = new THREE.Sprite(accentGlowMat);
     bloomCard.position.set(0, 2.95, 0.6);
-    bloomCard.scale.set(9, 7, 1);
+    bloomCard.scale.set(7.5, 5.6, 1);
     inst.add(bloomCard);
 
     /* Under-deck strip, and a stanchion each side. */
@@ -312,7 +319,7 @@ export function buildFacility(THREE, scene) {
   /* ------------------------------------------------------------------ dust */
 
   const motes = new THREE.BufferGeometry();
-  const count = 5200;
+  const count = 1500;
   const pos = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) {
     pos[i * 3] = (Math.random() - 0.5) * (HALL.width - 1);
@@ -323,11 +330,11 @@ export function buildFacility(THREE, scene) {
   const dust = new THREE.Points(
     motes,
     new THREE.PointsMaterial({
-      color: 0xa9bccd,
-      size: 0.035,
+      color: 0x93a6b8,
+      size: 0.018,
       sizeAttenuation: true,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.32,
       depthWrite: false,
     }),
   );
