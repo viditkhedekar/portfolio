@@ -5,7 +5,7 @@ import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
 import { boxFrame, readout, rectFrame, segments, type Readout } from "@/components/world/geometry";
 import { WORLD_COLOR } from "@/lib/world";
-import { air } from "@/components/world/Rig";
+import { air, worldTime } from "@/components/world/Rig";
 
 /**
  * 01 — PROJECT FACILITY.
@@ -147,7 +147,7 @@ function Station({ kind, z, side }: { kind: Readout; z: number; side: 1 | -1 }) 
     if (frameMat.current) frameMat.current.opacity = (0.25 + 0.5 * lit) * air.key;
 
     /* One line sweeping the panel. The station is reading something. */
-    const t = state.clock.elapsedTime;
+    const t = worldTime(state);
     if (scanRef.current) {
       const cycle = (t * 0.42 + z * 0.13) % 1;
       scanRef.current.position.y = (cycle - 0.5) * PANEL_H * 0.86;
