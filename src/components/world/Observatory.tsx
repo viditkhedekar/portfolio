@@ -58,19 +58,6 @@ export function Observatory({ tier }: { tier: "high" | "low" }) {
     return cloud(pts);
   }, [tier]);
 
-  /* One material shared by every marker, so the breath below is a single
-     write rather than one ref per subject that only ever holds the last. */
-  const markerMaterial = React.useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color: WORLD_COLOR.accent,
-        transparent: true,
-        opacity: 0.5,
-        fog: true,
-      }),
-    [],
-  );
-
   /* The axis the whole thing is built around, drawn down to the floor. */
   const axis = React.useMemo(
     () => segments([0, -CENTRE[1], 0, 0, 22 - CENTRE[1], 0]),
@@ -82,12 +69,11 @@ export function Observatory({ tier }: { tier: "high" | "low" }) {
     () => () => {
       rings.forEach((g) => g.dispose());
       marker.dispose();
-      markerMaterial.dispose();
       stars.dispose();
       axis.dispose();
       base.dispose();
     },
-    [rings, marker, markerMaterial, stars, axis, base],
+    [rings, marker, stars, axis, base],
   );
 
   const ringRefs = React.useRef<Array<THREE.LineSegments | null>>([]);
@@ -102,18 +88,20 @@ export function Observatory({ tier }: { tier: "high" | "low" }) {
     });
 
     /* Markers ride the inner ring and stay square to the camera, so a subject
-       never presents itself edge-on and vanishes. */
+       never presents itself edge-on and vanishes. Their breath is set here
+       too: they are reached through the group's ref, which keeps the whole
+       per-frame mutation on objects three owns rather than on render values. */
     const group = markerGroup.current;
     if (group) {
       group.rotation.y = t * TILTS[0][1];
-      for (const child of group.children) {
+      group.children.forEach((child, i) => {
         child.lookAt(state.camera.position);
-      }
+        const mat = (child as THREE.LineSegments).material as THREE.LineBasicMaterial;
+        mat.opacity = (0.45 + 0.25 * Math.sin(t * 0.6 + i * 0.7)) * air.key;
+      });
     }
 
     if (ringMat.current) ringMat.current.opacity = 0.4 * air.key;
-    /* A slow breath across the whole set. */
-    markerMaterial.opacity = (0.45 + 0.25 * Math.sin(t * 0.6)) * air.key;
   });
 
   return (
@@ -151,12 +139,14 @@ export function Observatory({ tier }: { tier: "high" | "low" }) {
         {/* Subjects */}
         <group ref={markerGroup} rotation={[TILTS[0][0], 0, TILTS[0][0] * 0.4]}>
           {seats.map((s) => (
-            <lineSegments
-              key={s.a}
-              geometry={marker}
-              material={markerMaterial}
-              position={[s.x, 0, s.z]}
-            />
+            <lineSegments key={s.a} geometry={marker} position={[s.x, 0, s.z]}>
+              <lineBasicMaterial
+                color={WORLD_COLOR.accent}
+                transparent
+                opacity={0.5}
+                fog
+              />
+            </lineSegments>
           ))}
         </group>
 
