@@ -107,7 +107,11 @@ export function buildVault(THREE, scene, kit, pool) {
         dummy.updateMatrix();
         handles.setMatrixAt(n, dummy.matrix);
 
-        if (side === 1 && filled.has(c * ROWS + r)) lit.push({ x, y, z });
+        /* Alternating walls: filled on one side only left the corridor lit
+           from a single flank all the way down. */
+        if (filled.has(c * ROWS + r) && (c % 2 === 0 ? side === 1 : side === -1)) {
+          lit.push({ x, y, z, side });
+        }
         n++;
       }
     }
@@ -119,20 +123,24 @@ export function buildVault(THREE, scene, kit, pool) {
   /* The filled records: a lit face plate and an indicator that actually
      throws a little light onto the wall around it. */
   const plateGeo = new THREE.PlaneGeometry(COL_W - 0.24, ROW_H - 0.3);
+  /* Deliberately under the bloom threshold. At full accent strength thirteen
+     of these lit the whole wall as one green slab and the drawers vanished. */
+  const plateMat = new THREE.MeshBasicMaterial({ color: 0x7fae2c });
+
   for (const rec of lit) {
-    const plate = new THREE.Mesh(plateGeo, mat.accent);
-    plate.position.set(rec.x - 0.19, rec.y, rec.z);
-    plate.rotation.y = -Math.PI / 2;
+    const plate = new THREE.Mesh(plateGeo, plateMat);
+    plate.position.set(rec.x - rec.side * 0.19, rec.y, rec.z);
+    plate.rotation.y = (rec.side * -Math.PI) / 2;
     group.add(plate);
 
-    const bloom = new THREE.Sprite(haze(0xaee83c, 0.3));
-    bloom.position.set(rec.x - 0.5, rec.y, rec.z);
-    bloom.scale.set(3.2, 2.2, 1);
+    const bloom = new THREE.Sprite(haze(0xaee83c, 0.16));
+    bloom.position.set(rec.x - rec.side * 0.5, rec.y, rec.z);
+    bloom.scale.set(1.7, 1.2, 1);
     group.add(bloom);
 
-    pool.add([rec.x - 0.8, rec.y, rec.z], {
-      intensity: 4.5,
-      distance: 7,
+    pool.add([rec.x - rec.side * 0.8, rec.y, rec.z], {
+      intensity: 2,
+      distance: 4.5,
       color: 0xaee83c,
     });
   }
