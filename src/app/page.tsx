@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { StatusDot } from "@/components/ui";
+import { ZoneStage } from "@/components/world/ZoneStage";
 import { zones, type Zone } from "@/lib/world";
 import { modules, system } from "@/lib/data/system";
 import { liveProjects, projectStats } from "@/lib/data/projects";
@@ -41,7 +42,7 @@ function span(zone: Zone, trailing = false): React.CSSProperties {
 
 function Row({ label, value, dim }: { label: string; value: string; dim?: boolean }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-t border-[var(--vk-line)] py-2">
+    <div className="flex items-baseline justify-between gap-4 border-t border-[var(--vk-line)] py-1.5">
       <span className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)]">
         {label}
       </span>
@@ -85,18 +86,18 @@ function Panel({
         </span>
       </div>
 
-      <p className="vk-display mt-4 text-[clamp(1.7rem,4.2vw,2.5rem)] text-[var(--vk-fg)]">
+      <p className="vk-display mt-3.5 text-[clamp(1.5rem,3.4vw,2.1rem)] text-[var(--vk-fg)]">
         {title}
       </p>
 
-      <div className="mt-6">{children}</div>
+      <div className="mt-5">{children}</div>
 
       {zone.href ? (
         <Link
           href={zone.href}
           data-cursor="ACCESS MODULE"
           data-cursor-sub={`${zone.index} / ${app?.name}`}
-          className="group mt-7 flex items-center justify-between border border-[var(--vk-accent-line)] bg-[var(--vk-accent-ghost)] px-4 py-3 transition-colors duration-200 hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)]"
+          className="group mt-6 flex items-center justify-between border border-[var(--vk-accent-line)] bg-[var(--vk-accent-ghost)] px-4 py-3 transition-colors duration-200 hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)]"
         >
           <span className="vk-mono text-[10px] tracking-[0.18em] text-[var(--vk-accent-soft)] transition-colors group-hover:text-[var(--vk-accent)]">
             OPEN {app?.name}
@@ -132,7 +133,7 @@ function Section({
       style={span(zone, trailing)}
       aria-label={zone.location}
     >
-      <div className="vk-zone-sticky">{children}</div>
+      <div className="vk-zone-body">{children}</div>
     </section>
   );
 }
@@ -146,7 +147,7 @@ export default function Home() {
     <>
       {/* The world itself and the HUD over it are mounted by VKOSShell, which
           keeps them clear of the boot fade. This is the readable half. */}
-      <div className="vk-world-content">
+      <ZoneStage>
         {/* -------------------------------------------------- OUTER FIELD */}
         <section
           id="origin"
@@ -154,7 +155,7 @@ export default function Home() {
           style={span(Z.origin)}
           aria-label={Z.origin.location}
         >
-          <div className="vk-zone-sticky vk-zone-open">
+          <div className="vk-zone-body vk-zone-open">
             <h1 className="vk-display text-[clamp(2.4rem,9vw,5rem)] leading-none text-[var(--vk-fg)]">
               {system.code}
             </h1>
@@ -178,11 +179,10 @@ export default function Home() {
         <Section zone={Z.projects} side="left">
           <Panel zone={Z.projects} title="Five stations, five builds.">
             <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
-              Each station in the facility is a project that exists. The panels
-              show what the thing does; the file has the objective, the system,
-              what broke and where it goes next.
+              Every station in the facility is a project that exists. The file
+              has the objective, what broke, and where it goes next.
             </p>
-            <div className="mt-5">
+            <div className="mt-4">
               {liveProjects.map((p) => (
                 <Row key={p.id} label={p.id} value={p.name.toUpperCase()} />
               ))}
@@ -201,7 +201,7 @@ export default function Home() {
             <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
               One marker on the inner ring for every subject in progress.
             </p>
-            <div className="mt-5">
+            <div className="mt-4">
               <Row label="LEVEL" value={school.currentLevel} />
               <Row
                 label="SUBJECTS"
@@ -218,10 +218,10 @@ export default function Home() {
         <Section zone={Z.certifications} side="left">
           <Panel zone={Z.certifications} title="The credential vault.">
             <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
-              Every lit slot on the wall is a record that is actually on file.
-              The empty ones are not padding, they are room.
+              Every lit slot on the wall is a record on file. The empty ones
+              are not padding, they are room.
             </p>
-            <div className="mt-5">
+            <div className="mt-4">
               <Row
                 label="RECORDS"
                 value={String(certifications.length).padStart(2, "0")}
@@ -245,7 +245,7 @@ export default function Home() {
             <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
               {identity.statement}
             </p>
-            <div className="mt-5">
+            <div className="mt-4">
               <Row label="NAME" value={identity.name} />
               <Row label="AGE" value={String(identity.age)} />
               <Row label="ROLE" value={identity.role} />
@@ -260,7 +260,7 @@ export default function Home() {
             <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
               One marker at the foot of the mast for each channel that is open.
             </p>
-            <div className="mt-5">
+            <div className="mt-4">
               {channels.map((c) => (
                 <Row
                   key={c.id}
@@ -286,7 +286,7 @@ export default function Home() {
             </div>
           </Panel>
         </Section>
-      </div>
+      </ZoneStage>
     </>
   );
 }
