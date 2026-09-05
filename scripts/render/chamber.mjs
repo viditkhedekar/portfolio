@@ -65,9 +65,11 @@ export function buildChamber(THREE, scene, kit, pool) {
 
   /* --------------------------------------------------------------- the file */
 
-  /* Off the walked line, so the camera passes it rather than flying into it. */
-  const standZ = midZ + 3;
-  const standX = -4.2;
+  /* Off the walked line and well down the room, so the camera has it in view
+     on the way in and passes it rather than arriving beside it. The first
+     pass put it level with the camera's entry point, where it was invisible. */
+  const standZ = midZ - 8;
+  const standX = -4.6;
 
   const base = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.9, 0.35, 48), mat.dark);
   base.position.set(standX, 0.175, standZ);
@@ -151,11 +153,13 @@ export function buildChamber(THREE, scene, kit, pool) {
     group.add(line);
   }
 
+  /* Sparse. Against a room this dark, dust at facility density reads as a
+     starfield indoors. */
   addDust(THREE, group, {
-    count: 2600,
+    count: 900,
     box: { x: [-width / 2, width / 2], y: [0, height], z: [to, from] },
-    size: 0.022,
-    opacity: 0.34,
+    size: 0.02,
+    opacity: 0.18,
   });
 
   return { group };
