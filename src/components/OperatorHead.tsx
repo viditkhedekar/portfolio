@@ -109,8 +109,12 @@ export function OperatorHead() {
   }, [reduced]);
 
   return (
-    <div ref={hostRef} className="vk-head" aria-hidden="true">
-      <HeadCloud chrome={false} className="h-full w-full" />
+    /* The layer never moves, so the boot fade has somewhere to live that the
+       frame loop is not writing to sixty times a second. */
+    <div className="vk-head-layer" aria-hidden="true">
+      <div ref={hostRef} className="vk-head">
+        <HeadCloud chrome={false} className="h-full w-full" />
+      </div>
     </div>
   );
 }
