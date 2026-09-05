@@ -370,53 +370,6 @@ html[data-boot="pending"] .vk-app {
   transform: translateY(0);
 }
 
-/* ---------------------------------------------------------------- ORBIT  */
-
-/*
- * The landing hero: the head in the middle with six application boxes set
- * around it, two down each side and two beneath.
- *
- * Below `lg` there is nothing to orbit, so the areas are dropped and the boxes
- * fall into a plain grid under the head. The head is first in the DOM so it
- * leads on small screens without needing to be reordered.
- */
-.vk-orbit {
-  display: grid;
-  gap: 12px;
-}
-
-@media (min-width: 640px) {
-  .vk-orbit {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .vk-orbit-head {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (min-width: 1024px) {
-  .vk-orbit {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(0, 1fr);
-    grid-template-areas:
-      "a head head c"
-      "b head head d"
-      ". e    f    .";
-    gap: 16px 28px;
-    align-items: center;
-  }
-
-  .vk-orbit-head {
-    grid-area: head;
-  }
-  .vk-orbit-a { grid-area: a; }
-  .vk-orbit-b { grid-area: b; }
-  .vk-orbit-c { grid-area: c; }
-  .vk-orbit-d { grid-area: d; }
-  .vk-orbit-e { grid-area: e; }
-  .vk-orbit-f { grid-area: f; }
-}
-
 /* ---------- Overlay entrance ---------- */
 
 /*
@@ -450,4 +403,297 @@ html[data-boot="pending"] .vk-app {
 
 .vk-panel-in {
   animation: vk-panel-in 200ms var(--vk-ease) both;
+}
+
+/* ---------------------------------------------------------------- WORLD  */
+
+/*
+ * The landing page stands on a 3D canvas rather than on a background colour.
+ * Everything in this block is the layering that makes that work: the world at
+ * the bottom, the HUD above it, the head above that, and the readable content
+ * in between, each on its own fixed plane so none of them can scroll away
+ * from the others.
+ */
+
+.vk-world {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 700ms var(--vk-ease);
+}
+
+html[data-boot="pending"] .vk-world {
+  opacity: 0;
+}
+
+/* Content sits over the world and must be reachable. */
+.vk-world-content {
+  position: relative;
+  z-index: 10;
+}
+
+/* ---------- The sticky head ---------- */
+
+/*
+ * Two elements: a layer that never moves, and the head inside it that does.
+ * Keeping the boot fade on the layer leaves the transform and opacity on the
+ * head itself free for the frame loop to write every frame.
+ */
+.vk-head-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  transition: opacity 700ms var(--vk-ease);
+}
+
+html[data-boot="pending"] .vk-head-layer {
+  opacity: 0;
+}
+
+.vk-head {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: min(440px, 78vw);
+  height: min(440px, 78vw);
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+}
+
+/* ---------- HUD ---------- */
+
+.vk-hud {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.vk-hud-corner {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.vk-hud-strong,
+.vk-hud-dim {
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  font-size: 9px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vk-hud-strong {
+  color: var(--vk-fg-dim);
+}
+
+.vk-hud-dim {
+  color: var(--vk-fg-ghost);
+}
+
+/* The top-left readout stands clear of the parked head, whose position is
+   published by the head itself so this never has to guess. */
+.vk-hud-tl {
+  top: 18px;
+  left: calc(var(--vk-head-x, 20px) + var(--vk-head-w, 46px) + 12px);
+}
+
+.vk-hud-tr {
+  top: 18px;
+  right: 20px;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.vk-hud-bl {
+  bottom: 20px;
+  left: 20px;
+}
+
+.vk-hud-br {
+  bottom: 20px;
+  right: 20px;
+  align-items: flex-end;
+  text-align: right;
+}
+
+@media (min-width: 640px) {
+  .vk-hud-tr { right: 32px; }
+  .vk-hud-bl { left: 32px; }
+  .vk-hud-br { right: 32px; }
+}
+
+@media (min-width: 1024px) {
+  .vk-hud-tr { right: 48px; }
+  .vk-hud-bl { left: 48px; }
+  .vk-hud-br { right: 48px; }
+}
+
+/* ---------- Transition log ---------- */
+
+.vk-hud-log {
+  margin-top: 10px;
+  font-family: var(--font-term), ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+  color: var(--vk-accent-soft);
+  animation: vk-overlay-in 160ms var(--vk-ease) both;
+}
+
+/* ---------- Destination rail ---------- */
+
+/*
+ * The one part of the HUD that takes clicks, so it opts back into pointer
+ * events the layer switched off.
+ */
+.vk-hud-rail {
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+@media (min-width: 640px) {
+  .vk-hud-rail { right: 32px; }
+}
+
+@media (min-width: 1024px) {
+  .vk-hud-rail { right: 48px; }
+}
+
+.vk-hud-rail ul {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: flex-end;
+}
+
+.vk-hud-rail button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  background: none;
+  border: 0;
+  padding: 2px 0;
+}
+
+.vk-hud-rail-name {
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vk-fg-ghost);
+  opacity: 0;
+  transform: translateX(6px);
+  transition:
+    opacity 220ms var(--vk-ease),
+    transform 220ms var(--vk-ease),
+    color 220ms var(--vk-ease);
+}
+
+.vk-hud-rail-tick {
+  display: block;
+  width: 22px;
+  height: 1px;
+  background: var(--vk-line-strong);
+  transition:
+    width 220ms var(--vk-ease),
+    background-color 220ms var(--vk-ease);
+}
+
+.vk-hud-rail button[data-here] .vk-hud-rail-tick {
+  width: 34px;
+  background: var(--vk-accent);
+}
+
+.vk-hud-rail button[data-here] .vk-hud-rail-name,
+.vk-hud-rail:hover .vk-hud-rail-name,
+.vk-hud-rail button:focus-visible .vk-hud-rail-name {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.vk-hud-rail button:hover .vk-hud-rail-tick {
+  background: var(--vk-accent);
+}
+
+.vk-hud-rail button:hover .vk-hud-rail-name,
+.vk-hud-rail button[data-here] .vk-hud-rail-name {
+  color: var(--vk-fg-dim);
+}
+
+/* The rail is the only navigation the landing page has, so it is never
+   hidden outright, but on a phone it collapses to ticks alone. */
+@media (max-width: 639px) {
+  .vk-hud-rail-name {
+    display: none;
+  }
+
+  .vk-hud-rail ul {
+    gap: 18px;
+  }
+}
+
+/* ---------- Zone panels ---------- */
+
+/*
+ * Each zone owns one screen of scroll and puts a single panel on it, held to
+ * one side so the middle of the frame stays clear for the world and the head.
+ */
+.vk-zone {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  padding: 96px 20px;
+}
+
+@media (min-width: 640px) {
+  .vk-zone { padding: 96px 32px; }
+}
+
+@media (min-width: 1024px) {
+  .vk-zone { padding: 120px 48px; }
+}
+
+.vk-zone-panel {
+  width: 100%;
+  max-width: 420px;
+  background: color-mix(in srgb, var(--vk-bg) 72%, transparent);
+  backdrop-filter: blur(9px);
+  border: 1px solid var(--vk-line);
+  padding: 26px 24px 24px;
+}
+
+@media (min-width: 1024px) {
+  .vk-zone-panel {
+    max-width: 460px;
+  }
+
+  /* Alternating sides, so the camera's weave through the world is answered
+     by the reading matter and the centre never fills up. */
+  .vk-zone[data-side="right"] {
+    justify-content: flex-end;
+  }
+}
+
+/* The opening screen has no panel: the head has the frame to itself. */
+.vk-zone-open {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 96px;
+  text-align: center;
 }
