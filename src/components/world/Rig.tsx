@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import * as THREE from "three";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useFrame } from "@react-three/fiber";
 import { scrollState } from "@/lib/scroll";
 import { emptyAir, sampleAir, samplePath } from "@/lib/world";
 
@@ -17,6 +17,10 @@ import { emptyAir, sampleAir, samplePath } from "@/lib/world";
  * Nothing here allocates per frame. At sixty frames a second a new Vector3 is
  * a new Vector3 sixty times a second, and the garbage collector eventually
  * charges for it in exactly the place a scroll animation cannot afford it.
+ *
+ * The fog and the background are declared rather than assigned onto the
+ * scene, so every per-frame write in here goes through a ref to an object
+ * three owns.
  */
 
 /**
@@ -37,26 +41,12 @@ const PARALLAX_CHASE = 0.045;
 const ROLL = 2.6;
 
 export function Rig({ reduced }: { reduced: boolean }) {
-  const { camera, scene } = useThree();
-
   const pos = React.useRef<[number, number, number]>([0, 0, 0]);
   const look = React.useRef<[number, number, number]>([0, 0, 0]);
   const target = React.useRef(new THREE.Vector3());
   const lean = React.useRef({ x: 0, y: 0 });
-  const fog = React.useRef<THREE.FogExp2 | null>(null);
-
-  /* One fog and one background colour, mutated in place for the life of the
-     scene rather than replaced on every atmosphere change. */
-  React.useEffect(() => {
-    const f = new THREE.FogExp2(0x08090a, 0.02);
-    scene.fog = f;
-    scene.background = new THREE.Color(0x08090a);
-    fog.current = f;
-    return () => {
-      scene.fog = null;
-      scene.background = null;
-    };
-  }, [scene]);
+  const fog = React.useRef<THREE.FogExp2>(null);
+  const background = React.useRef<THREE.Color>(null);
 
   useFrame((state) => {
     const p = scrollState.eased;
@@ -71,6 +61,7 @@ export function Rig({ reduced }: { reduced: boolean }) {
       lean.current.y += (state.pointer.y * PARALLAX_Y - lean.current.y) * PARALLAX_CHASE;
     }
 
+    const camera = state.camera;
     camera.position.set(
       pos.current[0] + lean.current.x,
       pos.current[1] + lean.current.y,
@@ -85,13 +76,15 @@ export function Rig({ reduced }: { reduced: boolean }) {
       camera.rotation.z += Math.max(-0.05, Math.min(0.05, scrollState.velocity * ROLL));
     }
 
-    const f = fog.current;
-    if (f) {
-      f.color.setRGB(air.fog[0], air.fog[1], air.fog[2]);
-      f.density = air.density;
-      (scene.background as THREE.Color).setRGB(air.fog[0], air.fog[1], air.fog[2]);
-    }
+    fog.current?.color.setRGB(air.fog[0], air.fog[1], air.fog[2]);
+    if (fog.current) fog.current.density = air.density;
+    background.current?.setRGB(air.fog[0], air.fog[1], air.fog[2]);
   });
 
-  return null;
+  return (
+    <>
+      <fogExp2 ref={fog} attach="fog" args={[0x08090a, 0.02]} />
+      <color ref={background} attach="background" args={[0x08090a]} />
+    </>
+  );
 }
