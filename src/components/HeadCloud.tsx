@@ -142,11 +142,16 @@ export function HeadCloud({
         /* Keep the sculpt. */
       });
 
+    /* Layout size, not the drawn size. The sticky marker scales its host with
+       a transform, which a bounding rect reports and `offsetWidth` does not.
+       Measuring the rect there would resize the canvas to the shrunken size,
+       which resizes the layout, which measures again. */
     const measure = () => {
-      const rect = host.getBoundingClientRect();
-      if (rect.width < 2 || rect.height < 2) return false;
-      width = rect.width;
-      height = rect.height;
+      const w = host.offsetWidth;
+      const h = host.offsetHeight;
+      if (w < 2 || h < 2) return false;
+      width = w;
+      height = h;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.floor(width * dpr);
