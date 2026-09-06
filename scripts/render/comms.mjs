@@ -11,13 +11,14 @@
  */
 
 import { addDust } from "./kit.mjs";
+import { buildFitting } from "./surfaces.mjs";
 
 export const COMMS = { from: -490, to: -580, width: 54, height: 26 };
 
 /** Real channels, mirrored from src/lib/data/identity.ts. */
 const CHANNELS = ["EMAIL", "LINKEDIN", "GITHUB"];
 
-export function buildComms(THREE, scene, kit, pool) {
+export function buildComms(THREE, scene, kit, pool, surfaces) {
   const { mat, haze } = kit;
   const group = new THREE.Group();
   scene.add(group);
@@ -193,24 +194,46 @@ export function buildComms(THREE, scene, kit, pool) {
 
   /* ------------------------------------------------------------- channels */
 
-  /* One console per open channel, at the foot of the mast. */
+  /* One console per open channel, arranged in an arc facing back up the
+     apron so the camera meets them head on rather than edge on. */
   CHANNELS.forEach((_, i) => {
-    const a = (i / CHANNELS.length) * Math.PI * 2 + Math.PI * 0.75;
-    const x = Math.cos(a) * 9;
-    const z = Math.sin(a) * 9;
+    const spread = 7.5;
+    const x = (i - (CHANNELS.length - 1) / 2) * spread;
+    const z = 13;
 
-    const box = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.5, 1.4), mat.dark);
-    box.position.set(x, 0.75, z);
-    box.rotation.y = -a;
+    const box = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.3, 1.8), mat.dark);
+    box.position.set(x, 0.65, z);
     box.castShadow = true;
     rig.add(box);
 
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.36), mat.accent);
-    face.position.set(x * 0.9, 1.1, z * 0.9);
-    face.rotation.y = -a + Math.PI / 2;
-    rig.add(face);
+    const stand = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.7, 0.4), mat.steel);
+    stand.position.set(x, 1.9, z - 0.3);
+    rig.add(stand);
 
-    pool.add([x, 1.4, to + 26 + z], { intensity: 4, distance: 8, color: 0xaee83c });
+    const fitting = buildFitting(THREE, kit, { width: 4.6, height: 2.5, depth: 0.4 });
+    fitting.group.position.set(x, 3.6, z + 0.2);
+    fitting.group.rotation.x = -0.16;
+    rig.add(fitting.group);
+
+    surfaces.add(`channel-${i}`, "console", fitting.face, 4.6, 2.5, { index: i });
+
+    pool.add([x, 3.4, to + 26 + z + 1.6], {
+      intensity: 5,
+      distance: 10,
+      color: 0xaee83c,
+    });
+  });
+
+  /* The summary board, high on the left wall where the roof runs out. */
+  const board = buildFitting(THREE, kit, { width: 12, height: 6.4, depth: 0.5 });
+  board.group.position.set(-width / 2 + 0.6, 9.5, from - roofLength - 12);
+  board.group.rotation.y = Math.PI / 2;
+  group.add(board.group);
+  surfaces.add("comms-index", "wall", board.face, 12, 6.4);
+
+  pool.add([-width / 2 + 4, 10, from - roofLength - 12], {
+    intensity: 20,
+    distance: 26,
   });
 
   /* Landing lights marking the apron out to the open end, and a mast light
