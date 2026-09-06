@@ -29,8 +29,14 @@
   import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
   import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
   import { buildEnvironment } from "./environment.mjs";
+  import { buildKit, createLightPool } from "./kit.mjs";
   import { PHOTOS, buildFacility } from "./facility.mjs";
-  import { samplePath } from "./path.mjs";
+  import { buildCorridor, buildThreshold } from "./links.mjs";
+  import { buildObservatory } from "./observatory.mjs";
+  import { buildVault } from "./vault.mjs";
+  import { buildChamber } from "./chamber.mjs";
+  import { buildComms } from "./comms.mjs";
+  import { samplePath, sampleAir } from "./path.mjs";
 
   const hud = document.getElementById("hud");
   const say = (m) => { hud.textContent = m; };
@@ -60,7 +66,7 @@
      a far end you cannot see. Density is the whole mood control. */
   scene.fog = new THREE.FogExp2(0x0a0f14, 0.0165);
 
-  const camera = new THREE.PerspectiveCamera(52, state.width / state.height, 0.1, 400);
+  const camera = new THREE.PerspectiveCamera(52, state.width / state.height, 0.1, 700);
 
   /* Reflections first: the materials read it off the scene when they compile. */
   scene.environment = buildEnvironment(THREE, renderer);
@@ -88,7 +94,38 @@
     ),
   );
 
-  const world = buildFacility(THREE, scene, photos);
+  /* One kit and one light pool for the whole building. Every room registers
+     its emitters with the same pool, so the scene never carries more than ten
+     real lights however many fixtures are modelled. */
+  const kit = buildKit(THREE);
+  const pool = createLightPool(THREE, scene, { size: 10, shadows: 3, reach: 48 });
+
+  scene.add(new THREE.AmbientLight(0x38495a, 0.85));
+  const fill = new THREE.DirectionalLight(0x6f8fac, 0.55);
+  fill.position.set(-6, 14, 20);
+  scene.add(fill);
+
+  /* The building, front to back. Corridors overshoot into the rooms they
+     serve so their mouths read as tunnels breaking through a wall, which is
+     cheaper and truer than cutting real holes. */
+  buildCorridor(THREE, scene, kit, pool, { from: 46, to: 8, width: 9, height: 6, accent: true });
+  buildThreshold(THREE, scene, kit, pool, { z: 9, width: 8.4, height: 5.6 });
+
+  buildFacility(THREE, scene, kit, pool, photos);
+
+  buildCorridor(THREE, scene, kit, pool, { from: -150, to: -206, width: 9, height: 6, accent: true });
+  buildObservatory(THREE, scene, kit, pool);
+  buildCorridor(THREE, scene, kit, pool, { from: -258, to: -302, width: 9, height: 6, accent: true });
+
+  buildVault(THREE, scene, kit, pool);
+
+  buildCorridor(THREE, scene, kit, pool, { from: -404, to: -424, width: 9, height: 6 });
+  buildThreshold(THREE, scene, kit, pool, { z: -419, width: 8.4, height: 5.6 });
+
+  buildChamber(THREE, scene, kit, pool);
+
+  buildCorridor(THREE, scene, kit, pool, { from: -470, to: -494, width: 9, height: 6 });
+  buildComms(THREE, scene, kit, pool);
 
   const composer = new EffectComposer(renderer);
   composer.setSize(state.width, state.height);
@@ -110,13 +147,21 @@
   const look = new THREE.Vector3();
   const pos = [0, 0, 0];
   const target = [0, 0, 0];
+  const airNow = { r: 0, g: 0, b: 0, density: 0.02, exposure: 1 };
 
   function place(progress) {
     samplePath(progress, pos, target);
     camera.position.set(pos[0], pos[1], pos[2]);
     look.set(target[0], target[1], target[2]);
     camera.lookAt(look);
-    world.update(camera);
+
+    sampleAir(progress, airNow);
+    scene.fog.color.setRGB(airNow.r, airNow.g, airNow.b);
+    scene.fog.density = airNow.density;
+    scene.background.setRGB(airNow.r, airNow.g, airNow.b);
+    renderer.toneMappingExposure = airNow.exposure;
+
+    pool.update(camera);
   }
 
   function draw(progress) {
