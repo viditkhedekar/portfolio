@@ -1,30 +1,31 @@
 /**
  * 03 — CREDENTIAL VAULT.
  *
- * A hundred metres of corridor walled floor to ceiling with record drawers.
- * Almost all of them are shut and dark; thirteen are lit, which is exactly
- * how many certifications are on file. The wall is therefore a true picture
- * of the archive rather than a decorative texture, and the empty drawers are
- * not padding, they are room.
+ * A hundred metres of corridor walled with safe doors. Almost all of them are
+ * shut and dark; the ones that hold something are lit and carry a nameplate
+ * you can read and open. There are exactly as many lit safes as there are
+ * certifications on record, so the wall is a true picture of the archive
+ * rather than a decorative texture, and the empty ones are not padding, they
+ * are room.
  *
- * The drawers are instanced. There are well over a thousand and they are the
- * same box, so drawing them one at a time would be a waste of a scene that
+ * The doors are instanced. There are a couple of hundred and they are the
+ * same object, so drawing them one at a time would be a waste of a scene that
  * has better things to spend on.
  */
 
 import { addDust } from "./kit.mjs";
+import { buildFitting } from "./surfaces.mjs";
 
 export const VAULT = { from: -300, to: -404, width: 11, height: 8 };
 
 /** Real record count, mirrored from src/lib/data/certifications.ts. */
 const FILLED = 13;
 
-const ROWS = 7;
-const ROW_H = 0.95;
-const COL_W = 1.15;
-const BASE_Y = 0.55;
+const ROWS = [1.55, 3.85];
+const DOOR = 1.9;
+const PITCH = 2.25;
 
-export function buildVault(THREE, scene, kit, pool) {
+export function buildVault(THREE, scene, kit, pool, surfaces) {
   const { mat, haze } = kit;
   const group = new THREE.Group();
   scene.add(group);
@@ -32,7 +33,7 @@ export function buildVault(THREE, scene, kit, pool) {
   const { from, to, width, height } = VAULT;
   const length = from - to;
   const midZ = (from + to) / 2;
-  const columns = Math.floor(length / COL_W);
+  const columns = Math.floor(length / PITCH);
 
   /* ---------------------------------------------------------------- shell */
 
@@ -64,93 +65,140 @@ export function buildVault(THREE, scene, kit, pool) {
     group.add(face);
   }
 
-  /* --------------------------------------------------------------- drawers */
+  /* ----------------------------------------------------------------- doors */
 
-  const drawerGeo = new THREE.BoxGeometry(0.34, ROW_H - 0.12, COL_W - 0.1);
-  const total = columns * ROWS * 2;
+  const total = columns * ROWS.length * 2;
 
-  const shut = new THREE.InstancedMesh(drawerGeo, mat.dark, total);
-  shut.castShadow = true;
-  shut.receiveShadow = true;
+  /* One instanced mesh per part of a door. Four draw calls for two hundred
+     safes, rather than seventeen hundred. */
+  const plate = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(DOOR, DOOR, 0.26),
+    mat.dark,
+    total,
+  );
+  plate.castShadow = true;
+  plate.receiveShadow = true;
 
-  const handleGeo = new THREE.BoxGeometry(0.12, 0.06, COL_W * 0.45);
-  const handles = new THREE.InstancedMesh(handleGeo, mat.steel, total);
+  const rim = new THREE.InstancedMesh(
+    new THREE.TorusGeometry(DOOR * 0.42, 0.045, 8, 32),
+    mat.steel,
+    total,
+  );
+
+  const dial = new THREE.InstancedMesh(
+    new THREE.CylinderGeometry(0.24, 0.24, 0.12, 20),
+    mat.steel,
+    total,
+  );
+
+  const handle = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(0.11, 0.86, 0.11),
+    mat.steel,
+    total,
+  );
 
   const dummy = new THREE.Object3D();
 
-  /* Which drawers are filled: spread down the corridor rather than clustered,
-     so the walk past them is paced. */
-  const filled = new Set();
+  /* Which safes hold something: spread down the corridor and alternating
+     walls, so the walk past them is paced and lit from both flanks. */
+  const slots = columns * ROWS.length;
+  const filled = new Map();
   for (let i = 0; i < FILLED; i++) {
-    filled.add(Math.round(((i + 0.5) / FILLED) * (columns * ROWS - 1)));
+    const slot = Math.round(((i + 0.5) / FILLED) * (slots - 1));
+    filled.set(slot, i);
   }
 
   const lit = [];
   let n = 0;
+
   for (let c = 0; c < columns; c++) {
-    const z = from - c * COL_W - COL_W / 2;
-    for (let r = 0; r < ROWS; r++) {
-      const y = BASE_Y + r * ROW_H;
+    const z = from - c * PITCH - PITCH / 2;
+    for (let r = 0; r < ROWS.length; r++) {
+      const y = ROWS[r];
+      const slot = c * ROWS.length + r;
+      const record = filled.get(slot);
+      const litSide = record === undefined ? 0 : record % 2 === 0 ? 1 : -1;
+
       for (const side of [-1, 1]) {
-        const x = (side * width) / 2 - side * 0.17;
+        const x = (side * width) / 2 - side * 0.14;
+        const facing = (side * -Math.PI) / 2;
 
-        /* A few drawers stand proud of the face. A wall where every single
-           unit is perfectly flush reads as wallpaper. */
-        const proud = (c * 7 + r * 3 + (side + 1)) % 23 === 0 ? 0.22 : 0;
-
-        dummy.position.set(x - side * proud, y, z);
-        dummy.rotation.set(0, 0, 0);
+        dummy.position.set(x, y, z);
+        dummy.rotation.set(0, facing, 0);
         dummy.updateMatrix();
-        shut.setMatrixAt(n, dummy.matrix);
+        plate.setMatrixAt(n, dummy.matrix);
+        rim.setMatrixAt(n, dummy.matrix);
 
-        dummy.position.set(x - side * (proud + 0.2), y, z);
+        dummy.position.set(x - side * 0.16, y, z);
+        dummy.rotation.set(Math.PI / 2, 0, facing);
         dummy.updateMatrix();
-        handles.setMatrixAt(n, dummy.matrix);
+        dial.setMatrixAt(n, dummy.matrix);
 
-        /* Alternating walls: filled on one side only left the corridor lit
-           from a single flank all the way down. */
-        if (filled.has(c * ROWS + r) && (c % 2 === 0 ? side === 1 : side === -1)) {
-          lit.push({ x, y, z, side });
+        dummy.position.set(x - side * 0.16, y, z + DOOR * 0.34);
+        dummy.rotation.set(0, facing, 0);
+        dummy.updateMatrix();
+        handle.setMatrixAt(n, dummy.matrix);
+
+        if (record !== undefined && side === litSide) {
+          lit.push({ index: record, x, y, z, side, facing });
         }
         n++;
       }
     }
   }
-  shut.instanceMatrix.needsUpdate = true;
-  handles.instanceMatrix.needsUpdate = true;
-  group.add(shut, handles);
 
-  /* The filled records: a lit face plate and an indicator that actually
-     throws a little light onto the wall around it. */
-  const plateGeo = new THREE.PlaneGeometry(COL_W - 0.24, ROW_H - 0.3);
-  /* Deliberately under the bloom threshold. At full accent strength thirteen
-     of these lit the whole wall as one green slab and the drawers vanished. */
-  const plateMat = new THREE.MeshBasicMaterial({ color: 0x7fae2c });
+  plate.instanceMatrix.needsUpdate = true;
+  rim.instanceMatrix.needsUpdate = true;
+  dial.instanceMatrix.needsUpdate = true;
+  handle.instanceMatrix.needsUpdate = true;
+  group.add(plate, rim, dial, handle);
 
+  /* The records that are actually held: a lit nameplate on the door, and
+     enough spill to pick the safe out of the row. */
   for (const rec of lit) {
-    const plate = new THREE.Mesh(plateGeo, plateMat);
-    plate.position.set(rec.x - rec.side * 0.19, rec.y, rec.z);
-    plate.rotation.y = (rec.side * -Math.PI) / 2;
-    group.add(plate);
+    const fitting = buildFitting(THREE, kit, {
+      width: 1.62,
+      height: 0.52,
+      depth: 0.16,
+      lit: false,
+    });
+    fitting.group.position.set(rec.x - rec.side * 0.2, rec.y - DOOR * 0.33, rec.z);
+    fitting.group.rotation.y = rec.facing;
+    group.add(fitting.group);
 
-    const bloom = new THREE.Sprite(haze(0xaee83c, 0.16));
-    bloom.position.set(rec.x - rec.side * 0.5, rec.y, rec.z);
-    bloom.scale.set(1.7, 1.2, 1);
-    group.add(bloom);
+    surfaces.add(`credential-${rec.index}`, "plate", fitting.face, 1.62, 0.52, {
+      index: rec.index,
+    });
 
-    pool.add([rec.x - rec.side * 0.8, rec.y, rec.z], {
-      intensity: 2,
-      distance: 4.5,
+    const glow = new THREE.Sprite(haze(0xaee83c, 0.2));
+    glow.position.set(rec.x - rec.side * 0.6, rec.y, rec.z);
+    glow.scale.set(3.4, 3.4, 1);
+    group.add(glow);
+
+    pool.add([rec.x - rec.side * 0.9, rec.y, rec.z], {
+      intensity: 3.4,
+      distance: 6,
       color: 0xaee83c,
     });
   }
 
+  /* The index board, on the end wall where the corridor runs out. */
+  const board = buildFitting(THREE, kit, { width: 8.4, height: 4.6, depth: 0.5 });
+  board.group.position.set(0, 4.2, to + 0.4);
+  board.group.rotation.y = Math.PI;
+  group.add(board.group);
+  surfaces.add("vault-index", "wall", board.face, 8.4, 4.6);
+
+  const endWall = new THREE.Mesh(new THREE.PlaneGeometry(width, height), wall);
+  endWall.position.set(0, height / 2, to);
+  endWall.rotation.y = Math.PI;
+  group.add(endWall);
+
+  pool.add([0, 5.4, to + 3], { intensity: 18, distance: 22 });
+
   /* ------------------------------------------------------------- lighting */
 
-  /* A single continuous run down the crown, which is what an archive corridor
-     actually has, and what gives the deck its long unbroken highlight. */
-  const runGeo = new THREE.BoxGeometry(0.5, 0.1, length);
-  const run = new THREE.Mesh(runGeo, mat.lamp);
+  const run = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.1, length), mat.lamp);
   run.position.set(0, height - 0.4, midZ);
   group.add(run);
 
@@ -162,7 +210,6 @@ export function buildVault(THREE, scene, kit, pool) {
     pool.add([0, height - 0.9, z], { intensity: 13, distance: 20 });
   }
 
-  /* A gantry rail down one side, the thing that would move the drawers. */
   const rail = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, length), mat.steel);
   rail.position.set(-width / 2 + 1.1, height - 1.3, midZ);
   group.add(rail);
