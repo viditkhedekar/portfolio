@@ -27,8 +27,13 @@ const PARK = 46;
 /** How much of the first screen the head takes to travel into the corner. */
 const TRAVEL = 0.55;
 
-/** How high the resting head sits: a little above centre reads better than on it. */
-const CENTRE_BIAS = 0.86;
+/**
+ * How high the resting head sits.
+ *
+ * Well above centre, because the title sits underneath it on the opening
+ * screen and at anything like centre the two occupy the same band.
+ */
+const CENTRE_BIAS = 0.62;
 
 /** Catch-up rate when the target jumps, as it does on navigation. */
 const CHASE = 0.14;
