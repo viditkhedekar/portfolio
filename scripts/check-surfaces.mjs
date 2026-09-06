@@ -158,6 +158,29 @@ const FIXTURE = {
   console.log(`${manifest.surfaces.length} surfaces, ${manifest.frames} camera samples`);
 }
 
+/* --------------------------------------- 3b. the render agrees with the app */
+
+/*
+ * The rooms are built by plain scripts that cannot import the app's
+ * TypeScript, so they are handed the counts over `/counts.json`. This checks
+ * the render that actually shipped used the right ones: a stale sequence
+ * lights a safe that holds nothing, and nothing else would say so.
+ */
+{
+  const { certifications } = await import(
+    path.join(ROOT, "src/lib/data/certifications.ts")
+  );
+
+  const lit = manifest.surfaces.filter((s) => s.id.startsWith("credential-")).length;
+  if (lit !== certifications.length) {
+    fail(
+      `the render has ${lit} lit safes but there are ${certifications.length} certifications; re-render`,
+    );
+  } else {
+    console.log(`${lit} lit safes for ${certifications.length} certifications`);
+  }
+}
+
 /* ------------------------------------------------- 4. panels come and pass */
 
 /*
