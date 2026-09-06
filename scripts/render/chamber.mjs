@@ -10,10 +10,11 @@
  */
 
 import { addDust } from "./kit.mjs";
+import { buildFitting } from "./surfaces.mjs";
 
 export const CHAMBER = { from: -420, to: -474, width: 20, height: 9 };
 
-export function buildChamber(THREE, scene, kit, pool) {
+export function buildChamber(THREE, scene, kit, pool, surfaces) {
   const { mat, haze } = kit;
   const group = new THREE.Group();
   scene.add(group);
@@ -147,6 +148,36 @@ export function buildChamber(THREE, scene, kit, pool) {
   shaft.position.set(standX, height / 2, standZ);
   shaft.scale.set(6.5, height, 1);
   group.add(shaft);
+
+  /* ----------------------------------------------------------- the record */
+
+  /*
+   * Two panels facing each other across the room. The camera passes between
+   * them, so one is read on the way in and the other on the way out, and
+   * neither has to compete with the file on its plinth.
+   */
+  const PANELS = [
+    { id: "about-identity", side: -1, z: midZ + 9, width: 9, height: 5.2 },
+    { id: "about-statement", side: 1, z: midZ - 3, width: 9, height: 5.2 },
+  ];
+
+  for (const panel of PANELS) {
+    const fitting = buildFitting(THREE, kit, {
+      width: panel.width,
+      height: panel.height,
+      depth: 0.42,
+    });
+    fitting.group.position.set((panel.side * width) / 2 - panel.side * 0.35, 4.1, panel.z);
+    fitting.group.rotation.y = (panel.side * -Math.PI) / 2;
+    group.add(fitting.group);
+
+    surfaces.add(panel.id, "wall", fitting.face, panel.width, panel.height);
+
+    pool.add([(panel.side * width) / 2 - panel.side * 2.4, 4.6, panel.z], {
+      intensity: 12,
+      distance: 18,
+    });
+  }
 
   /* ----------------------------------------------------------------- edges */
 
