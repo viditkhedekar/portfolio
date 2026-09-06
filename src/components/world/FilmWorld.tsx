@@ -23,6 +23,12 @@ export function FilmWorld() {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
 
   React.useEffect(() => {
+    /* Belt and braces. The shell already declines to mount this in low-RAM
+       mode, but a single commit before the store settles would be enough to
+       start fetching several megabytes, and the whole point of that mode is
+       that it never happens. */
+    if (document.documentElement.getAttribute("data-mode") === "lite") return;
+
     startFilm();
 
     const canvas = canvasRef.current;
