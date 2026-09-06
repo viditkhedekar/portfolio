@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { FILM, filmProgress, frameAt, onFilmProgress, startFilm } from "@/lib/film";
+import {
+  FILM,
+  blendAt,
+  filmProgress,
+  onFilmProgress,
+  startFilm,
+  type Blend,
+} from "@/lib/film";
 import { useScrollDriver, scrollState } from "@/lib/scroll";
 
 /**
@@ -61,9 +68,11 @@ export function FilmWorld() {
       dirty = true;
     };
 
+    const blend: Blend = { from: null, to: null, mix: 0 };
+
     const draw = () => {
-      const image = frameAt(scrollState.eased);
-      if (!image) return;
+      blendAt(scrollState.eased, blend);
+      if (!blend.from) return;
 
       /* Cover fit. The film is 16:9 and a browser window is whatever it is,
          so something has to be cropped; letterboxing a world would break the
@@ -71,14 +80,28 @@ export function FilmWorld() {
       const scale = Math.max(width / FILM.width, height / FILM.height);
       const w = FILM.width * scale;
       const h = FILM.height * scale;
-      ctx.drawImage(image, (width - w) / 2, (height - h) / 2, w, h);
+      const x = (width - w) / 2;
+      const y = (height - h) / 2;
+
+      ctx.globalAlpha = 1;
+      ctx.drawImage(blend.from, x, y, w, h);
+
+      /* The frame ahead, faded in by however far between the two the scroll
+         has landed. This is the difference between travelling and stepping. */
+      if (blend.to && blend.to !== blend.from && blend.mix > 0.01) {
+        ctx.globalAlpha = blend.mix;
+        ctx.drawImage(blend.to, x, y, w, h);
+        ctx.globalAlpha = 1;
+      }
     };
 
     const tick = () => {
-      const index = Math.round(scrollState.eased * (FILM.count - 1));
-      if (dirty || index !== painted) {
+      /* Sub-frame position, so a repaint happens for movement between two
+         frames as well as across them. Quantised to keep a still page still. */
+      const position = Math.round(scrollState.eased * (FILM.count - 1) * 24);
+      if (dirty || position !== painted) {
         draw();
-        painted = index;
+        painted = position;
         dirty = false;
       }
       raf = requestAnimationFrame(tick);
