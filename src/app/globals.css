@@ -1293,3 +1293,169 @@ html[data-boot="pending"] .vk-head-layer {
   border-color: var(--vk-accent);
   color: var(--vk-accent);
 }
+
+/* ---------- Wall panels, plates and channels ---------- */
+
+/*
+ * Everything below is authored in the surface's own space, a hundred pixels
+ * to the metre. A panel eleven metres wide is an eleven hundred pixel box, so
+ * type set at forty pixels here stands forty centimetres tall on the wall.
+ * That is why these numbers look enormous next to the rest of the interface.
+ */
+.vk-face-wall {
+  padding: 46px 54px;
+  gap: 0;
+  color: var(--vk-accent);
+  font-family: var(--font-pixel), ui-monospace, monospace;
+}
+
+.vk-face-label {
+  font-size: 22px;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--vk-accent) 58%, transparent);
+}
+
+.vk-face-title {
+  margin-top: 16px;
+  font-family: var(--font-term), ui-monospace, monospace;
+  font-size: 76px;
+  line-height: 0.94;
+  color: #dcf7a6;
+}
+
+.vk-face-rows {
+  display: flex;
+  flex-direction: column;
+  margin-top: 30px;
+  gap: 0;
+}
+
+.vk-face-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 13px 0;
+  border-top: 1px solid color-mix(in srgb, var(--vk-accent) 22%, transparent);
+  font-size: 24px;
+  letter-spacing: 0.07em;
+}
+
+.vk-face-line > :first-child {
+  flex: none;
+  color: color-mix(in srgb, var(--vk-accent) 52%, transparent);
+}
+
+.vk-face-line > :last-child {
+  text-align: right;
+  color: #dcf7a6;
+}
+
+.vk-face-line.is-dim > :last-child {
+  max-width: 34ch;
+  font-family: var(--font-read), ui-monospace, monospace;
+  font-size: 19px;
+  line-height: 1.5;
+  color: color-mix(in srgb, #dcf7a6 74%, transparent);
+}
+
+.vk-face-note {
+  margin-top: auto;
+  padding-top: 26px;
+  max-width: 52ch;
+  font-size: 19px;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--vk-accent) 50%, transparent);
+}
+
+.vk-face-statement {
+  margin-top: 22px;
+  max-width: 40ch;
+  font-family: var(--font-read), ui-monospace, monospace;
+  font-size: 26px;
+  line-height: 1.45;
+  color: #dcf7a6;
+}
+
+.vk-face-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px 26px;
+  margin-top: 30px;
+}
+
+.vk-face-cell {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid color-mix(in srgb, var(--vk-accent) 20%, transparent);
+  font-size: 23px;
+  letter-spacing: 0.06em;
+  color: #dcf7a6;
+}
+
+.vk-face-index {
+  font-size: 17px;
+  color: color-mix(in srgb, var(--vk-accent) 46%, transparent);
+}
+
+/* ---------- Nameplates ---------- */
+
+/*
+ * Small, and read at speed. One line of identification and one of name, which
+ * is all a plate on a plinth or a safe door has room to be.
+ */
+.vk-face-plate {
+  justify-content: center;
+  padding: 8px 16px;
+  gap: 4px;
+  font-family: var(--font-pixel), ui-monospace, monospace;
+}
+
+.vk-face-plate.is-action {
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.vk-face-plate-index {
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--vk-accent) 52%, transparent);
+}
+
+.vk-face-plate-name {
+  font-size: 21px;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  color: #dcf7a6;
+}
+
+.vk-face-plate.is-action:hover .vk-face-plate-name,
+.vk-face-plate.is-action:focus-visible .vk-face-plate-name {
+  color: #ffffff;
+}
+
+/* ---------- Channels ---------- */
+
+.vk-face-channel {
+  padding: 26px 32px;
+  gap: 0;
+  color: var(--vk-accent);
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  pointer-events: auto;
+}
+
+.vk-face-channel.is-off {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.vk-face-handle {
+  margin-top: 16px;
+  font-size: 26px;
+  letter-spacing: 0.03em;
+  color: #dcf7a6;
+  overflow-wrap: anywhere;
+}
