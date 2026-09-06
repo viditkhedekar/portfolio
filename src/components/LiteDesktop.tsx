@@ -35,6 +35,9 @@ export function LiteDesktop() {
           </h2>
           <div className="h-px flex-1 bg-[var(--vk-line)]" />
           <span className="vk-label">{String(apps.length).padStart(2, "0")} INSTALLED</span>
+          {/* Above the fold. The context bar at the foot of this page is
+              below it on most screens, which made the way back unfindable. */}
+          <ModeSwitch to="world" />
         </div>
         <div className="mt-8">
           <HeadOrbit />
@@ -112,7 +115,6 @@ export function LiteDesktop() {
         <span className="vk-mono ml-auto hidden text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)] sm:inline">
           ⌘K TO OPEN TERMINAL
         </span>
-        <ModeSwitch to="world" />
       </div>
 
       {/* --------------------------------------------------------- SOURCE  */}
