@@ -15,6 +15,7 @@ import { TerminalProvider } from "@/components/TerminalProvider";
 import { WorldHUD } from "@/components/world/WorldHUD";
 import { FilmWorld } from "@/components/world/FilmWorld";
 import { appForPath } from "@/lib/data/apps";
+import { useMode } from "@/lib/mode";
 import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot";
 
 /**
@@ -23,8 +24,9 @@ import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot"
  *
  * `/` is the world. It runs without the header, the dock or the footer,
  * because the HUD is its interface and a second set of navigation over the
- * top of it would be two operating systems arguing. Every other route is an
- * application and renders inside window chrome as before.
+ * top of it would be two operating systems arguing. In low-RAM mode the same
+ * route is an ordinary page and gets all of that chrome back. Every other
+ * route is an application and renders inside window chrome as before.
  *
  * The terminal no longer greets anyone on arrival. It used to open itself
  * once per session on the desktop, which worked when the desktop was a page;
@@ -39,7 +41,10 @@ import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot"
 export function VKOSShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const app = appForPath(pathname);
-  const world = app === null;
+  const mode = useMode();
+  /* The desktop is `/`. It renders as the world, or as the low-RAM page that
+     stands in for it, and only the first of those replaces the chrome. */
+  const world = app === null && mode === "world";
   const booting = React.useSyncExternalStore(
     subscribeBoot,
     getBootPending,
