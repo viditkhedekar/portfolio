@@ -24,11 +24,49 @@
 import http from "node:http";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { registerHooks } from "node:module";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "../..");
 const PORT = 4321;
+
+/*
+ * The scenes need to know how many certifications, channels and subjects
+ * there are, and those numbers live in the app's TypeScript. Copying them
+ * into the render scripts is what this hook exists to stop: the count was
+ * transcribed as thirteen when it was twelve, the vault lit a safe that held
+ * nothing, and nothing complained.
+ *
+ * So the server reads the real data and serves it, and the scenes ask.
+ */
+registerHooks({
+  resolve(specifier, context, next) {
+    if (specifier.startsWith("@/")) {
+      const target = path.join(ROOT, "src", specifier.slice(2));
+      return { url: pathToFileURL(`${target}.ts`).href, shortCircuit: true };
+    }
+    return next(specifier, context);
+  },
+});
+
+async function counts() {
+  const [certs, identity, school, projects] = await Promise.all([
+    import(pathToFileURL(path.join(ROOT, "src/lib/data/certifications.ts")).href),
+    import(pathToFileURL(path.join(ROOT, "src/lib/data/identity.ts")).href),
+    import(pathToFileURL(path.join(ROOT, "src/lib/data/school.ts")).href),
+    import(pathToFileURL(path.join(ROOT, "src/lib/data/projects.ts")).href),
+  ]);
+
+  return {
+    certifications: certs.certifications.length,
+    providers: certs.certificationGroups.length,
+    channels: identity.channels.length,
+    openChannels: identity.channels.filter((c) => c.href).length,
+    subjects: school.subjects.length,
+    projects: projects.liveProjects.map((p) => p.id),
+  };
+}
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -105,6 +143,20 @@ const server = http.createServer(async (req, res) => {
 
     res.writeHead(200, { "content-type": "application/json" });
     res.end(JSON.stringify({ ok: true, bytes: body.length }));
+    return;
+  }
+
+  if (req.method === "GET" && url === "/counts.json") {
+    try {
+      const body = JSON.stringify(await counts());
+      res.writeHead(200, {
+        "content-type": "application/json",
+        "cache-control": "no-store",
+      });
+      res.end(body);
+    } catch (err) {
+      res.writeHead(500).end(String(err));
+    }
     return;
   }
 
