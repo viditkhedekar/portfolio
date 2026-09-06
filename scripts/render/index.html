@@ -30,7 +30,8 @@
   import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
   import { buildEnvironment } from "./environment.mjs";
   import { buildKit, createLightPool } from "./kit.mjs";
-  import { PHOTOS, buildFacility } from "./facility.mjs";
+  import { buildFacility } from "./facility.mjs";
+  import { createSurfaceRegistry } from "./surfaces.mjs";
   import { buildCorridor, buildThreshold } from "./links.mjs";
   import { buildObservatory } from "./observatory.mjs";
   import { buildVault } from "./vault.mjs";
@@ -71,34 +72,14 @@
   /* Reflections first: the materials read it off the scene when they compile. */
   scene.environment = buildEnvironment(THREE, renderer);
 
-  /* The project screenshots have to be on disk before anything is built, so
-     each board knows its own aspect ratio. */
-  const loader = new THREE.TextureLoader();
-  const photos = {};
-  await Promise.all(
-    PHOTOS.map(
-      (name) =>
-        new Promise((resolve) => {
-          loader.load(
-            `/public/projects/${name}.png`,
-            (tex) => {
-              tex.colorSpace = THREE.SRGBColorSpace;
-              tex.anisotropy = 8;
-              photos[name] = tex;
-              resolve();
-            },
-            undefined,
-            () => resolve(),
-          );
-        }),
-    ),
-  );
-
   /* One kit and one light pool for the whole building. Every room registers
      its emitters with the same pool, so the scene never carries more than ten
      real lights however many fixtures are modelled. */
   const kit = buildKit(THREE);
   const pool = createLightPool(THREE, scene, { size: 10, shadows: 3, reach: 48 });
+  /* Every readable thing in the building registers itself here as a rectangle
+     in world space. The render draws the fitting; the page fills the face. */
+  const surfaces = createSurfaceRegistry();
 
   scene.add(new THREE.AmbientLight(0x38495a, 0.85));
   const fill = new THREE.DirectionalLight(0x6f8fac, 0.55);
@@ -111,7 +92,7 @@
   buildCorridor(THREE, scene, kit, pool, { from: 46, to: 8, width: 9, height: 6, accent: true });
   buildThreshold(THREE, scene, kit, pool, { z: 9, width: 8.4, height: 5.6 });
 
-  buildFacility(THREE, scene, kit, pool, photos);
+  buildFacility(THREE, scene, kit, pool, surfaces);
 
   buildCorridor(THREE, scene, kit, pool, { from: -150, to: -206, width: 9, height: 6, accent: true });
   buildObservatory(THREE, scene, kit, pool);
@@ -199,6 +180,48 @@
       const out = await post("render-tests", name, quality);
       say(`still ${name} · ${out.bytes} bytes`);
       return out;
+    },
+
+    /**
+     * The manifest the page needs to lay HTML onto the walls.
+     *
+     * The camera is sampled per frame and the surfaces once, because a
+     * surface does not move and a per-frame copy of forty of them would be a
+     * megabyte of JSON for no reason. The page reprojects them itself, using
+     * the same numbers this render used, so the text lands exactly where the
+     * fitting was photographed.
+     */
+    async manifest(frames) {
+      const camera_ = [];
+      for (let i = 0; i < frames; i++) {
+        place(i / (frames - 1));
+        camera.updateMatrixWorld(true);
+        const p = camera.position;
+        const q = camera.quaternion;
+        camera_.push([p.x, p.y, p.z, q.x, q.y, q.z, q.w].map((n) => Math.round(n * 10000) / 10000));
+      }
+
+      const data = {
+        frames,
+        width: state.width,
+        height: state.height,
+        fov: camera.fov,
+        camera: camera_,
+        surfaces: surfaces.export(THREE),
+      };
+
+      const res = await fetch("/frame", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          dir: "seq",
+          name: "manifest.json",
+          data: "json," + btoa(unescape(encodeURIComponent(JSON.stringify(data)))),
+        }),
+      });
+      const out = await res.json();
+      say(`manifest · ${data.surfaces.length} surfaces · ${out.bytes} bytes`);
+      return { surfaces: data.surfaces.length, bytes: out.bytes };
     },
 
     /** The whole flight. */
