@@ -3,22 +3,22 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowRight, X } from "lucide-react";
-import type { Surface } from "@/lib/surfaces";
-import { WorldSurfaces } from "@/components/world/WorldSurfaces";
+import type { Panel } from "@/lib/panels";
+import { WorldPanels } from "@/components/world/WorldPanels";
 import { getProject, slugOf } from "@/lib/data/projects";
 import { certifications } from "@/lib/data/certifications";
 
 /**
- * The interactive layer over the film: the walls, and what opens when you
- * touch one.
+ * The interactive layer over the film: the travelling panels, and what opens
+ * when you touch one.
  *
- * Clicking a console does not leave the journey. It opens the file in place,
+ * Clicking a panel does not leave the journey. It opens the file in place,
  * over the world, with a way through to the full module page for anyone who
  * wants the rest. Leaving the world to read one paragraph would waste the
  * thing the world is for.
  */
 export function WorldOverlay() {
-  const [open, setOpen] = React.useState<Surface | null>(null);
+  const [open, setOpen] = React.useState<Panel | null>(null);
 
   React.useEffect(() => {
     if (!open) return;
@@ -31,17 +31,17 @@ export function WorldOverlay() {
 
   return (
     <>
-      <WorldSurfaces onOpen={setOpen} />
-      {open ? <WorldSheet surface={open} onClose={() => setOpen(null)} /> : null}
+      <WorldPanels onOpen={setOpen} />
+      {open ? <WorldSheet panel={open} onClose={() => setOpen(null)} /> : null}
     </>
   );
 }
 
 function WorldSheet({
-  surface,
+  panel,
   onClose,
 }: {
-  surface: Surface;
+  panel: Panel;
   onClose: () => void;
 }) {
   const closeRef = React.useRef<HTMLButtonElement>(null);
@@ -50,9 +50,11 @@ function WorldSheet({
     closeRef.current?.focus();
   }, []);
 
-  const project = surface.project ? getProject(surface.project) : undefined;
-  const credential = surface.id.startsWith("credential-")
-    ? certifications[Number(surface.id.slice(11))]
+  const project = panel.id.startsWith("project-")
+    ? getProject(panel.id.slice(8))
+    : undefined;
+  const credential = panel.id.startsWith("credential-")
+    ? certifications[Number(panel.id.slice(11))]
     : undefined;
 
   const title = project?.name ?? credential?.name;
