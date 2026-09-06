@@ -125,6 +125,26 @@
   composer.addPass(new OutputPass());
   composer.addPass(new SMAAPass());
 
+  /*
+   * Motion blur.
+   *
+   * The flight moves several metres between frames, and two sharp images that
+   * far apart cross-fade rather than move. Exposing each frame across a slice
+   * of time instead of at an instant is what makes 24fps film read as motion
+   * and 24fps games read as stepping, and it costs nothing to download: the
+   * blur is baked into the same webp.
+   *
+   * Accumulated on a 2D canvas with additive compositing, each sub-sample at
+   * one Nth alpha, which averages them.
+   */
+  const BLUR_SAMPLES = 5;
+  const SHUTTER = 0.7;
+
+  const accum = document.createElement("canvas");
+  accum.width = state.width;
+  accum.height = state.height;
+  const accumCtx = accum.getContext("2d", { alpha: false });
+
   const look = new THREE.Vector3();
   const pos = [0, 0, 0];
   const target = [0, 0, 0];
@@ -150,8 +170,43 @@
     composer.render();
   }
 
+  /**
+   * One frame, exposed across `span` of the flight either side of `progress`.
+   *
+   * A single sample is used when the span is zero, which is what the stills
+   * want: a test frame should show exactly what is there, not a smear.
+   */
+  function expose(progress, span) {
+    if (span <= 0 || BLUR_SAMPLES < 2) {
+      draw(progress);
+      accumCtx.globalCompositeOperation = "source-over";
+      accumCtx.globalAlpha = 1;
+      accumCtx.drawImage(renderer.domElement, 0, 0);
+      return;
+    }
+
+    accumCtx.globalCompositeOperation = "source-over";
+    accumCtx.globalAlpha = 1;
+    accumCtx.fillStyle = "#000";
+    accumCtx.fillRect(0, 0, accum.width, accum.height);
+
+    accumCtx.globalCompositeOperation = "lighter";
+    accumCtx.globalAlpha = 1 / BLUR_SAMPLES;
+
+    for (let i = 0; i < BLUR_SAMPLES; i++) {
+      /* Centred on the frame, so the blur trails equally either side rather
+         than dragging the whole flight half a frame late. */
+      const offset = (i / (BLUR_SAMPLES - 1) - 0.5) * span;
+      draw(Math.min(1, Math.max(0, progress + offset)));
+      accumCtx.drawImage(renderer.domElement, 0, 0);
+    }
+
+    accumCtx.globalCompositeOperation = "source-over";
+    accumCtx.globalAlpha = 1;
+  }
+
   async function post(dir, name, quality) {
-    const data = renderer.domElement.toDataURL("image/webp", quality);
+    const data = accum.toDataURL("image/webp", quality);
     const res = await fetch("/frame", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -167,6 +222,8 @@
     resize(w, h) {
       state.width = w;
       state.height = h;
+      accum.width = w;
+      accum.height = h;
       renderer.setSize(w, h, false);
       composer.setSize(w, h);
       bloom.resolution.set(w, h);
@@ -174,9 +231,9 @@
       camera.updateProjectionMatrix();
     },
 
-    /** One frame, at a scroll fraction, written to disk. */
+    /** One frame, at a scroll fraction, written to disk. Never blurred. */
     async still(progress, name, quality = 0.9) {
-      draw(progress);
+      expose(progress, 0);
       const out = await post("render-tests", name, quality);
       say(`still ${name} · ${out.bytes} bytes`);
       return out;
@@ -264,8 +321,11 @@
     /** The whole flight. */
     async sequence(frames, dir, quality) {
       let total = 0;
+      /* The shutter, as a fraction of the whole flight. */
+      const span = (SHUTTER / (frames - 1));
+
       for (let i = 0; i < frames; i++) {
-        draw(i / (frames - 1));
+        expose(i / (frames - 1), span);
         const name = String(i).padStart(4, "0") + ".webp";
         const out = await post(dir, name, quality);
         total += out.bytes;
