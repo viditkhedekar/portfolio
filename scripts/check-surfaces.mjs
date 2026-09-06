@@ -19,11 +19,27 @@
  */
 
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { registerHooks } from "node:module";
 import path from "node:path";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
+
+/*
+ * Teach Node the project's `@/` alias and its extensionless imports, so this
+ * can load the real runtime modules instead of a transcription of them. A
+ * test that quietly drifts from the code it is testing is worse than no test.
+ */
+registerHooks({
+  resolve(specifier, context, next) {
+    if (specifier.startsWith("@/")) {
+      const target = path.join(ROOT, "src", specifier.slice(2));
+      return { url: pathToFileURL(`${target}.ts`).href, shortCircuit: true };
+    }
+    return next(specifier, context);
+  },
+});
 
 const { sampleCamera, placeSurface, coverFit, quadTransform } = await import(
   path.join(ROOT, "src/lib/surfaces.ts")
@@ -140,6 +156,69 @@ const FIXTURE = {
     fail(`manifest has ${manifest.camera.length} camera samples for ${manifest.frames} frames`);
   }
   console.log(`${manifest.surfaces.length} surfaces, ${manifest.frames} camera samples`);
+}
+
+/* ------------------------------------------------- 4. panels come and pass */
+
+/*
+ * The behaviour the panels are supposed to have: appear ahead of you, grow as
+ * you approach, swing aside near the end, and be gone once you have walked
+ * through where they stood. Each is asserted by sweeping the flight past one
+ * panel and watching the numbers, because none of it is visible in a single
+ * frame.
+ */
+{
+  const { panels, placePanel } = await import(path.join(ROOT, "src/lib/panels.ts"));
+
+  const cam = { x: 0, y: 0, z: 0, qx: 0, qy: 0, qz: 0, qw: 1 };
+  const out = { x: 0, y: 0, scale: 1, opacity: 0, depth: 0 };
+
+  const H = 810;
+  const CX = 720;
+  const CY = 405;
+
+  for (const panel of panels) {
+    const samples = [];
+    /* Sweep from well before the panel to just past it. */
+    for (let k = -140; k <= 30; k++) {
+      const at = panel.at + k * 0.0004;
+      if (at < 0 || at > 1) continue;
+      sampleCamera(manifest, at, cam);
+      if (placePanel(manifest, cam, panel, H, CX, CY, out)) {
+        samples.push({ at, ...out, offset: Math.abs(out.x - CX) });
+      }
+    }
+
+    if (samples.length < 8) {
+      fail(`${panel.id} is only placeable for ${samples.length} samples`);
+      continue;
+    }
+
+    /* It has to get bigger as you close on it. */
+    const first = samples[0];
+    const last = samples[samples.length - 1];
+    if (!(last.scale > first.scale * 1.5)) {
+      fail(`${panel.id} barely grows: ${first.scale.toFixed(3)} to ${last.scale.toFixed(3)}`);
+    }
+
+    /* And it has to move out of the middle of the frame on the way past. */
+    const nearest = samples[samples.length - 1];
+    const midway = samples[Math.floor(samples.length / 2)];
+    if (!(nearest.offset > midway.offset)) {
+      fail(`${panel.id} does not part: ${midway.offset.toFixed(0)}px then ${nearest.offset.toFixed(0)}px`);
+    }
+    if (Math.sign(nearest.x - CX) !== panel.side) {
+      fail(`${panel.id} parts to the wrong side`);
+    }
+
+    /* Once you are through it, it is gone. */
+    sampleCamera(manifest, Math.min(1, panel.at + 0.004), cam);
+    if (placePanel(manifest, cam, panel, H, CX, CY, out) && out.opacity > 0.2) {
+      fail(`${panel.id} is still showing after you have passed it`);
+    }
+  }
+
+  console.log(`${panels.length} panels approach, grow, part and pass`);
 }
 
 if (failures) {
