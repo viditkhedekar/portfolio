@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { StatusDot } from "@/components/ui";
 import { ZoneStage } from "@/components/world/ZoneStage";
+import { TerminalPrompt } from "@/components/world/TerminalPrompt";
 import { zones, type Zone } from "@/lib/world";
 import { modules, system } from "@/lib/data/system";
 import { liveProjects, projectStats } from "@/lib/data/projects";
@@ -156,7 +157,7 @@ export default function Home() {
           aria-label={Z.origin.location}
         >
           <div className="vk-zone-body vk-zone-open">
-            <h1 className="vk-display text-[clamp(2.4rem,9vw,5rem)] leading-none text-[var(--vk-fg)]">
+            <h1 className="vk-display vk-chrome text-[clamp(2.4rem,9vw,5rem)] leading-none">
               {system.code}
             </h1>
             <p className="vk-mono mt-4 text-[10px] tracking-[0.22em] text-[var(--vk-fg-faint)]">
@@ -167,13 +168,10 @@ export default function Home() {
               <span className="mx-2 text-[var(--vk-fg-ghost)]">/</span>
               {system.role}
             </p>
-            <p className="vk-mono mt-10 text-[9px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
+            <TerminalPrompt />
+
+            <p className="vk-mono mt-8 text-[9px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
               SCROLL TO TRAVEL
-              {/* Separator and hint travel together, or a phone is left with a
-                  dangling middle dot. */}
-              <span className="hidden sm:inline">
-                <span className="mx-2">·</span>⌘K FOR TERMINAL
-              </span>
             </p>
           </div>
         </section>
