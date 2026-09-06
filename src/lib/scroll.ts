@@ -22,10 +22,16 @@ export const scrollState = {
   velocity: 0,
 };
 
-/* How quickly the camera catches up with the wheel. Low enough that a flick
-   of the trackpad reads as the camera being heavy rather than the page being
-   laggy, high enough that it never feels disconnected from the input. */
-const CHASE = 0.075;
+/* How quickly the camera catches up with the wheel, expressed per sixtieth of
+   a second. Low enough that a flick of the trackpad reads as the camera being
+   heavy rather than the page being laggy, high enough that it never feels
+   disconnected from the input.
+
+   It is applied against real elapsed time rather than per frame, because a
+   fixed per-frame fraction chases twice as fast on a 120Hz display as on a
+   60Hz one, and the camera would feel like a different weight on different
+   machines. */
+const CHASE_PER_FRAME = 0.085;
 
 /* --------------------------------------------------------------- zone store */
 
@@ -81,9 +87,17 @@ function start(): void {
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onResize);
 
-  const tick = () => {
+  let last = performance.now();
+
+  const tick = (now: number) => {
+    /* Clamped, so a tab that was in the background does not resume by
+       teleporting the camera across the building in one step. */
+    const dt = Math.min(80, now - last) / 1000;
+    last = now;
+
     const before = scrollState.eased;
-    scrollState.eased += (scrollState.target - before) * CHASE;
+    const k = 1 - Math.pow(1 - CHASE_PER_FRAME, dt * 60);
+    scrollState.eased += (scrollState.target - before) * k;
     scrollState.velocity = scrollState.eased - before;
     publishZone();
     raf = requestAnimationFrame(tick);
