@@ -95,18 +95,18 @@
   buildFacility(THREE, scene, kit, pool, surfaces);
 
   buildCorridor(THREE, scene, kit, pool, { from: -150, to: -206, width: 9, height: 6, accent: true });
-  buildObservatory(THREE, scene, kit, pool);
+  buildObservatory(THREE, scene, kit, pool, surfaces);
   buildCorridor(THREE, scene, kit, pool, { from: -258, to: -302, width: 9, height: 6, accent: true });
 
-  buildVault(THREE, scene, kit, pool);
+  buildVault(THREE, scene, kit, pool, surfaces);
 
   buildCorridor(THREE, scene, kit, pool, { from: -404, to: -424, width: 9, height: 6 });
   buildThreshold(THREE, scene, kit, pool, { z: -419, width: 8.4, height: 5.6 });
 
-  buildChamber(THREE, scene, kit, pool);
+  buildChamber(THREE, scene, kit, pool, surfaces);
 
   buildCorridor(THREE, scene, kit, pool, { from: -470, to: -494, width: 9, height: 6 });
-  buildComms(THREE, scene, kit, pool);
+  buildComms(THREE, scene, kit, pool, surfaces);
 
   const composer = new EffectComposer(renderer);
   composer.setSize(state.width, state.height);
@@ -179,6 +179,43 @@
       draw(progress);
       const out = await post("render-tests", name, quality);
       say(`still ${name} · ${out.bytes} bytes`);
+      return out;
+    },
+
+    /**
+     * Ground truth for the runtime's own projection.
+     *
+     * Returns where three thinks each surface corner lands, in film pixels,
+     * for a given point in the flight. The page reimplements this in plain
+     * arithmetic; if the two disagree, the text drifts off its bezel, and
+     * this is the only way to know without staring at a screenshot.
+     */
+    probe(progress, ids) {
+      place(progress);
+      camera.updateMatrixWorld(true);
+
+      const local = [[-1, 1], [1, 1], [1, -1], [-1, -1]];
+      const v = new THREE.Vector3();
+      const q = new THREE.Quaternion();
+      const out = {};
+
+      for (const s of surfaces.export(THREE)) {
+        if (ids && !ids.includes(s.id)) continue;
+        q.set(s.q[0], s.q[1], s.q[2], s.q[3]);
+        const corners = [];
+        for (const [sx, sy] of local) {
+          v.set(sx * s.w, sy * s.h, 0).applyQuaternion(q);
+          v.x += s.p[0];
+          v.y += s.p[1];
+          v.z += s.p[2];
+          v.project(camera);
+          corners.push(
+            Math.round((v.x * 0.5 + 0.5) * state.width * 100) / 100,
+            Math.round((1 - (v.y * 0.5 + 0.5)) * state.height * 100) / 100,
+          );
+        }
+        out[s.id] = corners;
+      }
       return out;
     },
 
