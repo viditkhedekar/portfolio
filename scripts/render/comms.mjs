@@ -8,6 +8,9 @@
  * last move is upward, following the transmission rather than arriving
  * anywhere. It is the end of the path, so it gets the one view in the whole
  * world with sky in it at eye level.
+ *
+ * The console count comes from the app's data over `/counts.json`, never
+ * transcribed.
  */
 
 import { addDust } from "./kit.mjs";
@@ -15,10 +18,7 @@ import { buildFitting } from "./surfaces.mjs";
 
 export const COMMS = { from: -490, to: -580, width: 54, height: 26 };
 
-/** Real channels, mirrored from src/lib/data/identity.ts. */
-const CHANNELS = ["EMAIL", "LINKEDIN", "GITHUB"];
-
-export function buildComms(THREE, scene, kit, pool, surfaces) {
+export function buildComms(THREE, scene, kit, pool, surfaces, counts) {
   const { mat, haze } = kit;
   const group = new THREE.Group();
   scene.add(group);
@@ -196,9 +196,10 @@ export function buildComms(THREE, scene, kit, pool, surfaces) {
 
   /* One console per open channel, arranged in an arc facing back up the
      apron so the camera meets them head on rather than edge on. */
-  CHANNELS.forEach((_, i) => {
+  /* One console per channel, counted from the app's data. */
+  for (let i = 0; i < counts.channels; i++) {
     const spread = 7.5;
-    const x = (i - (CHANNELS.length - 1) / 2) * spread;
+    const x = (i - (counts.channels - 1) / 2) * spread;
     const z = 13;
 
     const box = new THREE.Mesh(new THREE.BoxGeometry(5.2, 1.3, 1.8), mat.dark);
@@ -222,7 +223,7 @@ export function buildComms(THREE, scene, kit, pool, surfaces) {
       distance: 10,
       color: 0xaee83c,
     });
-  });
+  }
 
   /* The summary board, high on the left wall where the roof runs out. */
   const board = buildFitting(THREE, kit, { width: 12, height: 6.4, depth: 0.5 });
