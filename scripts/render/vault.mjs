@@ -2,11 +2,11 @@
  * 03 — CREDENTIAL VAULT.
  *
  * A hundred metres of corridor walled with safe doors. Almost all of them are
- * shut and dark; the ones that hold something are lit and carry a nameplate
- * you can read and open. There are exactly as many lit safes as there are
- * certifications on record, so the wall is a true picture of the archive
- * rather than a decorative texture, and the empty ones are not padding, they
- * are room.
+ * shut and dark; the ones that hold something are lit and carry a nameplate.
+ * There are exactly as many lit safes as there are certifications on record,
+ * because the count comes from the app's own data over `/counts.json` rather
+ * than being written here, so the wall is a true picture of the archive and
+ * the empty ones are not padding, they are room.
  *
  * The doors are instanced. There are a couple of hundred and they are the
  * same object, so drawing them one at a time would be a waste of a scene that
@@ -18,14 +18,11 @@ import { buildFitting } from "./surfaces.mjs";
 
 export const VAULT = { from: -300, to: -404, width: 11, height: 8 };
 
-/** Real record count, mirrored from src/lib/data/certifications.ts. */
-const FILLED = 13;
-
 const ROWS = [1.55, 3.85];
 const DOOR = 1.9;
 const PITCH = 2.25;
 
-export function buildVault(THREE, scene, kit, pool, surfaces) {
+export function buildVault(THREE, scene, kit, pool, surfaces, counts) {
   const { mat, haze } = kit;
   const group = new THREE.Group();
   scene.add(group);
@@ -34,6 +31,9 @@ export function buildVault(THREE, scene, kit, pool, surfaces) {
   const length = from - to;
   const midZ = (from + to) / 2;
   const columns = Math.floor(length / PITCH);
+  /* Read from the app's own data, never transcribed. A hand-copied count is
+     how this room ended up lighting thirteen safes for twelve records. */
+  const filledCount = counts.certifications;
 
   /* ---------------------------------------------------------------- shell */
 
@@ -103,8 +103,8 @@ export function buildVault(THREE, scene, kit, pool, surfaces) {
      walls, so the walk past them is paced and lit from both flanks. */
   const slots = columns * ROWS.length;
   const filled = new Map();
-  for (let i = 0; i < FILLED; i++) {
-    const slot = Math.round(((i + 0.5) / FILLED) * (slots - 1));
+  for (let i = 0; i < filledCount; i++) {
+    const slot = Math.round(((i + 0.5) / filledCount) * (slots - 1));
     filled.set(slot, i);
   }
 
