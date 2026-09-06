@@ -106,18 +106,9 @@ export function startFilm(): void {
   for (let i = 0; i < LANES; i++) pump();
 }
 
-/**
- * The best available frame for a position in the film.
- *
- * Searches outward from the wanted index, so before the sequence has fully
- * arrived the picture is a slightly stale frame rather than a blank canvas.
- */
-export function frameAt(progress: number): HTMLImageElement | null {
-  const want = Math.round(
-    Math.min(1, Math.max(0, progress)) * (FILM.count - 1),
-  );
+/** The nearest loaded frame to an index, searching outward from it. */
+function nearest(want: number): HTMLImageElement | null {
   if (frames[want]) return frames[want];
-
   for (let step = 1; step < FILM.count; step++) {
     const before = want - step;
     if (before >= 0 && frames[before]) return frames[before];
@@ -125,4 +116,45 @@ export function frameAt(progress: number): HTMLImageElement | null {
     if (after < FILM.count && frames[after]) return frames[after];
   }
   return null;
+}
+
+/**
+ * The best available frame for a position in the film.
+ *
+ * Before the sequence has fully arrived this is a slightly stale frame rather
+ * than a blank canvas.
+ */
+export function frameAt(progress: number): HTMLImageElement | null {
+  const exact = Math.min(1, Math.max(0, progress)) * (FILM.count - 1);
+  return nearest(Math.round(exact));
+}
+
+/**
+ * The two frames either side of a position, and how far between them it is.
+ *
+ * Scroll lands between frames far more often than on one, and stepping to the
+ * nearest is what makes a hundred and eighty stills read as a hundred and
+ * eighty stills. Drawing both and cross-fading by the remainder costs one
+ * extra draw and buys back most of the motion a film at this frame count is
+ * missing. It is much cheaper than shipping more frames.
+ */
+export interface Blend {
+  from: HTMLImageElement | null;
+  to: HTMLImageElement | null;
+  /** 0 at `from`, 1 at `to`. */
+  mix: number;
+}
+
+export function blendAt(progress: number, out: Blend): void {
+  const exact = Math.min(1, Math.max(0, progress)) * (FILM.count - 1);
+  const lower = Math.floor(exact);
+  const upper = Math.min(FILM.count - 1, lower + 1);
+
+  out.from = nearest(lower);
+  out.to = upper === lower ? out.from : nearest(upper);
+  out.mix = exact - lower;
+
+  /* If the far side has not arrived, the near one is drawn on its own rather
+     than cross-faded with a frame from somewhere else in the building. */
+  if (out.to === out.from) out.mix = 0;
 }
