@@ -60,16 +60,23 @@ export const viewport: Viewport = {
 };
 
 /**
- * Runs before first paint: hides the interface if this session hasn't booted.
- * Must agree with src/lib/boot.ts — reduced motion skips the sequence, so the
- * gate must not engage there or the page would stay hidden.
+ * Runs before first paint, and does the two things that cannot wait for React.
+ *
+ * It hides the interface if this session hasn't booted, which must agree with
+ * src/lib/boot.ts: reduced motion skips the sequence, so the gate must not
+ * engage there or the page would stay hidden. And it resolves world versus
+ * low-RAM, which must happen before anything can start fetching the film.
+ *
+ * One script rather than two, because React warns about every script tag
+ * rendered inside a component and one warning is enough.
  */
-const BOOT_GATE = [
+const HEAD_GATE = [
   "try{",
   "var c=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;",
   "if(!c&&sessionStorage.getItem('vkos.booted')!=='1'){",
   "document.documentElement.setAttribute('data-boot','pending')}",
   "}catch(e){}",
+  MODE_SCRIPT,
 ].join("");
 
 export default function RootLayout({
@@ -79,14 +86,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${pixel.variable} ${term.variable} ${read.variable}`}
-      /* The boot-gate script sets data-boot before React hydrates. */
+      /* The head gate sets data-boot and data-mode before React hydrates. */
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: BOOT_GATE }} />
-        {/* Resolves world versus low-RAM before first paint, so the reduced
-            page never begins fetching the film it exists to avoid. */}
-        <script dangerouslySetInnerHTML={{ __html: MODE_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: HEAD_GATE }} />
       </head>
       <body className="antialiased">
         <a href="#main" className="vk-skip">
