@@ -130,48 +130,62 @@ VK.sequence(180, "seq", 0.86);   // writes public/seq/0000.webp …
 VK.still(0.3, "test.webp");      // one frame, into public/render-tests/
 ```
 
-Always re-export the manifest when the geometry moves, or the HTML will be
-laid onto fittings that are no longer there.
+Always re-export the manifest when the camera path changes: the panels are
+placed from it, and a stale one puts them in the wrong part of the building.
 
 The tab has to stay visible: a browser stops running animation frames in a
-background tab, so a hidden one renders nothing. The last full run was 180
-frames at about 4.7 MB.
+background tab, so a hidden one renders nothing. The last full run was 240
+frames with motion blur, at about 5.1 MB.
 
-### The words on the walls
+### The panels
 
-The rooms are photographed offline. The text in them is not. Every console,
-nameplate and wall panel is registered in the scene as a rectangle
-(`scripts/render/surfaces.mjs`), exported into `public/seq/manifest.json`
-alongside the camera, and filled with real HTML at runtime by
-`src/components/world/WorldSurfaces.tsx`, transformed onto the fitting in
-perspective.
+The rooms are photographed offline. The information in them is not, and it does
+not hang on the walls: every panel is planted on the camera path at a point in
+the flight, faces you square-on, grows as you approach, and swings aside as you
+walk through where it was standing. `src/lib/panels.ts` is the list and the
+placement; `src/components/world/panelContent.tsx` is what each one says.
 
-That means the walls are still driven by `src/lib/data/`: edit a grade and the
-wall it is written on changes, with no re-render. It also means the text is
-crisp at any size, can be focused and read aloud, and can be clicked.
+Two things follow from the panels facing the camera. There is no projective
+transform, so the type is exactly as crisp at twenty metres as at two, and
+placement is a translate and a scale rather than a homography.
 
-- **What each surface says** is `src/components/world/surfaceContent.tsx`,
-  keyed by the id the renderer gave the rectangle. Adding a display is a
-  matter of registering it in the scene and adding a case there.
+The consoles, boards and wall fittings in the render are still there. They are
+furniture now: lit bezels with dark faces, so the hall looks like it has
+equipment in it. Nothing is written on them.
+
+- **Content comes from `src/lib/data/`**, so editing a grade changes the panel
+  without re-rendering anything.
 - **Clicking one** opens the file in place over the world
   (`WorldOverlay.tsx`), with a link through to the module page.
-- **Type is sized in the surface's own space**, a hundred pixels to the metre.
-  A panel eleven metres wide is an eleven hundred pixel box, which is why the
-  font sizes in the wall CSS look enormous next to the rest of the interface.
+- **Type is sized in the panel's own space**, a hundred pixels to the metre,
+  which is why the font sizes in the panel CSS look enormous next to the rest
+  of the interface.
 
 ```bash
 npm run check:surfaces
 ```
 
-This is the check worth running after touching any of it. Placement fails
-invisibly: if the projection or the homography is slightly wrong, a single
-frame still looks right and the text slides off its bezel as the camera moves.
-The check compares the runtime's projection against three's own answer, and
-round-trips the CSS transform against the quad it was built from. Re-record
-the fixture in it with `VK.probe(...)` if the camera path or the PX-002
-station moves.
+Worth running after touching any of it, because all of this fails invisibly: a
+single frame looks right while the panels drift, or never part, or linger after
+you have passed them. The check imports the real runtime modules and asserts
+the projection against three's own answer, round-trips the CSS transform, and
+sweeps the flight past all 28 panels confirming each one approaches, grows,
+parts to the correct side and goes.
 
-### Editing the world
+### Smoothness
+
+Three things, and they compound:
+
+- **Motion blur**, baked in. Each frame is an average of five sub-samples
+  across its slice of time, which is why film at 24fps reads as motion and a
+  game at 24fps does not. Costs render time, nothing to download.
+- **240 frames** rather than 180, cutting the jump between them by a third.
+- **A slower camera**, done by lengthening the page (`--vk-travel`) so the
+  same path takes more scrolling.
+
+Frames either side of the scroll position are also cross-faded at runtime.
+
+### Editing the world### Editing the world
 
 | File | What it is |
 | --- | --- |
@@ -184,7 +198,7 @@ station moves.
 | `scripts/render/comms.mjs` | 05, the array |
 | `scripts/render/links.mjs` | Corridors and thresholds between rooms |
 | `scripts/render/textures.mjs` | Procedural plating and decking |
-| `scripts/render/surfaces.mjs` | The display surface registry and their fittings |
+| `scripts/render/surfaces.mjs` | Fittings: the bezels and dark faces the panels used to land on |
 
 Two counts in the render mirror the real data and have to be kept in step by
 hand, because the renderer is a plain script and does not import the app's
