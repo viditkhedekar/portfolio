@@ -1052,6 +1052,12 @@ html[data-boot="pending"] .vk-head-layer {
   transform: none;
 }
 
+/* Only the zone that is showing takes clicks. The opening screen has no
+   panel, so its two controls are named directly: without this they inherit
+   the layer's `pointer-events: none` and neither can be pressed, which is
+   exactly what happened. */
+[data-zone="origin"] #origin .vk-ask,
+[data-zone="origin"] #origin .vk-mode,
 [data-zone="projects"] #projects .vk-zone-panel,
 [data-zone="school"] #school .vk-zone-panel,
 [data-zone="certifications"] #certifications .vk-zone-panel,
