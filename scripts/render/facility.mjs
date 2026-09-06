@@ -226,13 +226,8 @@ export function buildFacility(THREE, scene, kit, pool, surfaces) {
     bloomCard.scale.set(10, 7, 1);
     inst.add(bloomCard);
 
-    /* Under-deck strip. */
-    const strip = new THREE.Mesh(
-      new THREE.BoxGeometry(6.2, 0.07, 0.07),
-      new THREE.MeshBasicMaterial({ color: 0xaee83c }),
-    );
-    strip.position.set(0, 1.02, 1.42);
-    inst.add(strip);
+    /* No under-deck strip: the fitting already carries one, and the two
+       together read as a double line under every console. */
 
     /* The project's own screenshot, on the wall above the console and turned
        in towards the aisle so the camera catches it as it passes. The picture
