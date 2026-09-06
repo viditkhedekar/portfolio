@@ -3,7 +3,7 @@ import { IBM_Plex_Mono, Silkscreen, VT323 } from "next/font/google";
 import "./globals.css";
 import { VKOSShell } from "@/components/VKOSShell";
 import { system } from "@/lib/data/system";
-import { MODE_SCRIPT } from "@/lib/mode";
+import { MODE_SCRIPT } from "@/lib/mode-gate";
 
 /*
  * Three faces, split by what the interface is doing with them.
