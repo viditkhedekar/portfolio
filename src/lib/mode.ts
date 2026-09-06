@@ -1,6 +1,9 @@
 "use client";
 
 import * as React from "react";
+import { MODE_KEY, type Mode } from "@/lib/mode-gate";
+
+export type { Mode } from "@/lib/mode-gate";
 
 /**
  * Which landing page you get.
@@ -14,31 +17,10 @@ import * as React from "react";
  * decided otherwise. So an inline script in the document head resolves it and
  * writes it onto `<html>`, and everything here reads it back off the
  * attribute. That is the same trick the boot gate uses.
- */
-
-export type Mode = "world" | "lite";
-
-export const MODE_KEY = "vkos.mode";
-
-/**
- * Resolves the mode before first paint. Kept as a string because it is
- * injected into the document head, and must agree with `readMode` below.
  *
- * Save-Data is honoured because it is an explicit request from the visitor,
- * not a guess about their hardware. Device memory is deliberately not
- * consulted: most phones report four gigabytes or less, and sending every
- * phone to the reduced page is not what it is for.
+ * The script itself lives in `mode-gate.ts`, which the server can actually
+ * read. See the note there.
  */
-export const MODE_SCRIPT = [
-  "try{",
-  "var m=localStorage.getItem('vkos.mode');",
-  "if(m!=='lite'&&m!=='world'){",
-  "var c=navigator.connection;",
-  "m=(c&&c.saveData)?'lite':'world';",
-  "}",
-  "document.documentElement.setAttribute('data-mode',m);",
-  "}catch(e){document.documentElement.setAttribute('data-mode','world');}",
-].join("");
 
 function readMode(): Mode {
   if (typeof document === "undefined") return "world";
