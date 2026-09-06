@@ -1072,3 +1072,224 @@ html[data-boot="pending"] .vk-head-layer {
     transition: opacity 200ms linear;
   }
 }
+
+/* ---------------------------------------------------------- WALL SURFACES */
+
+/*
+ * HTML mapped onto the rendered walls.
+ *
+ * Each element is authored flat, at a hundred pixels per metre, and then a
+ * projective transform drops it onto the rectangle the renderer photographed.
+ * Nothing in here should set a transform of its own: the frame loop owns it.
+ */
+.vk-surfaces {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  /* Establishes the plane the surfaces are transformed within, and stops the
+     browser flattening them into their parent. */
+  transform-style: preserve-3d;
+}
+
+.vk-surface {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+.vk-face {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  text-align: left;
+  background: none;
+  border: 0;
+}
+
+/* ---------- Console ---------- */
+
+/*
+ * The panel a visitor actually reads. Sized generously, because at a hundred
+ * pixels per metre this is a six metre screen and typing it at interface
+ * sizes would produce something nobody could read from the aisle.
+ */
+.vk-face-console {
+  padding: 34px 40px 30px;
+  gap: 0;
+  color: var(--vk-accent);
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.vk-face-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--vk-accent) 62%, transparent);
+}
+
+.vk-face-name {
+  margin-top: 18px;
+  font-family: var(--font-term), ui-monospace, monospace;
+  font-size: 62px;
+  line-height: 0.96;
+  letter-spacing: 0.01em;
+  color: #dcf7a6;
+}
+
+.vk-face-category {
+  margin-top: 12px;
+  font-size: 19px;
+  letter-spacing: 0.09em;
+  color: color-mix(in srgb, var(--vk-accent) 58%, transparent);
+}
+
+.vk-face-body {
+  margin-top: 22px;
+  max-width: 40ch;
+  font-family: var(--font-read), ui-monospace, monospace;
+  font-size: 20px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, #dcf7a6 76%, transparent);
+}
+
+.vk-face-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: 22px;
+}
+
+.vk-face-chip {
+  padding: 6px 12px;
+  border: 1px solid color-mix(in srgb, var(--vk-accent) 34%, transparent);
+  font-size: 16px;
+  letter-spacing: 0.07em;
+  color: color-mix(in srgb, var(--vk-accent) 72%, transparent);
+}
+
+.vk-face-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  padding: 14px 18px;
+  border: 1px solid color-mix(in srgb, var(--vk-accent) 52%, transparent);
+  background: color-mix(in srgb, var(--vk-accent) 10%, transparent);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  color: #dcf7a6;
+  transition:
+    background-color 200ms var(--vk-ease),
+    border-color 200ms var(--vk-ease);
+}
+
+.vk-face-console:hover .vk-face-cta,
+.vk-face-console:focus-visible .vk-face-cta {
+  background: color-mix(in srgb, var(--vk-accent) 22%, transparent);
+  border-color: var(--vk-accent);
+}
+
+/* ---------- Board ---------- */
+
+.vk-face-board {
+  position: relative;
+  overflow: hidden;
+  background: #0b0e11;
+}
+
+.vk-face-shot {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  /* Knocked back and cooled, so a bright product screenshot sits in a dark
+     hall instead of punching a hole in it. */
+  filter: brightness(0.82) contrast(1.04) saturate(0.85);
+}
+
+.vk-face-caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: linear-gradient(to top, rgba(6, 9, 12, 0.92), rgba(6, 9, 12, 0));
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  font-size: 18px;
+  letter-spacing: 0.08em;
+  color: var(--vk-fg-dim);
+}
+
+/* ---------- The sheet ---------- */
+
+/*
+ * What opens when a console is touched. It sits over the world rather than
+ * replacing it, because the journey is the point and a click should not end
+ * it to show one paragraph.
+ */
+.vk-sheet-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: vk-overlay-in 180ms var(--vk-ease) both;
+}
+
+.vk-sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 8, 0.72);
+  backdrop-filter: blur(3px);
+  border: 0;
+}
+
+.vk-sheet {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(80vh, 720px);
+  overflow-y: auto;
+  padding: 24px 26px 26px;
+  border: 1px solid var(--vk-line-mid);
+  background: color-mix(in srgb, var(--vk-bg) 94%, transparent);
+  animation: vk-panel-in 220ms var(--vk-ease) both;
+}
+
+.vk-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vk-sheet-close {
+  display: flex;
+  height: 28px;
+  width: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--vk-line);
+  color: var(--vk-fg-faint);
+  transition:
+    border-color 200ms var(--vk-ease),
+    color 200ms var(--vk-ease);
+}
+
+.vk-sheet-close:hover,
+.vk-sheet-close:focus-visible {
+  border-color: var(--vk-accent);
+  color: var(--vk-accent);
+}
