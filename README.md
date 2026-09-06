@@ -200,10 +200,13 @@ Frames either side of the scroll position are also cross-faded at runtime.
 | `scripts/render/textures.mjs` | Procedural plating and decking |
 | `scripts/render/surfaces.mjs` | Fittings: the bezels and dark faces the panels used to land on |
 
-Two counts in the render mirror the real data and have to be kept in step by
-hand, because the renderer is a plain script and does not import the app's
-TypeScript: the lit drawers in `vault.mjs` (`FILLED`) and the channel consoles
-in `comms.mjs` (`CHANNELS`).
+The render scripts are plain JavaScript and cannot import the app's
+TypeScript, so the harness server reads the real data and serves it at
+`/counts.json`, and the rooms ask. Nothing about how many certifications,
+channels or subjects there are is written down twice. It was, briefly, and the
+vault lit thirteen safes for twelve records without complaining, which is why
+`npm run check:surfaces` now fails if the shipped render disagrees with the
+data.
 
 The scroll fractions in `scripts/render/path.mjs` and the zone ranges in
 `src/lib/world.ts` describe the same journey from two ends. If you retime one,
