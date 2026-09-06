@@ -12,6 +12,7 @@ import { GithubLink } from "@/components/GithubLink";
 import { useClock } from "@/lib/hooks";
 import { useMode } from "@/lib/mode";
 import { OperatorPortrait } from "@/components/OperatorPortrait";
+import { ModeSwitch } from "@/components/ModeSwitch";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
@@ -101,6 +102,12 @@ export function SystemHeader() {
 
           {/* Status */}
           <div className="flex shrink-0 items-center gap-3 sm:gap-4">
+            {/* The way back into the world. Only in low-RAM mode, and in the
+                header rather than on the desktop, because someone who drops
+                to the reduced page and then opens a module would otherwise
+                have to find their way home to change their mind. */}
+            {world ? null : <ModeSwitch to="world" compact />}
+
             {/* Shown at every width — the header is the one slot on every page. */}
             <GithubLink variant="header" />
 
