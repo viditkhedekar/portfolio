@@ -370,6 +370,57 @@ html[data-boot="pending"] .vk-app {
   transform: translateY(0);
 }
 
+/* ---------------------------------------------------------------- ORBIT  */
+
+/*
+ * The low-RAM desktop: the head in the middle with six application boxes set
+ * around it, two down each side and two beneath.
+ *
+ * This was the landing page before the world was built, and it is kept as the
+ * alternative to it. Nothing here downloads a film or paints a canvas, which
+ * is the entire reason it exists.
+ *
+ * Below `lg` there is nothing to orbit, so the areas are dropped and the boxes
+ * fall into a plain grid under the head. The head is first in the DOM so it
+ * leads on small screens without needing to be reordered.
+ */
+.vk-orbit {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .vk-orbit {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .vk-orbit-head {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1024px) {
+  .vk-orbit {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr) minmax(0, 1.05fr) minmax(0, 1fr);
+    grid-template-areas:
+      "a head head c"
+      "b head head d"
+      ". e    f    .";
+    gap: 16px 28px;
+    align-items: center;
+  }
+
+  .vk-orbit-head {
+    grid-area: head;
+  }
+  .vk-orbit-a { grid-area: a; }
+  .vk-orbit-b { grid-area: b; }
+  .vk-orbit-c { grid-area: c; }
+  .vk-orbit-d { grid-area: d; }
+  .vk-orbit-e { grid-area: e; }
+  .vk-orbit-f { grid-area: f; }
+}
+
 /* ---------- Overlay entrance ---------- */
 
 /*
@@ -830,6 +881,63 @@ html[data-boot="pending"] .vk-head-layer {
   .vk-chrome {
     animation: none;
   }
+}
+
+/* ---------- Mode switch ---------- */
+
+/*
+ * The offer to drop to the low-RAM page, and the way back.
+ *
+ * Quiet, and honest about the cost: the detail on the right is the download,
+ * because that is the only number a visitor on a poor connection cares about.
+ */
+.vk-mode {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 12px;
+  border: 1px solid var(--vk-line);
+  background: color-mix(in srgb, var(--vk-bg) 55%, transparent);
+  backdrop-filter: blur(6px);
+  transition:
+    border-color 220ms var(--vk-ease),
+    background-color 220ms var(--vk-ease);
+}
+
+.vk-mode:hover,
+.vk-mode:focus-visible {
+  border-color: var(--vk-line-strong);
+  background: color-mix(in srgb, var(--vk-bg) 72%, transparent);
+}
+
+.vk-mode-dot {
+  width: 5px;
+  height: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--vk-fg-ghost);
+}
+
+.vk-mode:hover .vk-mode-dot,
+.vk-mode:focus-visible .vk-mode-dot {
+  background: var(--vk-accent);
+}
+
+.vk-mode-label,
+.vk-mode-detail {
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.vk-mode-label {
+  color: var(--vk-fg-faint);
+}
+
+.vk-mode-detail {
+  color: var(--vk-fg-ghost);
 }
 
 /* ---------- Terminal prompt ---------- */
