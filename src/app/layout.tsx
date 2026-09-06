@@ -3,6 +3,7 @@ import { IBM_Plex_Mono, Silkscreen, VT323 } from "next/font/google";
 import "./globals.css";
 import { VKOSShell } from "@/components/VKOSShell";
 import { system } from "@/lib/data/system";
+import { MODE_SCRIPT } from "@/lib/mode";
 
 /*
  * Three faces, split by what the interface is doing with them.
@@ -83,6 +84,9 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: BOOT_GATE }} />
+        {/* Resolves world versus low-RAM before first paint, so the reduced
+            page never begins fetching the film it exists to avoid. */}
+        <script dangerouslySetInnerHTML={{ __html: MODE_SCRIPT }} />
       </head>
       <body className="antialiased">
         <a href="#main" className="vk-skip">
