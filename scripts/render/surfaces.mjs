@@ -95,7 +95,10 @@ export function buildFitting(THREE, kit, { width, height, depth = 0.35, lit = tr
     new THREE.BoxGeometry(width + 0.16, height + 0.16, depth * 0.6),
     mat.dark,
   );
-  recess.position.z = -depth * 0.3;
+  /* Set back far enough that its front face is not coplanar with the screen.
+     At exactly the same depth the two z-fight, and a large flat panel doing
+     that renders as a checkerboard. */
+  recess.position.z = -depth * 0.3 - 0.02;
   group.add(recess);
 
   /* The face itself. Very dark, so the HTML that lands on it reads as lit
@@ -104,6 +107,7 @@ export function buildFitting(THREE, kit, { width, height, depth = 0.35, lit = tr
     new THREE.PlaneGeometry(width, height),
     new THREE.MeshBasicMaterial({ color: 0x0a1006 }),
   );
+  face.position.z = 0.015;
   group.add(face);
 
   if (lit) {
@@ -111,7 +115,7 @@ export function buildFitting(THREE, kit, { width, height, depth = 0.35, lit = tr
       new THREE.BoxGeometry(width * 0.9, 0.07, 0.07),
       mat.accent,
     );
-    strip.position.set(0, -height / 2 - 0.28, 0.06);
+    strip.position.set(0, -height / 2 - 0.3, 0.08);
     group.add(strip);
   }
 
