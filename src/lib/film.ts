@@ -21,7 +21,7 @@
  */
 
 export const FILM = {
-  count: 180,
+  count: 240,
   width: 1440,
   height: 810,
   src: (i: number) => `/seq/${String(i).padStart(4, "0")}.webp`,
