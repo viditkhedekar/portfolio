@@ -763,10 +763,18 @@ html[data-boot="pending"] .vk-head-layer {
  * one travel constant, so the page and the camera path cannot drift apart.
  */
 :root {
-  /* Every zone's share of this has to come out at 100vh or more, or the
-     no-JavaScript fallback below stretches the block and the whole path
-     slips. The smallest share is 0.13, so this cannot go below 770vh. */
-  --vk-travel: 780vh;
+  /*
+   * How much scrolling the whole flight takes.
+   *
+   * Raised deliberately: the same path over more scroll is a slower camera,
+   * which is a third of the answer to the flight feeling stepped. The other
+   * two thirds are motion blur baked into the frames and more of them.
+   *
+   * Every zone's share has to come out at 100vh or more, or the
+   * no-JavaScript fallback below stretches the block and the whole path
+   * slips. The smallest share is 0.13, so this cannot go below 770vh.
+   */
+  --vk-travel: 980vh;
 }
 
 .vk-zone {
@@ -1073,58 +1081,79 @@ html[data-boot="pending"] .vk-head-layer {
   }
 }
 
-/* ---------------------------------------------------------- WALL SURFACES */
+/* -------------------------------------------------------- TRAVELLING PANELS */
 
 /*
- * HTML mapped onto the rendered walls.
+ * The information that comes towards you.
  *
- * Each element is authored flat, at a hundred pixels per metre, and then a
- * projective transform drops it onto the rectangle the renderer photographed.
- * Nothing in here should set a transform of its own: the frame loop owns it.
+ * Each panel is authored flat at a hundred pixels per metre and then placed
+ * with a translate and a scale. Because they face the camera there is no
+ * projective transform and therefore no resampling, which is why the type is
+ * exactly as sharp at twenty metres as at two. Nothing in here should set a
+ * transform of its own: the frame loop owns it.
  */
-.vk-surfaces {
+.vk-panels {
   position: fixed;
   inset: 0;
   z-index: 15;
   pointer-events: none;
-  /* Establishes the plane the surfaces are transformed within, and stops the
-     browser flattening them into their parent. */
-  transform-style: preserve-3d;
 }
 
-.vk-surface {
+.vk-panel {
   position: absolute;
-  top: 0;
-  left: 0;
-  transform-origin: 0 0;
-  will-change: transform, opacity;
-  backface-visibility: hidden;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity, left, top;
 }
 
 .vk-face {
   display: flex;
   width: 100%;
-  height: 100%;
   flex-direction: column;
   text-align: left;
-  background: none;
   border: 0;
+  /* Panels float in mid air, so unlike a wall panel they have to carry their
+     own ground: a dark pane with a lit edge, close enough to the fittings in
+     the render that they read as the same system. */
+  background: linear-gradient(
+    160deg,
+    rgba(10, 16, 8, 0.9) 0%,
+    rgba(6, 10, 6, 0.94) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--vk-accent) 26%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 30px 90px rgba(0, 0, 0, 0.75);
 }
 
-/* ---------- Console ---------- */
+/* ---------- Project card ---------- */
 
 /*
- * The panel a visitor actually reads. Sized generously, because at a hundred
- * pixels per metre this is a six metre screen and typing it at interface
- * sizes would produce something nobody could read from the aisle.
+ * The panel a visitor actually reads: the screenshot, then the file. Sized
+ * generously, because at a hundred pixels per metre this is nearly six metres
+ * across and typing it at interface sizes would produce something nobody
+ * could read as it went past.
  */
-.vk-face-console {
-  padding: 34px 40px 30px;
+.vk-face-card {
   gap: 0;
   color: var(--vk-accent);
   font-family: var(--font-pixel), ui-monospace, monospace;
   cursor: pointer;
   pointer-events: auto;
+  overflow: hidden;
+}
+
+.vk-face-shotwrap {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid color-mix(in srgb, var(--vk-accent) 22%, transparent);
+}
+
+.vk-face-body-wrap {
+  display: flex;
+  flex-direction: column;
+  padding: 30px 36px 28px;
 }
 
 .vk-face-head {
@@ -1194,42 +1223,23 @@ html[data-boot="pending"] .vk-head-layer {
     border-color 200ms var(--vk-ease);
 }
 
-.vk-face-console:hover .vk-face-cta,
-.vk-face-console:focus-visible .vk-face-cta {
+.vk-face-card:hover .vk-face-cta,
+.vk-face-card:focus-visible .vk-face-cta {
   background: color-mix(in srgb, var(--vk-accent) 22%, transparent);
   border-color: var(--vk-accent);
 }
 
-/* ---------- Board ---------- */
-
-.vk-face-board {
-  position: relative;
-  overflow: hidden;
-  background: #0b0e11;
-}
+/* ---------- Screenshot ---------- */
 
 .vk-face-shot {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: top center;
   /* Knocked back and cooled, so a bright product screenshot sits in a dark
      hall instead of punching a hole in it. */
-  filter: brightness(0.82) contrast(1.04) saturate(0.85);
-}
-
-.vk-face-caption {
-  position: absolute;
-  inset: auto 0 0 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  padding: 14px 20px;
-  background: linear-gradient(to top, rgba(6, 9, 12, 0.92), rgba(6, 9, 12, 0));
-  font-family: var(--font-pixel), ui-monospace, monospace;
-  font-size: 18px;
-  letter-spacing: 0.08em;
-  color: var(--vk-fg-dim);
+  filter: brightness(0.8) contrast(1.04) saturate(0.82);
 }
 
 /* ---------- The sheet ---------- */
@@ -1303,7 +1313,7 @@ html[data-boot="pending"] .vk-head-layer {
  * That is why these numbers look enormous next to the rest of the interface.
  */
 .vk-face-wall {
-  padding: 46px 54px;
+  padding: 40px 46px;
   gap: 0;
   color: var(--vk-accent);
   font-family: var(--font-pixel), ui-monospace, monospace;
@@ -1409,8 +1419,8 @@ html[data-boot="pending"] .vk-head-layer {
  */
 .vk-face-plate {
   justify-content: center;
-  padding: 8px 16px;
-  gap: 4px;
+  padding: 22px 28px;
+  gap: 8px;
   font-family: var(--font-pixel), ui-monospace, monospace;
 }
 
@@ -1420,13 +1430,13 @@ html[data-boot="pending"] .vk-head-layer {
 }
 
 .vk-face-plate-index {
-  font-size: 14px;
+  font-size: 20px;
   letter-spacing: 0.1em;
   color: color-mix(in srgb, var(--vk-accent) 52%, transparent);
 }
 
 .vk-face-plate-name {
-  font-size: 21px;
+  font-size: 34px;
   letter-spacing: 0.05em;
   line-height: 1.1;
   color: #dcf7a6;
@@ -1440,7 +1450,7 @@ html[data-boot="pending"] .vk-head-layer {
 /* ---------- Channels ---------- */
 
 .vk-face-channel {
-  padding: 26px 32px;
+  padding: 30px 36px;
   gap: 0;
   color: var(--vk-accent);
   font-family: var(--font-pixel), ui-monospace, monospace;
