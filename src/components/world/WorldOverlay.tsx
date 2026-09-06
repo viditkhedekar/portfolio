@@ -6,6 +6,7 @@ import { ArrowRight, X } from "lucide-react";
 import type { Surface } from "@/lib/surfaces";
 import { WorldSurfaces } from "@/components/world/WorldSurfaces";
 import { getProject, slugOf } from "@/lib/data/projects";
+import { certifications } from "@/lib/data/certifications";
 
 /**
  * The interactive layer over the film: the walls, and what opens when you
@@ -43,17 +44,22 @@ function WorldSheet({
   surface: Surface;
   onClose: () => void;
 }) {
-  const project = surface.project ? getProject(surface.project) : undefined;
   const closeRef = React.useRef<HTMLButtonElement>(null);
 
   React.useEffect(() => {
     closeRef.current?.focus();
   }, []);
 
-  if (!project) return null;
+  const project = surface.project ? getProject(surface.project) : undefined;
+  const credential = surface.id.startsWith("credential-")
+    ? certifications[Number(surface.id.slice(11))]
+    : undefined;
+
+  const title = project?.name ?? credential?.name;
+  if (!title) return null;
 
   return (
-    <div className="vk-sheet-layer" role="dialog" aria-modal="true" aria-label={project.name}>
+    <div className="vk-sheet-layer" role="dialog" aria-modal="true" aria-label={title}>
       {/* The scrim closes, but it is a button rather than a click handler on a
           div so it is reachable without a pointer. */}
       <button type="button" className="vk-sheet-scrim" onClick={onClose} aria-label="Close" />
@@ -61,7 +67,7 @@ function WorldSheet({
       <div className="vk-sheet">
         <div className="vk-sheet-head">
           <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-accent)]">
-            {project.id}
+            {project?.id ?? credential?.id}
           </span>
           <button ref={closeRef} type="button" onClick={onClose} className="vk-sheet-close">
             <X aria-hidden="true" size={14} strokeWidth={1.6} />
@@ -70,26 +76,30 @@ function WorldSheet({
         </div>
 
         <h2 className="vk-display mt-3 text-[clamp(1.8rem,4vw,2.6rem)] text-[var(--vk-fg)]">
-          {project.name}
+          {title}
         </h2>
-        <p className="vk-mono mt-3 text-[11px] leading-[1.7] tracking-[0.1em] text-[var(--vk-fg-faint)]">
-          {project.tagline}
-        </p>
+        {project ? (
+          <p className="vk-mono mt-3 text-[11px] leading-[1.7] tracking-[0.1em] text-[var(--vk-fg-faint)]">
+            {project.tagline}
+          </p>
+        ) : null}
 
         {/* Every dossier field is optional in the data, and an unfilled one
             should leave no trace rather than print an empty heading. */}
         <dl className="mt-6 space-y-4">
-          <Row label="OBJECTIVE" value={project.objective} />
-          <Row label="RESULT" value={project.result} />
-          <Row label="CURRENT STATE" value={project.currentState} />
+          <Row label="OBJECTIVE" value={project?.objective} />
+          <Row label="RESULT" value={project?.result} />
+          <Row label="CURRENT STATE" value={project?.currentState} />
+          <Row label="ISSUER" value={credential?.issuer} />
+          <Row label="DETAIL" value={credential?.summary} />
         </dl>
 
         <Link
-          href={`/projects/${slugOf(project)}`}
+          href={project ? `/projects/${slugOf(project)}` : "/certifications"}
           className="group mt-7 flex items-center justify-between border border-[var(--vk-accent-line)] bg-[var(--vk-accent-ghost)] px-4 py-3 transition-colors hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)]"
         >
           <span className="vk-mono text-[10px] tracking-[0.18em] text-[var(--vk-accent-soft)] transition-colors group-hover:text-[var(--vk-accent)]">
-            OPEN THE FULL FILE
+            {project ? "OPEN THE FULL FILE" : "OPEN THE DATABASE"}
           </span>
           <ArrowRight
             aria-hidden="true"
