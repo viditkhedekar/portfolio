@@ -36,7 +36,9 @@ import { getBootPending, getBootPendingServer, subscribeBoot } from "@/lib/boot"
  * The head is mounted here rather than on any page. It is the one element
  * that survives navigation, and it has to: it opens centred on the landing
  * page and walks into the top-left corner, where it stays for the rest of the
- * site. Remounting it per route would restart the scan every time.
+ * site. Remounting it per route would restart the scan every time. In low-RAM
+ * mode it is not mounted at all, and the header keeps the photograph it had
+ * before the world existed.
  */
 export function VKOSShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -70,7 +72,10 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
           carry their own boot fade instead. */}
       {world && <FilmWorld />}
       {world && <WorldHUD />}
-      <OperatorHead />
+      {/* Low-RAM mode has its own head, in the middle of the desktop, and two
+          point clouds on one page is exactly the cost that mode exists to
+          avoid. */}
+      {mode === "world" && <OperatorHead />}
 
       <div className="vk-app" data-ready={booting ? undefined : "1"}>
         {!world && <SystemHeader />}
