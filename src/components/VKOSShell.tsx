@@ -13,7 +13,7 @@ import { SystemHeader } from "@/components/SystemHeader";
 import { Taskbar } from "@/components/Taskbar";
 import { TerminalProvider } from "@/components/TerminalProvider";
 import { WorldHUD } from "@/components/world/WorldHUD";
-import { WorldOverlay as WorldSurfacesLayer } from "@/components/world/WorldOverlay";
+import { WorldOverlay as WorldPanelLayer } from "@/components/world/WorldOverlay";
 import { FilmWorld } from "@/components/world/FilmWorld";
 import { appForPath } from "@/lib/data/apps";
 import { useMode } from "@/lib/mode";
@@ -72,7 +72,7 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
           would stretch the canvas to the height of the whole document. Both
           carry their own boot fade instead. */}
       {world && <FilmWorld />}
-      {world && <WorldSurfacesLayer />}
+      {world && <WorldPanelLayer />}
       {world && <WorldHUD />}
       {/* Low-RAM mode has its own head, in the middle of the desktop, and two
           point clouds on one page is exactly the cost that mode exists to
