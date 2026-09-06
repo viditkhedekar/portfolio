@@ -9,6 +9,9 @@
  * The hero here is chrome. It is the only mirrored object in the world so
  * far, which is the entire reason it works: put a second one anywhere near it
  * and both stop being special.
+ *
+ * The number of subject plinths comes from the app's data over
+ * `/counts.json`, never transcribed.
  */
 
 import { addDust } from "./kit.mjs";
@@ -22,12 +25,7 @@ export const OBSERVATORY = {
   mouthZ: -202,
 };
 
-const SUBJECTS = [
-  "MATHEMATICS", "ENGLISH", "BIOLOGY", "PHYSICS", "CHEMISTRY",
-  "HISTORY", "GEOGRAPHY", "ECONOMICS", "FRENCH",
-];
-
-export function buildObservatory(THREE, scene, kit, pool, surfaces) {
+export function buildObservatory(THREE, scene, kit, pool, surfaces, counts) {
   const { mat, haze } = kit;
   const group = new THREE.Group();
   const [cx, cy, cz] = OBSERVATORY.centre;
@@ -209,8 +207,9 @@ export function buildObservatory(THREE, scene, kit, pool, surfaces) {
 
   /* One plinth per subject, ringed around the floor under the armillary, each
      with its own nameplate. */
-  SUBJECTS.forEach((_, i) => {
-    const a = (i / SUBJECTS.length) * Math.PI * 2 + 0.3;
+  /* Counted from the app's data, so a subject added there gets a plinth. */
+  for (let i = 0; i < counts.subjects; i++) {
+    const a = (i / counts.subjects) * Math.PI * 2 + 0.3;
     const x = Math.cos(a) * 21;
     const z = Math.sin(a) * 21;
     const facing = Math.atan2(-Math.cos(a), -Math.sin(a));
@@ -238,7 +237,7 @@ export function buildObservatory(THREE, scene, kit, pool, surfaces) {
       distance: 8,
       color: 0xaee83c,
     });
-  });
+  }
 
   /* ------------------------------------------------------------------ sky */
 
