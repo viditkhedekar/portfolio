@@ -771,6 +771,128 @@ html[data-boot="pending"] .vk-head-layer {
   }
 }
 
+/* ---------- Chrome ---------- */
+
+/*
+ * Liquid metal, for the wordmark only.
+ *
+ * Chrome is a gradient with a hard dark band where the horizon would be: that
+ * band is the whole illusion, because polished metal reflects the bright sky
+ * above it and the dark ground below, and the line between them is what the
+ * eye reads as "mirrored". Take the band out and this is just a silver
+ * gradient.
+ *
+ * It is deliberately the one thing on the page treated this way. The rest of
+ * the interface is flat by design and a second chrome element would make both
+ * look like decoration.
+ */
+.vk-chrome {
+  background-image: linear-gradient(
+    177deg,
+    #fbfdff 0%,
+    #c3d0dc 14%,
+    #eef4f9 26%,
+    #7d8d9b 40%,
+    #39434c 49%,
+    #222a31 52%,
+    #6d7d8b 56%,
+    #cfdae4 68%,
+    #8fa0ae 82%,
+    #f2f7fb 100%
+  );
+  background-size: 100% 220%;
+  background-position: 50% 30%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* A cold rim under the type, so it sits on the world rather than floating
+     as a cut-out. */
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.18))
+    drop-shadow(0 10px 26px rgba(0, 0, 0, 0.65));
+  animation: vk-chrome-drift 14s var(--vk-ease-io) infinite alternate;
+}
+
+@keyframes vk-chrome-drift {
+  from {
+    background-position: 50% 24%;
+  }
+  to {
+    background-position: 50% 58%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vk-chrome {
+    animation: none;
+  }
+}
+
+/* ---------- Terminal prompt ---------- */
+
+/*
+ * The terminal, stated as an invitation rather than a keyboard shortcut.
+ *
+ * It looks like a field and behaves like a button: there is already a real
+ * terminal behind Command-K, and a second input that had to forward its own
+ * keystrokes into it would be two things pretending to be one.
+ */
+.vk-ask {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: min(360px, 82vw);
+  margin-top: 34px;
+  padding: 11px 14px;
+  border: 1px solid var(--vk-line-mid);
+  background: color-mix(in srgb, var(--vk-bg) 62%, transparent);
+  backdrop-filter: blur(8px);
+  text-align: left;
+  transition:
+    border-color 220ms var(--vk-ease),
+    background-color 220ms var(--vk-ease);
+}
+
+.vk-ask:hover,
+.vk-ask:focus-visible {
+  border-color: var(--vk-accent-line);
+  background: color-mix(in srgb, var(--vk-bg) 74%, transparent);
+}
+
+.vk-ask-caret {
+  width: 7px;
+  height: 13px;
+  flex: none;
+  background: var(--vk-accent);
+  animation: vk-ask-blink 1.15s steps(1, end) infinite;
+}
+
+@keyframes vk-ask-blink {
+  0%, 55% { opacity: 1; }
+  56%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vk-ask-caret {
+    animation: none;
+  }
+}
+
+.vk-ask-text {
+  flex: 1;
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vk-fg-faint);
+}
+
+.vk-ask kbd {
+  font-family: var(--font-pixel), ui-monospace, monospace;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  color: var(--vk-fg-ghost);
+}
+
 /* The opening screen has no panel: the head has the frame to itself and the
    title sits underneath it. */
 .vk-zone-open {
