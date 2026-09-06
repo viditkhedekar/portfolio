@@ -101,6 +101,62 @@ Every other route is an **application**, resolved by `appForPath()` in
 Adding a module to `system.ts` therefore installs an app: icon, window, launch
 splash and dock entry all follow.
 
+## The world on the landing page
+
+`/` is a camera flight through a five-room facility. It is **not** rendered in
+the browser. The rooms are built with three.js in `scripts/render/`, the flight
+is rendered offline to a numbered sequence of stills in `public/seq/`, and the
+landing page plays that sequence back on a 2D canvas with the scroll position
+choosing the frame.
+
+This is deliberate, and it is the reason the world looks the way it does. A
+frame that has to be drawn sixty times a second can afford thin lines in a
+mostly black room; a frame rendered once, slowly, can afford lit surfaces, real
+shadows, bloom and a hundred and sixty metres of hall. Three is a build-time
+dependency only. Nothing 3D ships to the browser.
+
+### Regenerating the flight
+
+```bash
+node scripts/render/server.mjs        # harness on :4321
+```
+
+Open <http://localhost:4321> and, in the console:
+
+```js
+VK.resize(1600, 900);
+VK.sequence(180, "seq", 0.86);   // writes public/seq/0000.webp …
+VK.still(0.3, "test.webp");      // one frame, into public/render-tests/
+```
+
+The tab has to stay visible: a browser stops running animation frames in a
+background tab, so a hidden one renders nothing. The last full run was 180
+frames at about 4.7 MB.
+
+### Editing the world
+
+| File | What it is |
+| --- | --- |
+| `scripts/render/path.mjs` | The camera flight, and the fog and exposure per room |
+| `scripts/render/kit.mjs` | Shared materials, the light pool, haze |
+| `scripts/render/facility.mjs` | 01, the project hall and its five stations |
+| `scripts/render/observatory.mjs` | 02, the drum and the chrome armillary |
+| `scripts/render/vault.mjs` | 03, the record wall |
+| `scripts/render/chamber.mjs` | 04, the identity chamber |
+| `scripts/render/comms.mjs` | 05, the array |
+| `scripts/render/links.mjs` | Corridors and thresholds between rooms |
+| `scripts/render/textures.mjs` | Procedural plating, decking and station readouts |
+
+Two counts in the render mirror the real data and have to be kept in step by
+hand, because the renderer is a plain script and does not import the app's
+TypeScript: the lit drawers in `vault.mjs` (`FILLED`) and the channel consoles
+in `comms.mjs` (`CHANNELS`).
+
+The scroll fractions in `scripts/render/path.mjs` and the zone ranges in
+`src/lib/world.ts` describe the same journey from two ends. If you retime one,
+retime the other, or a panel will be on screen while the wrong room is on
+camera.
+
 ## Things worth knowing
 
 - **Counts are derived, never typed.** `PROJECTS`, `ACTIVE`, `ARCHIVED` and the
@@ -119,8 +175,14 @@ splash and dock entry all follow.
   in the DOM as visually-hidden text and animates an `aria-hidden` copy on top,
   so the heading survives without JavaScript and for screen readers.
 - **Reduced motion is respected.** `prefers-reduced-motion` skips the boot
-  sequence, the launch splash, the hero typing, the file-opening transition and
-  the custom cursor.
+  sequence, the launch splash, the hero typing, the file-opening transition,
+  the custom cursor and the chrome shimmer on the wordmark.
+- **The landing page works without the film.** The frames load progressively
+  and out of order, sparsely first, so the journey is scrubbable early. If none
+  of them arrive, every zone is still a complete block of HTML.
+- **The head is the only live thing on the world.** It is a 2D canvas point
+  cloud, mounted in the shell so it survives navigation, and it tracks the
+  cursor on every route.
 
 ## Commands
 
