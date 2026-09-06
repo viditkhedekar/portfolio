@@ -948,6 +948,46 @@ html[data-boot="pending"] .vk-head-layer {
   color: var(--vk-fg-ghost);
 }
 
+/* Header-sized. Tighter, and it borrows the accent so the way back out of the
+   reduced page is the one thing in that bar that looks like an offer. */
+.vk-mode.is-compact {
+  padding: 6px 10px;
+  gap: 7px;
+  border-color: var(--vk-accent-line);
+  background: var(--vk-accent-ghost);
+}
+
+.vk-mode.is-compact .vk-mode-dot {
+  background: var(--vk-accent-soft);
+}
+
+.vk-mode.is-compact .vk-mode-label {
+  color: var(--vk-accent-soft);
+}
+
+.vk-mode.is-compact:hover,
+.vk-mode.is-compact:focus-visible {
+  border-color: var(--vk-accent);
+  background: var(--vk-accent-faint);
+}
+
+.vk-mode.is-compact:hover .vk-mode-label,
+.vk-mode.is-compact:focus-visible .vk-mode-label {
+  color: var(--vk-accent);
+}
+
+/* On a phone the header is already carrying the operator, GitHub, the clock
+   and the menu, so the label goes and the dot carries it. */
+@media (max-width: 639px) {
+  .vk-mode.is-compact .vk-mode-label {
+    display: none;
+  }
+
+  .vk-mode.is-compact {
+    padding: 6px 8px;
+  }
+}
+
 /* ---------- Terminal prompt ---------- */
 
 /*
