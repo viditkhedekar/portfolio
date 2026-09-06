@@ -39,6 +39,15 @@ export interface Manifest {
 
 export const MANIFEST_URL = "/seq/manifest.json";
 
+/**
+ * Pixels per metre in a surface element's own coordinate space.
+ *
+ * A panel four metres wide is authored as a four hundred pixel box, type is
+ * chosen in that space, and the projective transform does the rest. Changing
+ * this rescales every word in the building at once.
+ */
+export const SURFACE_SCALE = 100;
+
 let manifest: Manifest | null = null;
 let pending: Promise<Manifest | null> | null = null;
 
