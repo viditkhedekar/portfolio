@@ -13,8 +13,8 @@
  * surfaces are lit, the lights cast shadows, and the haze is real geometry.
  */
 
-import { readoutTexture } from "./textures.mjs";
 import { addDust } from "./kit.mjs";
+import { buildFitting } from "./surfaces.mjs";
 
 /* The hall. Wide and tall enough that the walls leave the frame. */
 export const HALL = {
@@ -33,23 +33,24 @@ const FIXTURE_Y = 9.5;
 /**
  * The five stations.
  *
- * `photo` is the project's own screenshot out of /public/projects. Hanging
- * the real thing on the wall behind each console is worth more than any
- * amount of invented instrumentation: it is the only surface in the hall that
- * proves the project exists.
+ * Each station has two display surfaces: the console the camera passes at
+ * eye level, and the board above it carrying the project's own screenshot.
+ * Neither is painted into the render. They are registered as rectangles and
+ * filled with real HTML at runtime, which is why the console can be read and
+ * the screenshot is sharp.
  */
 const STATIONS = [
-  { id: "PX-001", name: "GROWTHKIT AI", kind: "network", sub: "CONTEXT // LOADED", z: -22, side: -1, photo: "px-001-landing" },
-  { id: "PX-002", name: "PHYSIQAL PERFORMANCE", kind: "motion", sub: "MOTION ANALYSIS // ACTIVE", z: -46, side: 1, photo: "px-002-analysis" },
-  { id: "PX-003", name: "TACTIX XI", kind: "pitch", sub: "MATCH ENGINE // ACTIVE", z: -70, side: -1, photo: "px-003-tactics" },
-  { id: "PX-004", name: "BLACKOAK", kind: "market", sub: "BACKTEST ENGINE // READY", z: -94, side: 1, photo: "px-004-command-center" },
-  { id: "PX-005", name: "KEYNESIUM", kind: "model", sub: "GDP / INFLATION / UNEMPLOYMENT", z: -118, side: -1, photo: "px-005-shock" },
+  { id: "PX-001", z: -22, side: -1 },
+  { id: "PX-002", z: -46, side: 1 },
+  { id: "PX-003", z: -70, side: -1 },
+  { id: "PX-004", z: -94, side: 1 },
+  { id: "PX-005", z: -118, side: -1 },
 ];
 
-/** The screenshots this scene wants, in load order. */
-export const PHOTOS = STATIONS.map((s) => s.photo);
+/** Station ids, so the runtime knows which surfaces this room produces. */
+export const STATION_IDS = STATIONS.map((s) => s.id);
 
-export function buildFacility(THREE, scene, kit, pool, photos = {}) {
+export function buildFacility(THREE, scene, kit, pool, surfaces) {
   const group = new THREE.Group();
   scene.add(group);
 
@@ -188,101 +189,87 @@ export function buildFacility(THREE, scene, kit, pool, photos = {}) {
 
   for (const station of STATIONS) {
     const inst = new THREE.Group();
-    inst.position.set(station.side * 7.3, 0, station.z);
-    inst.rotation.y = station.side * -0.42;
+    inst.position.set(station.side * 8.2, 0, station.z);
+    inst.rotation.y = station.side * -0.46;
     group.add(inst);
 
-    const plinth = new THREE.Mesh(new THREE.BoxGeometry(4.6, 1.05, 2.4), darkMat);
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(6.6, 1.05, 2.6), darkMat);
     plinth.position.y = 0.525;
     plinth.castShadow = true;
     plinth.receiveShadow = true;
     inst.add(plinth);
 
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(4.9, 0.16, 2.7), steelMat);
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(7.0, 0.16, 2.9), steelMat);
     deck.position.y = 1.1;
     deck.castShadow = true;
     inst.add(deck);
 
-    /* Console body and the screen set into it. */
-    const body = new THREE.Mesh(new THREE.BoxGeometry(4.5, 3.1, 0.55), darkMat);
-    body.position.set(0, 2.9, -0.2);
-    body.castShadow = true;
-    inst.add(body);
-
-    const bezel = new THREE.Mesh(new THREE.BoxGeometry(4.1, 2.7, 0.12), steelMat);
-    bezel.position.set(0, 2.95, 0.12);
-    inst.add(bezel);
-
-    const screenTex = readoutTexture(THREE, station.kind, station.name, station.sub);
-    const screenMat = new THREE.MeshBasicMaterial({ map: screenTex, toneMapped: false });
-    const screen = new THREE.Mesh(new THREE.PlaneGeometry(3.85, 2.42), screenMat);
-    screen.position.set(0, 2.95, 0.2);
-    inst.add(screen);
+    /* The console. Much larger than it was: this is the surface a visitor is
+       meant to read, and at the old size the text on it was a texture of a
+       screen rather than a screen. */
+    const desk = buildFitting(THREE, kit, { width: 6.4, height: 3.9, depth: 0.5 });
+    desk.group.position.set(0, 3.5, 0.1);
+    inst.add(desk.group);
+    surfaces.add(`project-${station.id}`, "console", desk.face, 6.4, 3.9, {
+      project: station.id,
+    });
 
     /* The screen throws light, but a monitor is not a floodlight: at the
        first setting it washed ten metres of deck lime green. */
     pool.add(
-      [station.side * 7.3, 2.9, station.z + 1.4],
-      { intensity: 2.4, distance: 8.5, color: 0xaee83c },
+      [station.side * 8.2, 3.4, station.z + 1.6],
+      { intensity: 3.2, distance: 10, color: 0xaee83c },
     );
 
     const bloomCard = new THREE.Sprite(accentGlowMat);
-    bloomCard.position.set(0, 2.95, 0.6);
-    bloomCard.scale.set(7.5, 5.6, 1);
+    bloomCard.position.set(0, 3.5, 0.7);
+    bloomCard.scale.set(10, 7, 1);
     inst.add(bloomCard);
 
-    /* Under-deck strip, and a stanchion each side. */
+    /* Under-deck strip. */
     const strip = new THREE.Mesh(
-      new THREE.BoxGeometry(4.3, 0.07, 0.07),
+      new THREE.BoxGeometry(6.2, 0.07, 0.07),
       new THREE.MeshBasicMaterial({ color: 0xaee83c }),
     );
-    strip.position.set(0, 1.02, 1.28);
+    strip.position.set(0, 1.02, 1.42);
     inst.add(strip);
 
-    /* The project itself, mounted on the wall above the console and turned
-       in towards the aisle so the camera catches it side-on as it passes. */
-    const photo = photos[station.photo];
-    if (photo) {
-      const board = new THREE.Group();
-      board.position.set(station.side * 1.9, 5.1, -2.4);
-      board.rotation.y = station.side * 0.34;
-      inst.add(board);
+    /* The project's own screenshot, on the wall above the console and turned
+       in towards the aisle so the camera catches it as it passes. The picture
+       is no longer painted into the render: it is another surface, so the
+       screenshot arrives at its real resolution instead of at whatever a
+       1440-pixel frame could spare for it. */
+    const board = new THREE.Group();
+    board.position.set(station.side * 2.2, 6.4, -2.6);
+    board.rotation.y = station.side * 0.36;
+    inst.add(board);
 
-      const backing = new THREE.Mesh(new THREE.BoxGeometry(8.2, 5.2, 0.3), darkMat);
-      backing.position.z = -0.2;
-      board.add(backing);
+    const print = buildFitting(THREE, kit, {
+      width: 7.4,
+      height: 4.3,
+      depth: 0.34,
+      lit: false,
+    });
+    board.add(print.group);
+    surfaces.add(`board-${station.id}`, "board", print.face, 7.4, 4.3, {
+      project: station.id,
+    });
 
-      const aspect = (photo.image?.width ?? 16) / (photo.image?.height ?? 9);
-      const h = 4.6;
-      const w = Math.min(7.8, h * aspect);
-      const print = new THREE.Mesh(
-        new THREE.PlaneGeometry(w, h),
-        /* Dimmed rather than emissive: it is a lit print on a wall, not
-           another screen, and five more screens would flatten the hall. */
-        new THREE.MeshBasicMaterial({ map: photo, color: 0xb4bec8 }),
-      );
-      board.add(print);
+    /* A picture light, which is also the only thing lifting the upper wall
+       out of the dark along this stretch. A pool emitter rather than a
+       spotlight of its own: five more shadow-casting cones is not what this
+       scene should spend its light budget on. */
+    pool.add([station.side * 4.6, 8.4, station.z - 1.6], {
+      intensity: 22,
+      distance: 22,
+    });
 
-      const trim = new THREE.Mesh(new THREE.BoxGeometry(w + 0.3, 0.08, 0.12), steelMat);
-      trim.position.set(0, -h / 2 - 0.18, 0.1);
-      board.add(trim);
-
-      /* A picture light, which is also the only thing lifting the upper wall
-         out of the dark along this stretch. A pool emitter rather than a
-         spotlight of its own: five more shadow-casting cones is not what this
-         scene should spend its light budget on. */
-      pool.add([station.side * 4.2, 7.4, station.z - 1.4], {
-        intensity: 20,
-        distance: 20,
-      });
-    }
-
-    for (const s of [-1, 1]) {
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 3.2, 8), steelMat);
-      post.position.set(s * 2.5, 2.7, 1.0);
+    for (const side of [-1, 1]) {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 3.6, 8), steelMat);
+      post.position.set(side * 3.5, 3.0, 1.1);
       inst.add(post);
-      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 2.2), steelMat);
-      rail.position.set(s * 2.5, 1.15, 0.2);
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 2.4), steelMat);
+      rail.position.set(side * 3.5, 1.15, 0.2);
       inst.add(rail);
     }
   }
