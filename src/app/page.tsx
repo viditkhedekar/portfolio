@@ -2,6 +2,9 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { StatusDot } from "@/components/ui";
 import { ZoneStage } from "@/components/world/ZoneStage";
+import { LandingMode } from "@/components/world/LandingMode";
+import { LiteDesktop } from "@/components/LiteDesktop";
+import { ModeSwitch } from "@/components/ModeSwitch";
 import { TerminalPrompt } from "@/components/world/TerminalPrompt";
 import { zones, type Zone } from "@/lib/world";
 import { modules, system } from "@/lib/data/system";
@@ -144,7 +147,7 @@ function Section({
 export default function Home() {
   const providers = certificationGroups.length;
 
-  return (
+  const journey = (
     <>
       {/* The world itself and the HUD over it are mounted by VKOSShell, which
           keeps them clear of the boot fade. This is the readable half. */}
@@ -173,6 +176,10 @@ export default function Home() {
             <p className="vk-mono mt-8 text-[9px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
               SCROLL TO TRAVEL
             </p>
+
+            {/* Offered at the top, before any of the film has been asked for,
+                because after that the offer is worth much less. */}
+            <ModeSwitch to="lite" className="mt-5" />
           </div>
         </section>
 
@@ -290,4 +297,8 @@ export default function Home() {
       </ZoneStage>
     </>
   );
+
+  /* Both landings are described here, and the client picks one. The low-RAM
+     branch is the page this site had before the world existed. */
+  return <LandingMode world={journey} lite={<LiteDesktop />} />;
 }
