@@ -124,14 +124,52 @@ node scripts/render/server.mjs        # harness on :4321
 Open <http://localhost:4321> and, in the console:
 
 ```js
-VK.resize(1600, 900);
+VK.resize(1440, 810);
+VK.manifest(180);                // writes public/seq/manifest.json
 VK.sequence(180, "seq", 0.86);   // writes public/seq/0000.webp …
 VK.still(0.3, "test.webp");      // one frame, into public/render-tests/
 ```
 
+Always re-export the manifest when the geometry moves, or the HTML will be
+laid onto fittings that are no longer there.
+
 The tab has to stay visible: a browser stops running animation frames in a
 background tab, so a hidden one renders nothing. The last full run was 180
 frames at about 4.7 MB.
+
+### The words on the walls
+
+The rooms are photographed offline. The text in them is not. Every console,
+nameplate and wall panel is registered in the scene as a rectangle
+(`scripts/render/surfaces.mjs`), exported into `public/seq/manifest.json`
+alongside the camera, and filled with real HTML at runtime by
+`src/components/world/WorldSurfaces.tsx`, transformed onto the fitting in
+perspective.
+
+That means the walls are still driven by `src/lib/data/`: edit a grade and the
+wall it is written on changes, with no re-render. It also means the text is
+crisp at any size, can be focused and read aloud, and can be clicked.
+
+- **What each surface says** is `src/components/world/surfaceContent.tsx`,
+  keyed by the id the renderer gave the rectangle. Adding a display is a
+  matter of registering it in the scene and adding a case there.
+- **Clicking one** opens the file in place over the world
+  (`WorldOverlay.tsx`), with a link through to the module page.
+- **Type is sized in the surface's own space**, a hundred pixels to the metre.
+  A panel eleven metres wide is an eleven hundred pixel box, which is why the
+  font sizes in the wall CSS look enormous next to the rest of the interface.
+
+```bash
+npm run check:surfaces
+```
+
+This is the check worth running after touching any of it. Placement fails
+invisibly: if the projection or the homography is slightly wrong, a single
+frame still looks right and the text slides off its bezel as the camera moves.
+The check compares the runtime's projection against three's own answer, and
+round-trips the CSS transform against the quad it was built from. Re-record
+the fixture in it with `VK.probe(...)` if the camera path or the PX-002
+station moves.
 
 ### Editing the world
 
@@ -145,7 +183,8 @@ frames at about 4.7 MB.
 | `scripts/render/chamber.mjs` | 04, the identity chamber |
 | `scripts/render/comms.mjs` | 05, the array |
 | `scripts/render/links.mjs` | Corridors and thresholds between rooms |
-| `scripts/render/textures.mjs` | Procedural plating, decking and station readouts |
+| `scripts/render/textures.mjs` | Procedural plating and decking |
+| `scripts/render/surfaces.mjs` | The display surface registry and their fittings |
 
 Two counts in the render mirror the real data and have to be kept in step by
 hand, because the renderer is a plain script and does not import the app's
@@ -180,15 +219,25 @@ camera.
 - **The landing page works without the film.** The frames load progressively
   and out of order, sparsely first, so the journey is scrubbable early. If none
   of them arrive, every zone is still a complete block of HTML.
-- **The head is the only live thing on the world.** It is a 2D canvas point
+- **The head is the only live thing in the picture.** It is a 2D canvas point
   cloud, mounted in the shell so it survives navigation, and it tracks the
   cursor on every route.
+- **Frames are cross-faded.** Scroll lands between frames far more often than
+  on one, so the two either side are drawn and blended. It is much cheaper
+  than shipping more frames, and it is what stops a hundred and eighty stills
+  reading as a hundred and eighty stills.
+- **There is a low-RAM landing page.** Offered on the opening screen, honoured
+  automatically for anyone whose browser asks for Save-Data, and remembered
+  afterwards. It is the desktop this site had before the world was built, and
+  it downloads none of the film. `src/lib/mode-gate.ts` resolves it before
+  first paint.
 
 ## Commands
 
 ```bash
-npm run dev      # dev server
-npm run build    # production build
-npm run lint     # eslint
-npx tsc --noEmit # typecheck
+npm run dev             # dev server
+npm run build           # production build
+npm run lint            # eslint
+npm run check:surfaces  # wall HTML lands on its fitting
+npx tsc --noEmit        # typecheck
 ```
