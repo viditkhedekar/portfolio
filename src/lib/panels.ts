@@ -1,6 +1,7 @@
 "use client";
 
 import { SURFACE_SCALE, sampleCamera, type Camera, type Manifest } from "@/lib/surfaces";
+import { certifications } from "@/lib/data/certifications";
 
 /**
  * The information that travels with you.
@@ -86,10 +87,13 @@ export const panels: Panel[] = [
 
   /* 03 — the vault index, then the records themselves as a run of plates. */
   { id: "vault-index", kind: "wall", at: 0.583, side: -1, width: 6.2 },
-  ...Array.from({ length: 13 }, (_, i): Panel => ({
+  /* One plate per record actually held. Counted, never written down: the
+     first version of this said thirteen when there were twelve, and the
+     thirteenth panel was an empty box nobody could see was empty. */
+  ...certifications.map((_, i): Panel => ({
     id: `credential-${i}`,
     kind: "plate",
-    at: 0.605 + (i / 12) * 0.1,
+    at: 0.605 + (i / Math.max(1, certifications.length - 1)) * 0.1,
     side: i % 2 === 0 ? 1 : -1,
     width: 4.2,
   })),
