@@ -12,6 +12,7 @@
  */
 
 import { addDust } from "./kit.mjs";
+import { buildFitting } from "./surfaces.mjs";
 
 export const OBSERVATORY = {
   centre: [0, 0, -232],
@@ -26,7 +27,7 @@ const SUBJECTS = [
   "HISTORY", "GEOGRAPHY", "ECONOMICS", "FRENCH",
 ];
 
-export function buildObservatory(THREE, scene, kit, pool) {
+export function buildObservatory(THREE, scene, kit, pool, surfaces) {
   const { mat, haze } = kit;
   const group = new THREE.Group();
   const [cx, cy, cz] = OBSERVATORY.centre;
@@ -171,28 +172,70 @@ export function buildObservatory(THREE, scene, kit, pool) {
   base.receiveShadow = true;
   group.add(base);
 
+  /* ---------------------------------------------------------- wall panels */
+
+  /*
+   * The academic record, mounted on the drum.
+   *
+   * Set on the far half, because the camera enters at the near side and
+   * climbs looking across: a panel behind the entrance would never be seen.
+   * Facing dead centre, so they are square-on from the middle of the room.
+   */
+  const WALL_PANELS = [
+    { id: "school-summary", angle: 1.15, y: 10 },
+    { id: "school-subjects", angle: 1.95, y: 10 },
+    { id: "school-qualification", angle: 2.75, y: 10 },
+  ];
+
+  for (const panel of WALL_PANELS) {
+    const x = Math.cos(panel.angle) * (R - 1.7);
+    const z = Math.sin(panel.angle) * (R - 1.7);
+
+    const fitting = buildFitting(THREE, kit, { width: 11, height: 6.4, depth: 0.5 });
+    fitting.group.position.set(x, panel.y, z);
+    /* Turn the panel's +Z, which is the face, in towards the axis. */
+    fitting.group.rotation.y = Math.atan2(-Math.cos(panel.angle), -Math.sin(panel.angle));
+    group.add(fitting.group);
+
+    surfaces.add(panel.id, "wall", fitting.face, 11, 6.4);
+
+    pool.add([cx + x * 0.86, panel.y + 1, cz + z * 0.86], {
+      intensity: 16,
+      distance: 26,
+    });
+  }
+
   /* ------------------------------------------------------------- subjects */
 
-  /* One plinth per subject, ringed around the floor under the armillary. */
+  /* One plinth per subject, ringed around the floor under the armillary, each
+     with its own nameplate. */
   SUBJECTS.forEach((_, i) => {
     const a = (i / SUBJECTS.length) * Math.PI * 2 + 0.3;
     const x = Math.cos(a) * 21;
     const z = Math.sin(a) * 21;
+    const facing = Math.atan2(-Math.cos(a), -Math.sin(a));
 
-    const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.2, 2.6, 1.1), mat.dark);
-    plinth.position.set(x, 1.3, z);
-    plinth.rotation.y = -a + Math.PI / 2;
+    const plinth = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.8, 1.1), mat.dark);
+    plinth.position.set(x, 1.4, z);
+    plinth.rotation.y = facing;
     plinth.castShadow = true;
     group.add(plinth);
 
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.5), mat.accent);
-    face.position.set(x * 0.975, 2.0, z * 0.975);
-    face.rotation.y = -a + Math.PI / 2;
-    group.add(face);
+    const plate = buildFitting(THREE, kit, {
+      width: 2.1,
+      height: 0.62,
+      depth: 0.18,
+      lit: false,
+    });
+    plate.group.position.set(x * 0.975, 2.15, z * 0.975);
+    plate.group.rotation.y = facing;
+    group.add(plate.group);
 
-    pool.add([cx + x * 0.9, 2.4, cz + z * 0.9], {
-      intensity: 5,
-      distance: 9,
+    surfaces.add(`subject-${i}`, "plate", plate.face, 2.1, 0.62, { index: i });
+
+    pool.add([cx + x * 0.9, 2.6, cz + z * 0.9], {
+      intensity: 4,
+      distance: 8,
       color: 0xaee83c,
     });
   });
