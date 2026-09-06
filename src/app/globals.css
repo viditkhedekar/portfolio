@@ -787,37 +787,42 @@ html[data-boot="pending"] .vk-head-layer {
  * look like decoration.
  */
 .vk-chrome {
+  /* Weighted bright. The first pass put a near-black horizon through the
+     middle of the type and, against a dark corridor, the wordmark simply
+     disappeared. The band is still there because chrome needs it, but it is
+     a slate grey and it is thin. */
   background-image: linear-gradient(
     177deg,
-    #fbfdff 0%,
-    #c3d0dc 14%,
-    #eef4f9 26%,
-    #7d8d9b 40%,
-    #39434c 49%,
-    #222a31 52%,
-    #6d7d8b 56%,
-    #cfdae4 68%,
-    #8fa0ae 82%,
-    #f2f7fb 100%
+    #f9fcff 0%,
+    #d2dee9 15%,
+    #ffffff 30%,
+    #adbcc9 43%,
+    #66727d 49%,
+    #55616b 52%,
+    #a6b5c2 56%,
+    #f4f8fc 68%,
+    #c2d0dc 84%,
+    #ffffff 100%
   );
-  background-size: 100% 220%;
-  background-position: 50% 30%;
+  background-size: 100% 190%;
+  background-position: 50% 34%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
   /* A cold rim under the type, so it sits on the world rather than floating
      as a cut-out. */
-  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.18))
-    drop-shadow(0 10px 26px rgba(0, 0, 0, 0.65));
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.22))
+    drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8))
+    drop-shadow(0 14px 40px rgba(0, 0, 0, 0.6));
   animation: vk-chrome-drift 14s var(--vk-ease-io) infinite alternate;
 }
 
 @keyframes vk-chrome-drift {
   from {
-    background-position: 50% 24%;
+    background-position: 50% 28%;
   }
   to {
-    background-position: 50% 58%;
+    background-position: 50% 52%;
   }
 }
 
@@ -899,7 +904,7 @@ html[data-boot="pending"] .vk-head-layer {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  padding-bottom: 104px;
+  padding-bottom: 72px;
   text-align: center;
 }
 
