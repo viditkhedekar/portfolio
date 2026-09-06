@@ -3,7 +3,8 @@
 import * as React from "react";
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { SURFACE_SCALE, type Surface } from "@/lib/surfaces";
+import { SURFACE_SCALE } from "@/lib/surfaces";
+import type { Panel } from "@/lib/panels";
 import { getProject } from "@/lib/data/projects";
 import { certificationGroups, certifications } from "@/lib/data/certifications";
 import { predicted, qualification, school, subjects } from "@/lib/data/school";
@@ -11,29 +12,28 @@ import { channels, contactNote, identity } from "@/lib/data/identity";
 import { system } from "@/lib/data/system";
 
 /**
- * What each surface in the building says.
+ * What each travelling panel says.
  *
- * Keyed by the id the renderer gave the rectangle, so adding a display is a
- * matter of registering it in the scene and adding a case here. Everything is
- * read from the data files, which is the whole reason this is HTML and not
- * paint: editing a grade changes the wall it is written on without
- * re-rendering six hundred metres of building.
+ * Keyed by the panel's id, so adding one is a matter of listing it in
+ * `src/lib/panels.ts` and adding a case here. Everything is read from the
+ * data files, which is the whole reason this is HTML and not paint: editing a
+ * grade changes the panel without re-rendering six hundred metres of
+ * building.
  *
- * Type is sized in the surface's own space, a hundred pixels to the metre, so
- * a number set at ninety pixels here is most of a metre tall on the wall.
+ * Type is sized in the panel's own space, a hundred pixels to the metre, so a
+ * heading set at sixty pixels stands a little over half a metre tall as you
+ * pass it. That is why these numbers look enormous beside the rest of the
+ * interface.
  */
-export function surfaceContent(surface: Surface, open: () => void): React.ReactNode {
-  const id = surface.id;
+export function panelContent(panel: Panel, open: () => void): React.ReactNode {
+  const id = panel.id;
 
-  if (surface.kind === "console" && surface.project) {
-    return <ProjectConsole id={surface.project} open={open} />;
-  }
-  if (surface.kind === "board" && surface.project) {
+  if (id.startsWith("project-")) {
     return (
-      <ProjectBoard
-        id={surface.project}
-        width={Math.round(surface.w * 2 * SURFACE_SCALE)}
-        height={Math.round(surface.h * 2 * SURFACE_SCALE)}
+      <ProjectCard
+        id={id.slice(8)}
+        width={Math.round(panel.width * SURFACE_SCALE)}
+        open={open}
       />
     );
   }
@@ -84,58 +84,58 @@ function Line({ term, value, dim }: { term: string; value: string; dim?: boolean
 
 /* ---------------------------------------------------------------- projects */
 
-function ProjectConsole({ id, open }: { id: string; open: () => void }) {
+function ProjectCard({
+  id,
+  width,
+  open,
+}: {
+  id: string;
+  width: number;
+  open: () => void;
+}) {
   const project = getProject(id);
   if (!project) return null;
 
+  const shot = project.media?.[0];
+
   return (
-    <button type="button" onClick={open} className="vk-face vk-face-console">
-      <span className="vk-face-head">
-        <span>{project.id}</span>
-        <span>{project.status}</span>
-      </span>
+    <button type="button" onClick={open} className="vk-face vk-face-card">
+      {shot ? (
+        <span className="vk-face-shotwrap">
+          <Image
+            src={shot.src}
+            alt={shot.alt}
+            width={width}
+            height={Math.round(width * 0.56)}
+            className="vk-face-shot"
+          />
+        </span>
+      ) : null}
 
-      <span className="vk-face-name">{project.name}</span>
-      <span className="vk-face-category">{project.category}</span>
-      <span className="vk-face-body">{project.summary}</span>
+      <span className="vk-face-body-wrap">
+        <span className="vk-face-head">
+          <span>{project.id}</span>
+          <span>{project.status}</span>
+        </span>
 
-      <span className="vk-face-stack">
-        {project.technologies.map((tech) => (
-          <span key={tech} className="vk-face-chip">
-            {tech}
-          </span>
-        ))}
-      </span>
+        <span className="vk-face-name">{project.name}</span>
+        <span className="vk-face-category">{project.category}</span>
+        <span className="vk-face-body">{project.summary}</span>
 
-      <span className="vk-face-cta">
-        OPEN FILE
-        <ArrowRight aria-hidden="true" size={18} strokeWidth={1.6} />
+        <span className="vk-face-stack">
+          {project.technologies.map((tech) => (
+            <span key={tech} className="vk-face-chip">
+              {tech}
+            </span>
+          ))}
+        </span>
+
+        <span className="vk-face-cta">
+          OPEN FILE
+          <ArrowRight aria-hidden="true" size={18} strokeWidth={1.6} />
+        </span>
       </span>
     </button>
-  );
-}
-
-function ProjectBoard({ id, width, height }: { id: string; width: number; height: number }) {
-  const project = getProject(id);
-  const shot = project?.media?.[0];
-  if (!project || !shot) return null;
-
-  return (
-    <span className="vk-face vk-face-board">
-      {/* The board's pixel size is its metre size times the surface scale, so
-          the optimiser is told exactly what this will be drawn at. */}
-      <Image
-        src={shot.src}
-        alt={shot.alt}
-        width={width}
-        height={height}
-        className="vk-face-shot"
-      />
-      <span className="vk-face-caption">
-        <span>{project.name.toUpperCase()}</span>
-        <span>{shot.ref}</span>
-      </span>
-    </span>
   );
 }
 
