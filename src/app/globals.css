@@ -1159,15 +1159,21 @@ html[data-boot="pending"] .vk-head-layer {
   position: absolute;
   transform-origin: 50% 50%;
   will-change: transform, opacity, left, top;
-  /* Where the pointer is inside this panel, written by the panel layer. The
-     defaults are the centre, which is the neutral pose. */
+}
+
+/*
+ * The pointer position lives on the face, not on the panel above it, because
+ * the frame loop owns `transform` on the panel and the tilt needs an element
+ * of its own.
+ */
+.vk-face {
   --px: 0.5;
   --py: 0.5;
   --lift: 0;
 }
 
-.vk-panel:hover,
-.vk-panel:focus-within {
+.vk-panel:hover .vk-face,
+.vk-panel:focus-within .vk-face {
   --lift: 1;
 }
 
@@ -1226,13 +1232,20 @@ html[data-boot="pending"] .vk-head-layer {
     rotateY(calc((var(--px) - 0.5) * 15deg * var(--lift)))
     rotateX(calc((0.5 - var(--py)) * 11deg * var(--lift)))
     translateZ(calc(var(--lift) * 26px));
+  /*
+   * Only `transform` is transitioned, never the pointer numbers themselves.
+   *
+   * Transitioning a custom property makes its computed value the output of a
+   * running animation, and an animation that is paused (a background tab, a
+   * hidden pane) never advances, so the value stays pinned at where it
+   * started and the face never moves. Interpolating the transform instead
+   * gives the same smooth follow, because each pointer move retargets a
+   * transition that is already in flight.
+   */
   transition:
-    transform 300ms var(--vk-ease),
+    transform 260ms var(--vk-ease),
     box-shadow 300ms var(--vk-ease),
-    border-color 300ms var(--vk-ease),
-    --px 220ms linear,
-    --py 220ms linear,
-    --lift 300ms var(--vk-ease);
+    border-color 300ms var(--vk-ease);
 }
 
 .vk-panel:hover .vk-face,
