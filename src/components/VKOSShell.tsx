@@ -7,6 +7,7 @@ import { AppLauncher } from "@/components/AppLauncher";
 import { AppWindow } from "@/components/AppWindow";
 import { BootSequence } from "@/components/BootSequence";
 import { Cursor } from "@/components/Cursor";
+import { CursorTrail } from "@/components/world/CursorTrail";
 import { OperatorHead } from "@/components/OperatorHead";
 import { SystemFooter } from "@/components/SystemFooter";
 import { SystemHeader } from "@/components/SystemHeader";
@@ -64,6 +65,10 @@ export function VKOSShell({ children }: { children: React.ReactNode }) {
     <TerminalProvider>
       {booting && <BootSequence />}
       <Cursor />
+      {/* The trail is part of the world's character, so it is off on the
+          low-RAM page: a canvas repainting behind the pointer is exactly the
+          kind of thing someone chose that page to avoid. */}
+      {mode === "world" && <CursorTrail />}
       <AppLauncher />
 
       {/* The world and the head sit outside `.vk-app` deliberately. That
