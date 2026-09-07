@@ -891,6 +891,20 @@ html[data-boot="pending"] .vk-head-layer {
   }
 }
 
+/* ---------- Cursor trail ---------- */
+
+/*
+ * Above the panels so the embers pass in front of them, below the HUD so it
+ * never crosses the readouts. Takes no pointer events: it is the pointer's
+ * shadow, not a target.
+ */
+.vk-trail {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+}
+
 /* ---------- Mode switch ---------- */
 
 /*
@@ -1143,6 +1157,39 @@ html[data-boot="pending"] .vk-head-layer {
   position: absolute;
   transform-origin: 50% 50%;
   will-change: transform, opacity, left, top;
+  /* Where the pointer is inside this panel, written by the panel layer. The
+     defaults are the centre, which is the neutral pose. */
+  --px: 0.5;
+  --py: 0.5;
+  --lift: 0;
+}
+
+.vk-panel:hover,
+.vk-panel:focus-within {
+  --lift: 1;
+}
+
+/*
+ * Registered so the browser will interpolate them. Without this the pointer
+ * numbers are strings as far as transitions are concerned, and the face snaps
+ * back to level the instant the cursor leaves instead of settling.
+ */
+@property --px {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@property --py {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.5;
+}
+
+@property --lift {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
 }
 
 .vk-face {
@@ -1164,6 +1211,109 @@ html[data-boot="pending"] .vk-head-layer {
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.5),
     0 30px 90px rgba(0, 0, 0, 0.75);
+
+  /*
+   * Reactivity lives here rather than on `.vk-panel`, whose transform is
+   * rewritten every frame by the placement loop. This element is free.
+   *
+   * The tilt is towards the cursor, which is the way round that reads as the
+   * panel turning to face you. Away from it reads as the panel avoiding you.
+   */
+  position: relative;
+  transform: perspective(1400px)
+    rotateY(calc((var(--px) - 0.5) * 15deg * var(--lift)))
+    rotateX(calc((0.5 - var(--py)) * 11deg * var(--lift)))
+    translateZ(calc(var(--lift) * 26px));
+  transition:
+    transform 300ms var(--vk-ease),
+    box-shadow 300ms var(--vk-ease),
+    border-color 300ms var(--vk-ease),
+    --px 220ms linear,
+    --py 220ms linear,
+    --lift 300ms var(--vk-ease);
+}
+
+.vk-panel:hover .vk-face,
+.vk-panel:focus-within .vk-face {
+  border-color: color-mix(in srgb, var(--vk-accent) 62%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--vk-accent) 22%, transparent),
+    0 0 60px color-mix(in srgb, var(--vk-accent) 20%, transparent),
+    0 44px 120px rgba(0, 0, 0, 0.8);
+}
+
+/*
+ * The specular sheen: a soft highlight that sits under the pointer and slides
+ * across the face as it moves. This is the single detail that sells the panel
+ * as a physical sheet rather than a div, because a flat surface catching a
+ * light is exactly what your eye is looking for to decide something is real.
+ */
+.vk-face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--lift);
+  transition: opacity 300ms var(--vk-ease);
+  background: radial-gradient(
+    circle at calc(var(--px) * 100%) calc(var(--py) * 100%),
+    color-mix(in srgb, var(--vk-accent) 26%, transparent) 0%,
+    color-mix(in srgb, var(--vk-accent) 7%, transparent) 26%,
+    transparent 55%
+  );
+  mix-blend-mode: screen;
+}
+
+/*
+ * A single scan passing down the face on arrival. It runs once per hover
+ * rather than looping: a permanent sweep is a screensaver, and the point is
+ * to acknowledge the pointer, not to keep talking.
+ */
+.vk-face::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--vk-accent) 34%, transparent) 48%,
+    color-mix(in srgb, var(--vk-accent) 34%, transparent) 52%,
+    transparent 100%
+  );
+  background-size: 100% 34%;
+  background-repeat: no-repeat;
+}
+
+.vk-panel:hover .vk-face::before,
+.vk-panel:focus-within .vk-face::before {
+  animation: vk-face-scan 900ms var(--vk-ease-io) 1 both;
+}
+
+@keyframes vk-face-scan {
+  from {
+    opacity: 0.85;
+    background-position: 0 -40%;
+  }
+  to {
+    opacity: 0;
+    background-position: 0 130%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vk-face {
+    transform: none;
+    transition: border-color 200ms linear, box-shadow 200ms linear;
+  }
+
+  .vk-face::after,
+  .vk-panel:hover .vk-face::before,
+  .vk-panel:focus-within .vk-face::before {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* ---------- Project card ---------- */
