@@ -766,15 +766,21 @@ html[data-boot="pending"] .vk-head-layer {
   /*
    * How much scrolling the whole flight takes.
    *
-   * Raised deliberately: the same path over more scroll is a slower camera,
-   * which is a third of the answer to the flight feeling stepped. The other
-   * two thirds are motion blur baked into the frames and more of them.
+   * Raised deliberately, and then raised a long way again. The same flight
+   * over more scroll is a slower camera, and it does two things at once: the
+   * journey stops rushing, and it reads as smoother, because the film
+   * cross-fades between neighbouring frames and a slower pass shows more of
+   * those in-between states rather than skipping past them.
+   *
+   * At this setting each of the six rooms gets roughly three and a half
+   * screens of scrolling. The destination rail is there for anyone who would
+   * rather jump than travel.
    *
    * Every zone's share has to come out at 100vh or more, or the
    * no-JavaScript fallback below stretches the block and the whole path
    * slips. The smallest share is 0.13, so this cannot go below 770vh.
    */
-  --vk-travel: 980vh;
+  --vk-travel: 2100vh;
 }
 
 .vk-zone {
