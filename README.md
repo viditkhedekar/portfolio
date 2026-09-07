@@ -180,7 +180,8 @@ Three things, and they compound:
   across its slice of time, which is why film at 24fps reads as motion and a
   game at 24fps does not. Costs render time, nothing to download.
 - **240 frames** rather than 180, cutting the jump between them by a third.
-- **A slower camera**, done by lengthening the page (`--vk-travel`) so the
+- **A slower camera**, done by lengthening the page (`--vk-travel`, currently
+  2100vh, about 22 screens and 63px of scrolling per frame) so the
   same path takes more scrolling.
 
 Frames either side of the scroll position are also cross-faded at runtime.
