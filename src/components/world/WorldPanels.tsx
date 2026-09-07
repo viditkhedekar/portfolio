@@ -96,27 +96,29 @@ export function WorldPanels({ onOpen }: { onOpen: (panel: Panel) => void }) {
   }, [manifest]);
 
   /*
-   * Where the pointer is within a panel, as a pair of 0..1 numbers on the
-   * element itself. The CSS reads them to tilt the face towards the cursor
-   * and to put a specular sheen under it.
+   * Where the pointer is within a panel, as a pair of 0..1 numbers. The CSS
+   * reads them to tilt the face towards the cursor and to put a specular
+   * sheen under it.
    *
-   * These are custom properties rather than a transform written from here,
-   * because the frame loop above owns `transform` on this element. The tilt
-   * belongs to the face inside it, and the two must not fight over the same
-   * declaration.
+   * Written to the face rather than to this wrapper for two reasons. The
+   * frame loop above owns `transform` on the wrapper, so the tilt has to live
+   * on a different element; and the face transitions these properties, which
+   * would cut it off from anything inherited (see the note in globals.css).
    */
   const track = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    const box = el.getBoundingClientRect();
+    const face = e.currentTarget.firstElementChild as HTMLElement | null;
+    if (!face) return;
+    const box = e.currentTarget.getBoundingClientRect();
     if (box.width < 1 || box.height < 1) return;
-    el.style.setProperty("--px", ((e.clientX - box.left) / box.width).toFixed(3));
-    el.style.setProperty("--py", ((e.clientY - box.top) / box.height).toFixed(3));
+    face.style.setProperty("--px", ((e.clientX - box.left) / box.width).toFixed(3));
+    face.style.setProperty("--py", ((e.clientY - box.top) / box.height).toFixed(3));
   }, []);
 
   const release = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const el = e.currentTarget;
-    el.style.setProperty("--px", "0.5");
-    el.style.setProperty("--py", "0.5");
+    const face = e.currentTarget.firstElementChild as HTMLElement | null;
+    if (!face) return;
+    face.style.setProperty("--px", "0.5");
+    face.style.setProperty("--py", "0.5");
   }, []);
 
   return (
