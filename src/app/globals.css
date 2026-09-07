@@ -1102,29 +1102,31 @@ html[data-boot="pending"] .vk-head-layer {
   pointer-events: none;
 }
 
-/* CSS cannot compare one attribute against another, so the six pairings are
-   written out. The ids come from the zone list and do not change. */
-[data-zone="origin"] #origin > .vk-zone-body,
-[data-zone="projects"] #projects > .vk-zone-body,
-[data-zone="school"] #school > .vk-zone-body,
-[data-zone="certifications"] #certifications > .vk-zone-body,
-[data-zone="about"] #about > .vk-zone-body,
-[data-zone="contact"] #contact > .vk-zone-body {
+/*
+ * With the information travelling towards you on its own panels, the fixed
+ * zone panel is the same words a second time, parked in the corner. So once
+ * the stage is running, only the opening screen keeps its content: the title,
+ * the terminal prompt and the offer of the low-RAM page, none of which belong
+ * on something that flies past.
+ *
+ * The rest stay in the document for the no-JavaScript reading and for screen
+ * readers, which is why this hides them rather than the page omitting them.
+ */
+[data-zone] #projects > .vk-zone-body,
+[data-zone] #school > .vk-zone-body,
+[data-zone] #certifications > .vk-zone-body,
+[data-zone] #about > .vk-zone-body,
+[data-zone] #contact > .vk-zone-body {
+  display: none;
+}
+
+[data-zone="origin"] #origin > .vk-zone-body {
   opacity: 1;
   transform: none;
 }
 
-/* Only the zone that is showing takes clicks. The opening screen has no
-   panel, so its two controls are named directly: without this they inherit
-   the layer's `pointer-events: none` and neither can be pressed, which is
-   exactly what happened. */
 [data-zone="origin"] #origin .vk-ask,
-[data-zone="origin"] #origin .vk-mode,
-[data-zone="projects"] #projects .vk-zone-panel,
-[data-zone="school"] #school .vk-zone-panel,
-[data-zone="certifications"] #certifications .vk-zone-panel,
-[data-zone="about"] #about .vk-zone-panel,
-[data-zone="contact"] #contact .vk-zone-panel {
+[data-zone="origin"] #origin .vk-mode {
   pointer-events: auto;
 }
 
