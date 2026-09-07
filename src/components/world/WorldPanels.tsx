@@ -95,6 +95,30 @@ export function WorldPanels({ onOpen }: { onOpen: (panel: Panel) => void }) {
     return () => cancelAnimationFrame(raf);
   }, [manifest]);
 
+  /*
+   * Where the pointer is within a panel, as a pair of 0..1 numbers on the
+   * element itself. The CSS reads them to tilt the face towards the cursor
+   * and to put a specular sheen under it.
+   *
+   * These are custom properties rather than a transform written from here,
+   * because the frame loop above owns `transform` on this element. The tilt
+   * belongs to the face inside it, and the two must not fight over the same
+   * declaration.
+   */
+  const track = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const box = el.getBoundingClientRect();
+    if (box.width < 1 || box.height < 1) return;
+    el.style.setProperty("--px", ((e.clientX - box.left) / box.width).toFixed(3));
+    el.style.setProperty("--py", ((e.clientY - box.top) / box.height).toFixed(3));
+  }, []);
+
+  const release = React.useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    el.style.setProperty("--px", "0.5");
+    el.style.setProperty("--py", "0.5");
+  }, []);
+
   return (
     <div ref={hostRef} className="vk-panels">
       {panels.map((panel) => (
@@ -103,6 +127,8 @@ export function WorldPanels({ onOpen }: { onOpen: (panel: Panel) => void }) {
           data-panel={panel.id}
           data-kind={panel.kind}
           className="vk-panel"
+          onPointerMove={track}
+          onPointerLeave={release}
           style={{
             width: panel.width * SURFACE_SCALE,
             visibility: "hidden",
