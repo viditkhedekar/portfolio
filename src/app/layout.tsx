@@ -3,7 +3,6 @@ import { IBM_Plex_Mono, Silkscreen, VT323 } from "next/font/google";
 import "./globals.css";
 import { VKOSShell } from "@/components/VKOSShell";
 import { system } from "@/lib/data/system";
-import { MODE_SCRIPT } from "@/lib/mode-gate";
 
 /*
  * Three faces, split by what the interface is doing with them.
@@ -60,23 +59,16 @@ export const viewport: Viewport = {
 };
 
 /**
- * Runs before first paint, and does the two things that cannot wait for React.
- *
- * It hides the interface if this session hasn't booted, which must agree with
- * src/lib/boot.ts: reduced motion skips the sequence, so the gate must not
- * engage there or the page would stay hidden. And it resolves world versus
- * low-RAM, which must happen before anything can start fetching the film.
- *
- * One script rather than two, because React warns about every script tag
- * rendered inside a component and one warning is enough.
+ * Runs before first paint: hides the interface if this session hasn't booted.
+ * Must agree with src/lib/boot.ts — reduced motion skips the sequence, so the
+ * gate must not engage there or the page would stay hidden.
  */
-const HEAD_GATE = [
+const BOOT_GATE = [
   "try{",
   "var c=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;",
   "if(!c&&sessionStorage.getItem('vkos.booted')!=='1'){",
   "document.documentElement.setAttribute('data-boot','pending')}",
   "}catch(e){}",
-  MODE_SCRIPT,
 ].join("");
 
 export default function RootLayout({
@@ -86,11 +78,11 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${pixel.variable} ${term.variable} ${read.variable}`}
-      /* The head gate sets data-boot and data-mode before React hydrates. */
+      /* The boot-gate script sets data-boot before React hydrates. */
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: HEAD_GATE }} />
+        <script dangerouslySetInnerHTML={{ __html: BOOT_GATE }} />
       </head>
       <body className="antialiased">
         <a href="#main" className="vk-skip">

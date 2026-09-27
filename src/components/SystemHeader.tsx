@@ -9,10 +9,8 @@ import { modules, system } from "@/lib/data/system";
 import { StatusDot, cx } from "@/components/ui";
 import { useTerminal } from "@/components/TerminalProvider";
 import { GithubLink } from "@/components/GithubLink";
-import { useClock } from "@/lib/hooks";
-import { useMode } from "@/lib/mode";
 import { OperatorPortrait } from "@/components/OperatorPortrait";
-import { ModeSwitch } from "@/components/ModeSwitch";
+import { useClock } from "@/lib/hooks";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
@@ -23,9 +21,6 @@ export function SystemHeader() {
   const [menuAt, setMenuAt] = React.useState<string | null>(null);
   const open = menuAt === pathname;
   const terminal = useTerminal();
-  /* The sticky head only exists in world mode, so only world mode has to
-     leave a gap for it. */
-  const world = useMode() === "world";
 
   const dateLabel = now
     ? `${String(now.getDate()).padStart(2, "0")} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`
@@ -40,16 +35,10 @@ export function SystemHeader() {
     <>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--vk-line)] bg-[var(--vk-bg)]/85 backdrop-blur-md">
         <div className="mx-auto flex h-[62px] w-full max-w-[1440px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
-          {/* Identity. In world mode the parked head sits in this corner,
-              fixed above the header, so the slot it occupies is held open
-              rather than filled: `--vk-head-w` is published by the head
-              itself. In low-RAM mode there is no head, and the photograph
-              takes the slot back. */}
-          <div
-            className="flex shrink-0 items-center gap-3"
-            style={world ? { marginLeft: "calc(var(--vk-head-w, 46px) + 12px)" } : undefined}
-          >
-            {world ? null : <OperatorPortrait />}
+          {/* Identity. The photograph opens itself, so it sits beside the
+              link rather than inside it. */}
+          <div className="flex shrink-0 items-center gap-3">
+            <OperatorPortrait />
             <Link
               href="/"
               className="group"
@@ -102,12 +91,6 @@ export function SystemHeader() {
 
           {/* Status */}
           <div className="flex shrink-0 items-center gap-3 sm:gap-4">
-            {/* The way back into the world. Only in low-RAM mode, and in the
-                header rather than on the desktop, because someone who drops
-                to the reduced page and then opens a module would otherwise
-                have to find their way home to change their mind. */}
-            {world ? null : <ModeSwitch to="world" compact />}
-
             {/* Shown at every width — the header is the one slot on every page. */}
             <GithubLink variant="header" />
 

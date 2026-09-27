@@ -1,242 +1,108 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { StatusDot } from "@/components/ui";
-import { ZoneStage } from "@/components/world/ZoneStage";
-import { LandingMode } from "@/components/world/LandingMode";
-import { LiteDesktop } from "@/components/LiteDesktop";
-import { ModeSwitch } from "@/components/ModeSwitch";
-import { TerminalPrompt } from "@/components/world/TerminalPrompt";
-import { zones, type Zone } from "@/lib/world";
-import { modules, system } from "@/lib/data/system";
-import { subjects } from "@/lib/data/school";
-import { certifications } from "@/lib/data/certifications";
-import { channels } from "@/lib/data/identity";
+import { Container, Label } from "@/components/ui";
+import { SystemState, TelemetryPanel } from "@/components/TelemetryPanel";
+import { system } from "@/lib/data/system";
+import { apps } from "@/lib/data/apps";
+import { GithubLink } from "@/components/GithubLink";
+import { ParticleHero } from "@/components/ParticleHero";
+import { HeadOrbit } from "@/components/HeadOrbit";
+import { TerminalHint } from "@/components/TerminalHint";
 
-/**
- * VKOS/01 — the landing page.
- *
- * The panels here are captions, not content. Since the walls of the building
- * carry the real material as HTML mapped onto them, a panel that repeated it
- * would be the same words twice on one screen, read twice by a screen reader.
- * Each one now says where you are, what is around you, and how to get the
- * whole module.
- *
- * One document. Scrolling it flies a camera through a single continuous
- * world, and this file is the readable half of that: six blocks of scroll,
- * each pinning one panel to the middle of the screen for exactly as long as
- * its environment is on camera.
- *
- * Everything here is a teaser. Counts and names are read from the data files
- * so a panel can never contradict the module it opens, and the module pages
- * are where the actual material lives.
- *
- * If the world failed to load, this page is still a complete, ordered
- * description of the whole system. That is the test it has to pass.
- */
+const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
 
-/** Zone lookup, so a section can be written in the order it is read. */
-const Z: Record<string, Zone> = Object.fromEntries(zones.map((z) => [z.id, z]));
-
-/** Height of a zone's scroll block, from the share of the path it owns. */
-function span(zone: Zone, trailing = false): React.CSSProperties {
-  const share = zone.range[1] - zone.range[0];
-  return {
-    minHeight: trailing
-      ? `calc(${share} * var(--vk-travel) + 100vh)`
-      : `calc(${share} * var(--vk-travel))`,
-  };
-}
-
-/* ------------------------------------------------------------------ parts */
-
-function Panel({
-  zone,
-  title,
-  children,
-}: {
-  zone: Zone;
-  title: string;
-  children: React.ReactNode;
-}) {
-  const app = modules.find((m) => m.id === zone.id);
-
+export default function Home() {
   return (
-    <div className="vk-zone-panel">
-      <div className="flex items-baseline gap-3">
-        <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-accent)]">
-          {zone.index}
-        </span>
-        <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">/</span>
-        <h2 className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-dim)]">
-          {app?.name ?? zone.location}
-        </h2>
-        <span className="ml-auto flex items-center gap-2">
-          <StatusDot status={app?.status ?? "ONLINE"} />
-          <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
-            {app?.status}
+    <Container className="pb-4">
+      {/* ----------------------------------------------------------- DESKTOP */}
+      <section className="pt-10 lg:pt-14" aria-labelledby="apps-heading">
+        <div className="flex items-center gap-4 border-b border-[var(--vk-line)] pb-3">
+          <h2 id="apps-heading" className="vk-label text-[var(--vk-fg-dim)]">
+            APPLICATIONS
+          </h2>
+          <div className="h-px flex-1 bg-[var(--vk-line)]" />
+          <span className="vk-label">{String(apps.length).padStart(2, "0")} INSTALLED</span>
+        </div>
+        <div className="mt-8">
+          <HeadOrbit />
+        </div>
+      </section>
+
+      {/* ---------------------------------------------------- CONTROL ROOM */}
+      <section className="mt-20 grid grid-cols-1 gap-px border-y border-[var(--vk-line)] lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex flex-col justify-between pb-10 pt-12 lg:pb-12 lg:pr-12 lg:pt-20">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
+                SYSTEM
+              </span>
+              <span className="h-px w-8 bg-[var(--vk-line-mid)]" />
+              <span className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)]">
+                ROOT
+              </span>
+            </div>
+
+            <ParticleHero className="mt-6" compact />
+
+            <p className="vk-mono mt-6 text-[11px] tracking-[0.22em] text-[var(--vk-fg-dim)]">
+              {system.fullName}
+            </p>
+          </div>
+
+          <div className="mt-14 grid gap-10 sm:grid-cols-2 lg:mt-20">
+            <div>
+              <Label>OPERATOR</Label>
+              <p className="mt-3 text-[26px] tracking-tight text-[var(--vk-fg)]">
+                {system.operator}
+              </p>
+              <p className="vk-mono mt-2 text-[10px] tracking-[0.18em] text-[var(--vk-fg-faint)]">
+                {system.role} · AGE {system.age}
+              </p>
+            </div>
+
+            <div>
+              <Label>DISCIPLINES</Label>
+              <ul className="mt-3 space-y-1.5">
+                {system.disciplines.map((d, i) => (
+                  <li key={d} className="flex items-baseline gap-3">
+                    <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="vk-mono text-[12px] tracking-[0.16em] text-[var(--vk-fg-dim)]">
+                      {d}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Instrument column */}
+        <aside className="flex flex-col gap-px border-t border-[var(--vk-line)] py-10 lg:border-l lg:border-t-0 lg:py-12 lg:pl-8">
+          <TerminalHint />
+          <TelemetryPanel />
+          <SystemState className="mt-6" />
+        </aside>
+      </section>
+
+      {/* ------------------------------------------------------ CONTEXT BAR */}
+      <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-b border-[var(--vk-line)] py-4">
+        {CONTEXT.map((c) => (
+          <span
+            key={c}
+            className="vk-mono text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)]"
+          >
+            {c}
           </span>
+        ))}
+        <span className="vk-mono ml-auto hidden text-[10px] tracking-[0.2em] text-[var(--vk-fg-faint)] sm:inline">
+          ⌘K TO OPEN TERMINAL
         </span>
       </div>
 
-      <p className="vk-display mt-3.5 text-[clamp(1.5rem,3.4vw,2.1rem)] text-[var(--vk-fg)]">
-        {title}
-      </p>
-
-      <div className="mt-5">{children}</div>
-
-      {zone.href ? (
-        <Link
-          href={zone.href}
-          data-cursor="ACCESS MODULE"
-          data-cursor-sub={`${zone.index} / ${app?.name}`}
-          className="group mt-6 flex items-center justify-between border border-[var(--vk-accent-line)] bg-[var(--vk-accent-ghost)] px-4 py-3 transition-colors duration-200 hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)]"
-        >
-          <span className="vk-mono text-[10px] tracking-[0.18em] text-[var(--vk-accent-soft)] transition-colors group-hover:text-[var(--vk-accent)]">
-            OPEN {app?.name}
-          </span>
-          <ArrowRight
-            aria-hidden="true"
-            size={13}
-            strokeWidth={1.5}
-            className="text-[var(--vk-accent-soft)] transition-transform duration-200 group-hover:translate-x-1"
-          />
-        </Link>
-      ) : null}
-    </div>
+      {/* --------------------------------------------------------- SOURCE  */}
+      <div className="pt-14">
+        <GithubLink />
+      </div>
+    </Container>
   );
-}
-
-function Section({
-  zone,
-  side,
-  trailing,
-  children,
-}: {
-  zone: Zone;
-  side: "left" | "right";
-  trailing?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <section
-      id={zone.id}
-      data-side={side}
-      className="vk-zone"
-      style={span(zone, trailing)}
-      aria-label={zone.location}
-    >
-      <div className="vk-zone-body">{children}</div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------- page */
-
-export default function Home() {
-  const journey = (
-    <>
-      {/* The world itself and the HUD over it are mounted by VKOSShell, which
-          keeps them clear of the boot fade. This is the readable half. */}
-      <ZoneStage>
-        {/* -------------------------------------------------- OUTER FIELD */}
-        <section
-          id="origin"
-          className="vk-zone"
-          style={span(Z.origin)}
-          aria-label={Z.origin.location}
-        >
-          <div className="vk-zone-body vk-zone-open">
-            <h1 className="vk-display vk-chrome text-[clamp(2.4rem,9vw,5rem)] leading-none">
-              {system.code}
-            </h1>
-            <p className="vk-mono mt-4 text-[10px] tracking-[0.22em] text-[var(--vk-fg-faint)]">
-              {system.fullName}
-            </p>
-            <p className="vk-mono mt-8 text-[11px] tracking-[0.18em] text-[var(--vk-fg-dim)]">
-              {system.operator}
-              <span className="mx-2 text-[var(--vk-fg-ghost)]">/</span>
-              {system.role}
-            </p>
-            <TerminalPrompt />
-
-            <p className="vk-mono mt-8 text-[9px] tracking-[0.2em] text-[var(--vk-fg-ghost)]">
-              SCROLL TO TRAVEL
-            </p>
-
-            {/* Offered at the top, before any of the film has been asked for,
-                because after that the offer is worth much less. */}
-            <ModeSwitch to="lite" className="mt-5" />
-          </div>
-        </section>
-
-        {/* ----------------------------------------------------- PROJECTS */}
-        <Section zone={Z.projects} side="left">
-          <Panel zone={Z.projects} title="Five stations, five builds.">
-            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
-              Five consoles down the hall, one per project. Read them where
-              they stand, or open the index.
-            </p>
-          </Panel>
-        </Section>
-
-        {/* ------------------------------------------------------- SCHOOL */}
-        <Section zone={Z.school} side="right">
-          <Panel zone={Z.school} title="The academic system.">
-            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
-              The record is on the drum wall, and one plinth carries each of
-              the {subjects.length} subjects in progress.
-            </p>
-          </Panel>
-        </Section>
-
-        {/* ----------------------------------------------- CERTIFICATIONS */}
-        <Section zone={Z.certifications} side="left">
-          <Panel zone={Z.certifications} title="The credential vault.">
-            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
-              {certifications.length} safes on this corridor hold something.
-              Each one opens where it stands.
-            </p>
-          </Panel>
-        </Section>
-
-        {/* -------------------------------------------------------- ABOUT */}
-        <Section zone={Z.about} side="right">
-          <Panel zone={Z.about} title="The identity file.">
-            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
-              The file is on the two panels facing each other across the
-              chamber, and on the plinth between them.
-            </p>
-          </Panel>
-        </Section>
-
-        {/* ------------------------------------------------------ CONTACT */}
-        <Section zone={Z.contact} side="left" trailing>
-          <Panel zone={Z.contact} title="Communications.">
-            <p className="vk-mono text-[11px] leading-[1.75] tracking-[0.1em] text-[var(--vk-fg-faint)]">
-              {channels.length} consoles at the foot of the mast, one per open
-              channel. Each connects directly.
-            </p>
-
-            {/* The landing page has no footer, so the two routes that are not
-                stations on the path are reachable from the last panel. */}
-            <div className="mt-6 flex items-center gap-5 border-t border-[var(--vk-line)] pt-4">
-              <Link
-                href="/archive"
-                className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)] transition-colors hover:text-[var(--vk-fg-dim)]"
-              >
-                ARCHIVE
-              </Link>
-              <span className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)]">
-                VKOS 1.0.0
-              </span>
-            </div>
-          </Panel>
-        </Section>
-      </ZoneStage>
-    </>
-  );
-
-  /* Both landings are described here, and the client picks one. The low-RAM
-     branch is the page this site had before the world existed. */
-  return <LandingMode world={journey} lite={<LiteDesktop />} />;
 }

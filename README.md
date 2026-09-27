@@ -101,119 +101,6 @@ Every other route is an **application**, resolved by `appForPath()` in
 Adding a module to `system.ts` therefore installs an app: icon, window, launch
 splash and dock entry all follow.
 
-## The world on the landing page
-
-`/` is a camera flight through a five-room facility. It is **not** rendered in
-the browser. The rooms are built with three.js in `scripts/render/`, the flight
-is rendered offline to a numbered sequence of stills in `public/seq/`, and the
-landing page plays that sequence back on a 2D canvas with the scroll position
-choosing the frame.
-
-This is deliberate, and it is the reason the world looks the way it does. A
-frame that has to be drawn sixty times a second can afford thin lines in a
-mostly black room; a frame rendered once, slowly, can afford lit surfaces, real
-shadows, bloom and a hundred and sixty metres of hall. Three is a build-time
-dependency only. Nothing 3D ships to the browser.
-
-### Regenerating the flight
-
-```bash
-node scripts/render/server.mjs        # harness on :4321
-```
-
-Open <http://localhost:4321> and, in the console:
-
-```js
-VK.resize(1440, 810);
-VK.manifest(180);                // writes public/seq/manifest.json
-VK.sequence(180, "seq", 0.86);   // writes public/seq/0000.webp …
-VK.still(0.3, "test.webp");      // one frame, into public/render-tests/
-```
-
-Always re-export the manifest when the camera path changes: the panels are
-placed from it, and a stale one puts them in the wrong part of the building.
-
-The tab has to stay visible: a browser stops running animation frames in a
-background tab, so a hidden one renders nothing. The last full run was 240
-frames with motion blur, at about 5.1 MB.
-
-### The panels
-
-The rooms are photographed offline. The information in them is not, and it does
-not hang on the walls: every panel is planted on the camera path at a point in
-the flight, faces you square-on, grows as you approach, and swings aside as you
-walk through where it was standing. `src/lib/panels.ts` is the list and the
-placement; `src/components/world/panelContent.tsx` is what each one says.
-
-Two things follow from the panels facing the camera. There is no projective
-transform, so the type is exactly as crisp at twenty metres as at two, and
-placement is a translate and a scale rather than a homography.
-
-The consoles, boards and wall fittings in the render are still there. They are
-furniture now: lit bezels with dark faces, so the hall looks like it has
-equipment in it. Nothing is written on them.
-
-- **Content comes from `src/lib/data/`**, so editing a grade changes the panel
-  without re-rendering anything.
-- **Clicking one** opens the file in place over the world
-  (`WorldOverlay.tsx`), with a link through to the module page.
-- **Type is sized in the panel's own space**, a hundred pixels to the metre,
-  which is why the font sizes in the panel CSS look enormous next to the rest
-  of the interface.
-
-```bash
-npm run check:surfaces
-```
-
-Worth running after touching any of it, because all of this fails invisibly: a
-single frame looks right while the panels drift, or never part, or linger after
-you have passed them. The check imports the real runtime modules and asserts
-the projection against three's own answer, round-trips the CSS transform, and
-sweeps the flight past all 28 panels confirming each one approaches, grows,
-parts to the correct side and goes.
-
-### Smoothness
-
-Three things, and they compound:
-
-- **Motion blur**, baked in. Each frame is an average of five sub-samples
-  across its slice of time, which is why film at 24fps reads as motion and a
-  game at 24fps does not. Costs render time, nothing to download.
-- **240 frames** rather than 180, cutting the jump between them by a third.
-- **A slower camera**, done by lengthening the page (`--vk-travel`, currently
-  2100vh, about 22 screens and 63px of scrolling per frame) so the
-  same path takes more scrolling.
-
-Frames either side of the scroll position are also cross-faded at runtime.
-
-### Editing the world### Editing the world
-
-| File | What it is |
-| --- | --- |
-| `scripts/render/path.mjs` | The camera flight, and the fog and exposure per room |
-| `scripts/render/kit.mjs` | Shared materials, the light pool, haze |
-| `scripts/render/facility.mjs` | 01, the project hall and its five stations |
-| `scripts/render/observatory.mjs` | 02, the drum and the chrome armillary |
-| `scripts/render/vault.mjs` | 03, the record wall |
-| `scripts/render/chamber.mjs` | 04, the identity chamber |
-| `scripts/render/comms.mjs` | 05, the array |
-| `scripts/render/links.mjs` | Corridors and thresholds between rooms |
-| `scripts/render/textures.mjs` | Procedural plating and decking |
-| `scripts/render/surfaces.mjs` | Fittings: the bezels and dark faces the panels used to land on |
-
-The render scripts are plain JavaScript and cannot import the app's
-TypeScript, so the harness server reads the real data and serves it at
-`/counts.json`, and the rooms ask. Nothing about how many certifications,
-channels or subjects there are is written down twice. It was, briefly, and the
-vault lit thirteen safes for twelve records without complaining, which is why
-`npm run check:surfaces` now fails if the shipped render disagrees with the
-data.
-
-The scroll fractions in `scripts/render/path.mjs` and the zone ranges in
-`src/lib/world.ts` describe the same journey from two ends. If you retime one,
-retime the other, or a panel will be on screen while the wrong room is on
-camera.
-
 ## Things worth knowing
 
 - **Counts are derived, never typed.** `PROJECTS`, `ACTIVE`, `ARCHIVED` and the
@@ -232,30 +119,14 @@ camera.
   in the DOM as visually-hidden text and animates an `aria-hidden` copy on top,
   so the heading survives without JavaScript and for screen readers.
 - **Reduced motion is respected.** `prefers-reduced-motion` skips the boot
-  sequence, the launch splash, the hero typing, the file-opening transition,
-  the custom cursor and the chrome shimmer on the wordmark.
-- **The landing page works without the film.** The frames load progressively
-  and out of order, sparsely first, so the journey is scrubbable early. If none
-  of them arrive, every zone is still a complete block of HTML.
-- **The head is the only live thing in the picture.** It is a 2D canvas point
-  cloud, mounted in the shell so it survives navigation, and it tracks the
-  cursor on every route.
-- **Frames are cross-faded.** Scroll lands between frames far more often than
-  on one, so the two either side are drawn and blended. It is much cheaper
-  than shipping more frames, and it is what stops a hundred and eighty stills
-  reading as a hundred and eighty stills.
-- **There is a low-RAM landing page.** Offered on the opening screen, honoured
-  automatically for anyone whose browser asks for Save-Data, and remembered
-  afterwards. It is the desktop this site had before the world was built, and
-  it downloads none of the film. `src/lib/mode-gate.ts` resolves it before
-  first paint.
+  sequence, the launch splash, the hero typing, the file-opening transition and
+  the custom cursor.
 
 ## Commands
 
 ```bash
-npm run dev             # dev server
-npm run build           # production build
-npm run lint            # eslint
-npm run check:surfaces  # wall HTML lands on its fitting
-npx tsc --noEmit        # typecheck
+npm run dev      # dev server
+npm run build    # production build
+npm run lint     # eslint
+npx tsc --noEmit # typecheck
 ```
