@@ -83,6 +83,7 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: BOOT_GATE }} />
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#aee83c" />
       </head>
       <body className="antialiased">
         <a href="#main" className="vk-skip">

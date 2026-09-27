@@ -3,8 +3,7 @@ import type { Project } from "@/lib/types";
 /**
  * VKOS/01 — PROJECT INDEX.
  *
- * PX-001..PX-005 are real: names, taglines, stacks, dossiers, screenshots and
- * links are all Vidit's own. Anything still in [ SQUARE BRACKETS ] is an
+ * PX-001..PX-005 and PX-010 are real. Anything still in [ SQUARE BRACKETS ] is an
  * unfilled slot and renders dimmed on screen until it is written.
  *
  * Do not invent results or metrics for these. Where a dossier section states an
@@ -228,6 +227,55 @@ export const projects: Project[] = [
       },
     ],
     links: [{ label: "NEW-KEYNESIUM.VERCEL.APP", href: "https://new-keynesium.vercel.app/" }],
+  },
+  {
+    id: "PX-010",
+    name: "Growency",
+    tagline: "Operations for sales and go-to-market work.",
+    category: "OPERATIONS / SALES GTM",
+    status: "ACTIVE",
+    year: "2026",
+    summary:
+      "COO at Growency, a sales and go-to-market agency. Working with Kairos Health (YC F26), Posting Machine, and Corsair (YC W25).",
+    technologies: ["Agency operations", "Sales GTM", "Client delivery"],
+    currentState:
+      "Working as COO across Growency's agency operations and sales GTM engagements.",
+    associations: [
+      {
+        id: "growency",
+        name: "Growency",
+        context: "AGENCY · COO",
+        links: [
+          { label: "LINKEDIN", href: "https://www.linkedin.com/company/growency/" },
+        ],
+      },
+      {
+        id: "kairos-health",
+        name: "Kairos Health",
+        context: "CLIENT · YC F26",
+        links: [
+          { label: "YC LAUNCH", href: "https://www.ycombinator.com/launches/LfH-kairo-health-the-ai-healthcare-workforce" },
+          { label: "LINKEDIN", href: "https://www.linkedin.com/company/kairoshealth/" },
+        ],
+      },
+      {
+        id: "posting-machine",
+        name: "Posting Machine",
+        context: "CLIENT",
+        links: [
+          { label: "LINKEDIN", href: "https://www.linkedin.com/company/postingmachine/" },
+        ],
+      },
+      {
+        id: "corsair",
+        name: "Corsair",
+        context: "CLIENT · YC W25",
+        links: [
+          { label: "Y COMBINATOR", href: "https://www.ycombinator.com/companies/corsair" },
+          { label: "LINKEDIN", href: "https://www.linkedin.com/company/corsairdev/" },
+        ],
+      },
+    ],
   },
 
   /* ---------- ARCHIVE ----------

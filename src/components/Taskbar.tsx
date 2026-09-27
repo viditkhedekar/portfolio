@@ -12,6 +12,7 @@ import {
 } from "@/lib/apps-session";
 import { useTerminal } from "@/components/TerminalProvider";
 import { StatusDot, cx } from "@/components/ui";
+import { ItemMark } from "@/components/ItemMark";
 
 /** Rotating status line. Deliberately dull — it should never pull the eye. */
 const STATUS = [
@@ -119,6 +120,7 @@ export function Taskbar() {
                     minimised && "opacity-55",
                   )}
                 >
+                  <ItemMark itemKey={a.id} label={a.name} kind="app" size={19} />
                   <StatusDot
                     status={active ? "ACTIVE" : "ARCHIVED"}
                     pulse={active}
@@ -156,6 +158,7 @@ export function Taskbar() {
                   : "border-transparent hover:border-[var(--vk-line)] hover:bg-[var(--vk-bg-raised)]",
               )}
             >
+              <ItemMark itemKey="terminal" label="TERMINAL" kind="app" size={19} />
               <StatusDot
                 status={terminal.isOpen ? "ACTIVE" : "ARCHIVED"}
                 pulse={terminal.isOpen}

@@ -11,6 +11,7 @@ import { useTerminal } from "@/components/TerminalProvider";
 import { GithubLink } from "@/components/GithubLink";
 import { OperatorPortrait } from "@/components/OperatorPortrait";
 import { useClock } from "@/lib/hooks";
+import { ItemMark } from "@/components/ItemMark";
 
 const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
@@ -34,7 +35,7 @@ export function SystemHeader() {
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-50 border-b border-[var(--vk-line)] bg-[var(--vk-bg)]/85 backdrop-blur-md">
-        <div className="mx-auto flex h-[62px] w-full max-w-[1440px] items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
+        <div className="mx-auto flex h-[62px] w-full max-w-[1760px] items-center justify-between gap-4 px-5 sm:px-8">
           {/* Identity. The photograph opens itself, so it sits beside the
               link rather than inside it. */}
           <div className="flex shrink-0 items-center gap-3">
@@ -56,7 +57,7 @@ export function SystemHeader() {
           </div>
 
           {/* Module strip — desktop */}
-          <nav aria-label="System modules" className="hidden flex-1 justify-center lg:flex">
+          <nav aria-label="System modules" className="hidden flex-1 justify-center xl:flex">
             <ul className="flex items-center gap-1">
               {modules.map((m) => {
                 const active = pathname === m.href || pathname.startsWith(`${m.href}/`);
@@ -67,12 +68,13 @@ export function SystemHeader() {
                       data-cursor="ACCESS MODULE"
                       data-cursor-sub={`${m.index} / ${m.name}`}
                       className={cx(
-                        "flex items-center gap-1.5 px-2.5 py-1.5 transition-colors",
+                        "flex items-center gap-1 px-1.5 py-1.5 transition-colors",
                         active
                           ? "text-[var(--vk-fg)]"
                           : "text-[var(--vk-fg-faint)] hover:text-[var(--vk-fg-dim)]",
                       )}
                     >
+                      <ItemMark itemKey={m.id} label={m.name} kind="app" size={16} />
                       <span
                         className={cx(
                           "vk-mono text-[9px] tracking-[0.14em]",
@@ -99,7 +101,7 @@ export function SystemHeader() {
               onClick={terminal.open}
               data-cursor="OPEN"
               data-cursor-sub="TERMINAL"
-              className="hidden items-center gap-2 border border-[var(--vk-line)] px-2.5 py-1.5 transition-colors hover:border-[var(--vk-line-strong)] sm:flex"
+              className="hidden items-center gap-2 border border-[var(--vk-line)] px-2.5 py-1.5 transition-colors hover:border-[var(--vk-line-strong)] min-[1440px]:flex"
             >
               <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-dim)]">
                 TERMINAL
@@ -109,7 +111,7 @@ export function SystemHeader() {
               </kbd>
             </button>
 
-            <div className="hidden text-right sm:block">
+            <div className="hidden text-right min-[1700px]:block">
               <div className="flex items-center justify-end gap-2">
                 <StatusDot status="ONLINE" pulse />
                 <span className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-dim)]">
@@ -129,7 +131,7 @@ export function SystemHeader() {
             <button
               type="button"
               onClick={() => setMenuAt(open ? null : pathname)}
-              className="flex h-8 w-8 items-center justify-center border border-[var(--vk-line)] text-[var(--vk-fg-dim)] lg:hidden"
+              className="flex h-8 w-8 items-center justify-center border border-[var(--vk-line)] text-[var(--vk-fg-dim)] xl:hidden"
               aria-expanded={open}
               aria-label={open ? "Close module index" : "Open module index"}
             >
@@ -147,7 +149,7 @@ export function SystemHeader() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-40 bg-[var(--vk-bg)] pt-[62px] lg:hidden"
+            className="fixed inset-0 z-40 bg-[var(--vk-bg)] pt-[62px] xl:hidden"
           >
             <nav aria-label="System modules" className="h-full overflow-y-auto">
               <ul>
@@ -159,7 +161,8 @@ export function SystemHeader() {
                     transition={{ delay: 0.03 * i, duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
                     className="border-b border-[var(--vk-line)]"
                   >
-                    <Link href={m.href} className="flex items-baseline gap-4 px-5 py-5 sm:px-8">
+                    <Link href={m.href} className="flex items-center gap-4 px-5 py-5 sm:px-8">
+                      <ItemMark itemKey={m.id} label={m.name} kind="app" size={34} className="shrink-0" />
                       <span className="vk-mono text-[10px] tracking-[0.16em] text-[var(--vk-accent)]">
                         {m.index}
                       </span>

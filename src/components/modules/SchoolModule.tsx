@@ -1,5 +1,6 @@
 import { Container, Label, ModuleHeading, SectionTitle } from "@/components/ui";
 import { Disclosure } from "@/components/Disclosure";
+import { ItemMark } from "@/components/ItemMark";
 import {
   achievementSections,
   predicted,
@@ -93,7 +94,10 @@ export function SchoolModule() {
               <div className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)]">
                 {String(i + 1).padStart(2, "0")}
               </div>
-              <h3 className="mt-5 text-[17px] tracking-tight text-[var(--vk-fg)]">{s.name}</h3>
+              <div className="mt-5 flex items-center gap-3">
+                <ItemMark itemKey={`subject:${s.name}`} label={s.name} kind="subject" size={32} className="shrink-0" />
+                <h3 className="text-[17px] tracking-tight text-[var(--vk-fg)]">{s.name}</h3>
+              </div>
             </li>
           ))}
         </ul>
@@ -126,8 +130,11 @@ export function SchoolModule() {
                           key={e.title}
                           className="grid gap-x-8 gap-y-1.5 border-b border-[var(--vk-line)] py-4 sm:grid-cols-[40px_minmax(0,1fr)]"
                         >
-                          <span className="vk-mono text-[10px] leading-6 tracking-[0.14em] text-[var(--vk-fg-ghost)]">
-                            {String(ei + 1).padStart(2, "0")}
+                          <span className="flex flex-col gap-1">
+                            <ItemMark itemKey={`achievement:${section.id}:${group.label ?? gi}:${e.title}`} label={e.title} kind="achievement" size={29} />
+                            <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
+                              {String(ei + 1).padStart(2, "0")}
+                            </span>
                           </span>
                           <div>
                             <p className="text-[15px] leading-snug tracking-tight text-[var(--vk-fg)]">

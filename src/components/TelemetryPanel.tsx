@@ -1,5 +1,6 @@
 import { formatDot, system, uptimeYears } from "@/lib/data/system";
 import { projectStats } from "@/lib/data/projects";
+import { ItemMark } from "@/components/ItemMark";
 import { Label, StatusDot, cx } from "@/components/ui";
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -76,6 +77,7 @@ export function SystemState({ className }: { className?: string }) {
           const active = s === system.state;
           return (
             <li key={s} className="flex items-center gap-3 py-1.5">
+              <ItemMark itemKey={`state:${s}`} label={s} kind="state" size={21} />
               <span
                 aria-hidden
                 className={cx(

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatDot, modules, system, uptimeYears } from "@/lib/data/system";
 import { projectStats } from "@/lib/data/projects";
 import { Label } from "@/components/ui";
+import { ItemMark } from "@/components/ItemMark";
 
 export function SystemFooter() {
   return (
@@ -52,10 +53,11 @@ export function SystemFooter() {
                 <li key={m.id}>
                   <Link
                     href={m.href}
-                    className="group flex items-baseline gap-3"
+                    className="group flex items-center gap-3"
                     data-cursor="ACCESS MODULE"
                     data-cursor-sub={m.name}
                   >
+                    <ItemMark itemKey={m.id} label={m.name} kind="app" size={19} />
                     <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
                       {m.index}
                     </span>
@@ -66,7 +68,8 @@ export function SystemFooter() {
                 </li>
               ))}
               <li>
-                <Link href="/archive" className="group flex items-baseline gap-3">
+                <Link href="/archive" className="group flex items-center gap-3">
+                  <ItemMark itemKey="archive" label="ARCHIVE" kind="app" size={19} />
                   <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
                     ··
                   </span>

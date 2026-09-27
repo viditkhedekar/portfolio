@@ -22,6 +22,13 @@ export interface ProjectLink {
   href: string;
 }
 
+export interface ProjectAssociation {
+  id: string;
+  name: string;
+  context: string;
+  links: ProjectLink[];
+}
+
 export interface Project {
   /** Stable file ID, e.g. "PX-001". Also the URL slug (lowercased). */
   id: string;
@@ -44,6 +51,8 @@ export interface Project {
   nextIteration?: string;
   media?: ProjectMedia[];
   links?: ProjectLink[];
+  /** Agency and client organisations connected to this work. */
+  associations?: ProjectAssociation[];
   /** Nodes in the system map this project attaches to. */
   domains?: string[];
   /** Archived projects render in /archive instead of the main index. */

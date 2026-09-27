@@ -12,6 +12,7 @@ import {
   toggleMaximised,
 } from "@/lib/apps-session";
 import { cx } from "@/components/ui";
+import { ItemMark } from "@/components/ItemMark";
 
 const CONTROLS = [
   { id: "close", colour: "#ff5f57", label: "Close" },
@@ -121,7 +122,8 @@ export function AppWindow({
             ))}
           </span>
 
-          <div className="flex min-w-0 flex-1 items-baseline justify-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-3">
+            <ItemMark itemKey={app.id} label={app.name} kind="app" size={19} className="shrink-0" />
             <span className="vk-mono truncate text-[10px] tracking-[0.16em] text-[var(--vk-fg-dim)]">
               {app.file}
             </span>

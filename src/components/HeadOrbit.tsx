@@ -1,28 +1,11 @@
 import Link from "next/link";
-import {
-  Archive,
-  BadgeCheck,
-  FolderOpen,
-  GraduationCap,
-  Send,
-  UserRound,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { apps } from "@/lib/data/apps";
 import { projectStats } from "@/lib/data/projects";
 import { subjects } from "@/lib/data/school";
 import { certifications } from "@/lib/data/certifications";
 import { channels } from "@/lib/data/identity";
 import { HeadCloud } from "@/components/HeadCloud";
-
-const GLYPH: Record<string, LucideIcon> = {
-  projects: FolderOpen,
-  school: GraduationCap,
-  certifications: BadgeCheck,
-  about: UserRound,
-  contact: Send,
-  archive: Archive,
-};
+import { ItemMark } from "@/components/ItemMark";
 
 /** Counts come from the data files so a box never contradicts its app. */
 function appMeta(id: string): string {
@@ -57,18 +40,12 @@ function AppBox({ id, seat }: { id: string; seat: string }) {
   const app = apps.find((a) => a.id === id);
   if (!app) return null;
 
-  const Glyph = GLYPH[app.id] ?? FolderOpen;
-
   return (
     <Link
       href={app.href}
       className={`vk-orbit-${seat} group relative flex items-center gap-4 border border-[var(--vk-accent-line)] bg-[var(--vk-accent-ghost)] px-4 py-4 transition-colors duration-200 [transition-timing-function:var(--vk-ease)] hover:border-[var(--vk-accent)] hover:bg-[var(--vk-accent-faint)] focus-visible:border-[var(--vk-accent)] focus-visible:bg-[var(--vk-accent-faint)] focus-visible:outline-none`}
     >
-      <Glyph
-        aria-hidden="true"
-        className="h-4 w-4 shrink-0 text-[var(--vk-accent-soft)] transition-colors duration-200 group-hover:text-[var(--vk-accent)] group-focus-visible:text-[var(--vk-accent)]"
-        strokeWidth={1.25}
-      />
+      <ItemMark itemKey={app.id} label={app.name} kind="app" size={36} className="shrink-0" />
 
       <span className="min-w-0">
         <span className="flex items-baseline gap-2">

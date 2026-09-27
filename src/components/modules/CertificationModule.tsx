@@ -7,6 +7,7 @@ import { X } from "lucide-react";
 import type { Certification } from "@/lib/types";
 import { certificationGroups, certifications } from "@/lib/data/certifications";
 import { Container, Label, ModuleHeading, SectionTitle, Slot } from "@/components/ui";
+import { ItemMark } from "@/components/ItemMark";
 
 function DocumentView({ cert, onClose }: { cert: Certification; onClose: () => void }) {
   const closeRef = React.useRef<HTMLButtonElement>(null);
@@ -204,10 +205,13 @@ export function CertificationModule() {
                       onClick={() => setOpen(c)}
                       data-cursor="OPEN DOCUMENT"
                       data-cursor-sub={c.id}
-                      className="group grid w-full items-baseline gap-x-6 gap-y-2 border-b border-[var(--vk-line)] py-5 text-left transition-colors hover:bg-[var(--vk-bg-panel)] sm:grid-cols-[86px_minmax(0,1fr)_90px]"
+                      className="group grid w-full items-center gap-x-6 gap-y-2 border-b border-[var(--vk-line)] py-5 text-left transition-colors hover:bg-[var(--vk-bg-panel)] sm:grid-cols-[118px_minmax(0,1fr)_90px]"
                     >
-                      <span className="vk-mono text-[10px] tracking-[0.14em] text-[var(--vk-fg-faint)] transition-colors group-hover:text-[var(--vk-accent)]">
-                        {c.id}
+                      <span className="flex items-center gap-2">
+                        <ItemMark itemKey={c.id} label={c.name} kind="credential" size={28} className="shrink-0" />
+                        <span className="vk-mono whitespace-nowrap text-[10px] tracking-[0.14em] text-[var(--vk-fg-faint)] transition-colors group-hover:text-[var(--vk-accent)]">
+                          {c.id}
+                        </span>
                       </span>
 
                       <span className="min-w-0">

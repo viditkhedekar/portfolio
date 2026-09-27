@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { Project, ProjectStatus } from "@/lib/types";
 import { liveStatuses, slugOf } from "@/lib/data/projects";
 import { Label, Slot, cx, statusColor } from "@/components/ui";
+import { ItemMark } from "@/components/ItemMark";
 
 /* Only offer filters for statuses that actually exist in the index, so the
    control never presents an empty result as a valid choice. */
@@ -43,10 +44,13 @@ function ProjectFile({
           className="absolute left-0 top-0 h-px w-full origin-left scale-x-0 bg-[var(--vk-accent)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-x-100"
         />
 
-        <div className="grid grid-cols-1 items-baseline gap-x-6 gap-y-3 px-1 sm:px-4 lg:grid-cols-[76px_minmax(0,1.35fr)_minmax(0,1fr)_84px_110px]">
+        <div className="grid grid-cols-1 items-center gap-x-6 gap-y-3 px-1 sm:px-4 lg:grid-cols-[112px_minmax(0,1.35fr)_minmax(0,1fr)_84px_110px]">
           {/* ID */}
-          <span className="vk-mono text-[10px] tracking-[0.14em] text-[var(--vk-fg-faint)] transition-colors duration-300 group-hover:text-[var(--vk-accent)]">
-            {project.id}
+          <span className="flex items-center gap-2">
+            <ItemMark itemKey={project.id} label={project.name} kind="project" size={30} className="shrink-0" />
+            <span className="vk-mono whitespace-nowrap text-[10px] tracking-[0.14em] text-[var(--vk-fg-faint)] transition-colors duration-300 group-hover:text-[var(--vk-accent)]">
+              {project.id}
+            </span>
           </span>
 
           {/* Name + summary */}
@@ -155,7 +159,7 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
       </div>
 
       {/* Column headings */}
-      <div className="hidden grid-cols-[76px_minmax(0,1.35fr)_minmax(0,1fr)_84px_110px] gap-x-6 border-b border-[var(--vk-line)] px-4 py-2.5 lg:grid">
+      <div className="hidden grid-cols-[112px_minmax(0,1.35fr)_minmax(0,1fr)_84px_110px] gap-x-6 border-b border-[var(--vk-line)] px-4 py-2.5 lg:grid">
         <Label>ID</Label>
         <Label>NAME</Label>
         <Label>CATEGORY</Label>
@@ -202,6 +206,7 @@ export function ProjectExplorer({ projects }: { projects: Project[] }) {
                 transition={{ delay: 0.16, duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                 className="mt-6"
               >
+                <ItemMark itemKey={opening.id} label={opening.name} kind="project" size={48} />
                 <div className="vk-mono text-[11px] tracking-[0.2em] text-[var(--vk-accent)]">
                   {opening.id}
                 </div>

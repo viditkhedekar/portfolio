@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import type { Project } from "@/lib/types";
 import { Container, Label, Prose, Slot, StatusTag, cx } from "@/components/ui";
 import { Display } from "@/components/Display";
+import { ItemMark } from "@/components/ItemMark";
 import { liveProjects, projects, slugOf } from "@/lib/data/projects";
 
 const SECTIONS: Array<{ key: keyof Project; index: string; title: string }> = [
@@ -65,8 +66,17 @@ export function ProjectDetail({ project }: { project: Project }) {
       {/* Title block */}
       <header className="grid gap-10 border-b border-[var(--vk-line)] py-12 lg:grid-cols-[minmax(0,1fr)_300px] lg:py-16">
         <div>
-          <div className="vk-mono text-[11px] tracking-[0.22em] text-[var(--vk-accent)]">
-            {project.id}
+          <div className="flex items-center gap-4">
+            <ItemMark
+              itemKey={project.id}
+              label={project.name}
+              kind={project.archived ? "archive" : "project"}
+              size={52}
+              className="shrink-0"
+            />
+            <span className="vk-mono text-[11px] tracking-[0.22em] text-[var(--vk-accent)]">
+              {project.id}
+            </span>
           </div>
           <h1 className="vk-display mt-6 text-[clamp(2.2rem,6vw,4.5rem)]">
             <Slot className="text-[var(--vk-fg)]">{project.name}</Slot>
@@ -105,7 +115,7 @@ export function ProjectDetail({ project }: { project: Project }) {
           <Meta label="STATUS" value={<StatusTag status={project.status} pulse />} />
           <Meta label="YEAR" value={project.year} />
           <Meta
-            label="TECHNOLOGY"
+            label="STACK / PRACTICE"
             value={
               <span className="flex flex-wrap gap-1.5">
                 {project.technologies.map((t, i) => (
@@ -133,8 +143,9 @@ export function ProjectDetail({ project }: { project: Project }) {
                         rel="noreferrer noopener"
                         data-cursor="OPEN"
                         data-cursor-sub="EXTERNAL"
-                        className="vk-mono block break-words text-[11px] leading-relaxed tracking-[0.1em] text-[var(--vk-fg-dim)] transition-colors hover:text-[var(--vk-accent)]"
+                        className="vk-mono flex items-center gap-2 break-words text-[11px] leading-relaxed tracking-[0.1em] text-[var(--vk-fg-dim)] transition-colors hover:text-[var(--vk-accent)]"
                       >
+                        <ItemMark itemKey={`${project.id}-${l.label}`} label={l.label} kind="record" size={18} className="shrink-0" />
                         {l.label}
                         <ArrowUpRight
                           size={11}
@@ -154,6 +165,46 @@ export function ProjectDetail({ project }: { project: Project }) {
           )}
         </dl>
       </header>
+
+      {project.associations && project.associations.length > 0 && (
+        <section className="border-b border-[var(--vk-line)] py-10" aria-labelledby="organisations-heading">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 id="organisations-heading" className="vk-mono text-[11px] tracking-[0.18em] text-[var(--vk-fg-dim)]">
+              ORGANISATIONS
+            </h2>
+            <span className="vk-mono text-[9px] tracking-[0.16em] text-[var(--vk-fg-ghost)]">
+              {String(project.associations.length).padStart(2, "0")} ON FILE
+            </span>
+          </div>
+          <ul className="mt-5 grid gap-px border border-[var(--vk-line)] bg-[var(--vk-line)] sm:grid-cols-2">
+            {project.associations.map((company) => (
+              <li key={company.id} className="flex gap-4 bg-[var(--vk-bg-panel)] p-5">
+                <ItemMark itemKey={company.id} label={company.name} kind="project" size={38} className="shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-[17px] tracking-tight text-[var(--vk-fg)]">{company.name}</div>
+                  <div className="vk-mono mt-1 text-[9px] tracking-[0.14em] text-[var(--vk-fg-faint)]">
+                    {company.context}
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2">
+                    {company.links.map((link) => (
+                      <a
+                        key={link.href}
+                        href={link.href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="vk-mono inline-flex items-center gap-1 text-[9px] tracking-[0.12em] text-[var(--vk-accent)] hover:underline"
+                      >
+                        {link.label}
+                        <ArrowUpRight size={10} strokeWidth={1.5} />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Primary display */}
       {project.media && project.media.length > 0 && (
@@ -211,6 +262,7 @@ export function ProjectDetail({ project }: { project: Project }) {
               )}
             >
               <Label>{dir}</Label>
+              <ItemMark itemKey={p.id} label={p.name} kind={p.archived ? "archive" : "project"} size={25} />
               <span className="vk-mono text-[10px] tracking-[0.14em] text-[var(--vk-accent)]">
                 {p.id}
               </span>

@@ -1,6 +1,7 @@
 import { Container, Label, ModuleHeading, SectionTitle, Slot } from "@/components/ui";
 import { identity } from "@/lib/data/identity";
 import { uptimeYears } from "@/lib/data/system";
+import { ItemMark } from "@/components/ItemMark";
 
 export function AboutModule() {
   return (
@@ -21,9 +22,12 @@ export function AboutModule() {
               {identity.records.map((r) => (
                 <div
                   key={r.key}
-                  className="flex items-baseline justify-between gap-4 border-b border-[var(--vk-line)] px-4 py-3 last:border-b-0"
+                  className="flex items-center justify-between gap-4 border-b border-[var(--vk-line)] px-4 py-3 last:border-b-0"
                 >
-                  <Label as="dt">{r.key}</Label>
+                  <dt className="flex items-center gap-2">
+                    <ItemMark itemKey={`record:${r.key}`} label={r.key} kind="record" size={20} />
+                    <Label as="span">{r.key}</Label>
+                  </dt>
                   <dd className="vk-mono text-[11px] tracking-[0.1em]">
                     <Slot className="text-[var(--vk-fg)]">{r.value}</Slot>
                   </dd>
@@ -36,7 +40,8 @@ export function AboutModule() {
             <Label>INTERESTS</Label>
             <ul className="mt-3 space-y-1.5">
               {identity.interests.map((t, i) => (
-                <li key={t} className="flex items-baseline gap-3">
+                <li key={t} className="flex items-center gap-3">
+                  <ItemMark itemKey={`interest:${t}`} label={t} kind="interest" size={21} />
                   <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
                     {String(i + 1).padStart(2, "0")}
                   </span>

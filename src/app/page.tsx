@@ -6,6 +6,7 @@ import { GithubLink } from "@/components/GithubLink";
 import { ParticleHero } from "@/components/ParticleHero";
 import { HeadOrbit } from "@/components/HeadOrbit";
 import { TerminalHint } from "@/components/TerminalHint";
+import { ItemMark } from "@/components/ItemMark";
 
 const CONTEXT = ["PERSONAL SYSTEM", "DESKTOP", "PROJECTS", "EXPERIMENTS"];
 
@@ -62,7 +63,8 @@ export default function Home() {
               <Label>DISCIPLINES</Label>
               <ul className="mt-3 space-y-1.5">
                 {system.disciplines.map((d, i) => (
-                  <li key={d} className="flex items-baseline gap-3">
+                  <li key={d} className="flex items-center gap-3">
+                    <ItemMark itemKey={`discipline:${d}`} label={d} kind="interest" size={21} />
                     <span className="vk-mono text-[9px] tracking-[0.14em] text-[var(--vk-fg-ghost)]">
                       {String(i + 1).padStart(2, "0")}
                     </span>

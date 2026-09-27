@@ -5,6 +5,7 @@ import { ArrowUpRight, Check, Copy } from "lucide-react";
 import { Container, Label, ModuleHeading, SectionTitle, Slot, cx } from "@/components/ui";
 import { channels, contactNote, identity } from "@/lib/data/identity";
 import { StatusDot } from "@/components/ui";
+import { ItemMark } from "@/components/ItemMark";
 
 export function ContactModule() {
   const [copied, setCopied] = React.useState<string | null>(null);
@@ -38,7 +39,9 @@ export function ContactModule() {
                   key={c.id}
                   className="grid items-center gap-x-6 gap-y-3 border-b border-[var(--vk-line)] py-6 sm:grid-cols-[minmax(0,1fr)_auto]"
                 >
-                  <div className="min-w-0">
+                  <div className="flex min-w-0 items-center gap-4">
+                    <ItemMark itemKey={c.id} label={c.label} kind="channel" size={38} className="shrink-0" />
+                    <div className="min-w-0">
                     <div className="flex items-center gap-3">
                       <StatusDot status={live ? "ONLINE" : "ARCHIVED"} pulse={live} />
                       <h3 className="vk-mono text-[11px] tracking-[0.18em] text-[var(--vk-fg-dim)]">
@@ -53,6 +56,7 @@ export function ContactModule() {
                     <p className="mt-2.5 truncate text-[19px] tracking-tight">
                       <Slot className="text-[var(--vk-fg)]">{c.handle}</Slot>
                     </p>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
