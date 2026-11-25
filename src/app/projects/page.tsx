@@ -1,79 +1,46 @@
 import type { Metadata } from "next";
-import { Container, ModuleHeading } from "@/components/ui";
-import { ProjectExplorer } from "@/components/ProjectExplorer";
-import { archivedProjects, liveProjects, liveStatuses } from "@/lib/data/projects";
+import Image from "next/image";
 import Link from "next/link";
-import { Label } from "@/components/ui";
-import { GithubLink } from "@/components/GithubLink";
+import { ClientList, ExternalArrow } from "@/components/PortfolioMedia";
+import { featuredApps, portfolioPath } from "@/lib/data/portfolio";
 
 export const metadata: Metadata = {
-  title: "Projects",
-  description: "PROJECT INDEX — selected builds, experiments and systems.",
+  title: "Selected work",
+  description: "Go-to-market work at Growency and software projects by Vidit Khedekar.",
 };
-
-/* Only statuses present in the index get a tile, so the row never shows a
-   column of zeroes. */
-const stats = [
-  { label: "INDEXED", value: liveProjects.length },
-  ...liveStatuses.map((status) => ({
-    label: status,
-    value: liveProjects.filter((p) => p.status === status).length,
-  })),
-  { label: "ARCHIVED", value: archivedProjects.length },
-];
 
 export default function ProjectsPage() {
   return (
-    <Container>
-      <ModuleHeading index="01" name="PROJECTS" subtitle="PROJECT INDEX" />
-
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--vk-line)] py-5">
-        <p className="max-w-[52ch] text-[14px] leading-relaxed text-[var(--vk-fg-dim)]">
-          Selected builds and experiments. Source for these lives on GitHub.
-        </p>
-        <GithubLink variant="inline" />
-      </div>
-
-      <div className="grid grid-cols-2 gap-6 border-b border-[var(--vk-line)] py-6 sm:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label}>
-            <Label>{s.label}</Label>
-            <div className="vk-mono mt-2 text-[28px] leading-none tracking-tight text-[var(--vk-fg)]">
-              {String(s.value).padStart(2, "0")}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="pt-10">
-        <ProjectExplorer projects={liveProjects} />
-      </div>
-
-      <div className="pt-12">
-        <Link
-          href="/archive"
-          data-cursor="ACCESS"
-          data-cursor-sub="ARCHIVE"
-          className="group flex items-center justify-between border border-[var(--vk-line)] p-6 transition-colors hover:border-[var(--vk-line-mid)] hover:bg-[var(--vk-bg-panel)]"
-        >
-          <div>
-            <Label>ARCHIVE</Label>
-            <p className="mt-2 text-[19px] tracking-tight text-[var(--vk-fg)]">
-              {archivedProjects.length} archived builds
-            </p>
-            <p className="mt-1 text-[13px] text-[var(--vk-fg-faint)]">
-              Earlier experiments, prototypes and abandoned ideas.
-            </p>
-          </div>
-          <span className="vk-mono text-[10px] tracking-[0.16em] text-[var(--vk-fg-ghost)] transition-colors group-hover:text-[var(--vk-accent)]">
-            OPEN →
-          </span>
-        </Link>
-      </div>
-
-      <div className="pb-12 pt-4">
-        <GithubLink />
-      </div>
-    </Container>
+    <>
+      <header className="page-heading">
+        <h1>Selected work.</h1>
+      </header>
+      <section className="agency-index" aria-labelledby="agency-title">
+        <div>
+          <h2 id="agency-title">Growency</h2>
+          <p>Go-to-market work across cold outreach and Meta ads.</p>
+          <Link className="work-link" href="/projects/growency">See Growency work <ExternalArrow /></Link>
+        </div>
+        <ClientList />
+      </section>
+      <section className="apps-index" id="apps" aria-labelledby="apps-title">
+        <h2 id="apps-title">Apps I’ve built</h2>
+        <div className="project-grid">
+          {featuredApps.map((project) => {
+            const media = project.media?.[1] ?? project.media?.[0];
+            return (
+              <Link key={project.id} href={portfolioPath(project)} className="project-item">
+                {media && (
+                  <span className="app-image">
+                    <Image src={media.src} alt={media.alt} fill sizes="(max-width: 600px) 90vw, (max-width: 850px) 42vw, 30vw" />
+                  </span>
+                )}
+                <span>{project.name} <ExternalArrow /></span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    </>
   );
 }

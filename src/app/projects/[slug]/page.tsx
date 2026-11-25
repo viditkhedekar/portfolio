@@ -1,35 +1,78 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { ProjectDetail } from "@/components/ProjectDetail";
-import { getProject, projects, slugOf } from "@/lib/data/projects";
-import { isPlaceholder } from "@/components/ui";
+import Image from "next/image";
+import Link from "next/link";
+import { notFound, permanentRedirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { ClientList, ExternalArrow, GrowencyAds } from "@/components/PortfolioMedia";
+import { findPortfolioProject, growencyUrl, portfolioPath, portfolioSlug } from "@/lib/data/portfolio";
+import { liveProjects } from "@/lib/data/projects";
+
+type PageProps = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {
-  return projects.map((p) => ({ slug: slugOf(p) }));
+  return liveProjects.map((project) => ({ slug: portfolioSlug(project) }));
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
-  const { slug } = await params;
-  const project = getProject(slug);
-  if (!project) return { title: "File not found" };
-  const name = isPlaceholder(project.name) ? project.id : `${project.id} · ${project.name}`;
-  return {
-    title: name,
-    description: isPlaceholder(project.summary) ? undefined : project.summary,
-  };
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const project = findPortfolioProject((await params).slug);
+  if (!project) return { title: "Project not found" };
+  return { title: project.name, description: project.summary };
 }
 
-export default async function ProjectPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function ProjectPage({ params }: PageProps) {
   const { slug } = await params;
-  const project = getProject(slug);
+  const project = findPortfolioProject(slug);
   if (!project) notFound();
-  return <ProjectDetail project={project} />;
+  if (slug !== portfolioSlug(project)) permanentRedirect(portfolioPath(project));
+
+  return (
+    <article className="case-study">
+      <header className="page-heading">
+        <Link href="/projects" className="small-link"><ArrowLeft size={16} aria-hidden="true" /> Selected work</Link>
+        <h1>{project.name}</h1>
+        <p>{project.id === "PX-010" ? "I run operations and client delivery at Growency, a go-to-market agency working across cold outreach and Meta ads." : project.summary}</p>
+      </header>
+
+      {project.id === "PX-010" ? (
+        <>
+          <ClientList />
+          <section className="case-section" id="outreach">
+            <h2>Cold outreach</h2>
+            <p>We research target accounts, write and test outreach, and manage the follow-up. The work starts with deciding who is most likely to need what the client sells.</p>
+          </section>
+          <section className="case-section case-ads" id="meta-ads">
+            <div>
+              <h2>Meta Ads</h2>
+              <p>We turn a brief into ad creative, run tests on Facebook and Instagram, and use the results to decide which ads to keep running.</p>
+              <a className="work-link" href={growencyUrl}>Visit Growency <ExternalArrow /></a>
+            </div>
+            <GrowencyAds />
+          </section>
+        </>
+      ) : (
+        <>
+          {project.media && (
+            <div className="case-media">
+              {project.media.map((media) => (
+                <figure key={media.src}>
+                  <div className="app-image"><Image src={media.src} alt={media.alt} fill sizes="(max-width: 700px) 90vw, 46vw" /></div>
+                  <figcaption>{media.label.toLowerCase()}</figcaption>
+                </figure>
+              ))}
+            </div>
+          )}
+          {project.implementation && (
+            <section className="case-section">
+              <h2>What I built</h2>
+              <p>{project.implementation}</p>
+              {project.result && <p>{project.result}</p>}
+            </section>
+          )}
+          {project.links?.map(({ href }) => (
+            <a key={href} className="work-link" href={href}>Visit {project.name} <ExternalArrow /></a>
+          ))}
+        </>
+      )}
+    </article>
+  );
 }
