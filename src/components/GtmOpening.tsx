@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AnimatePresence, LayoutGroup, motion, useIsPresent, useReducedMotion, type Transition } from "framer-motion";
-import { ArrowRight, House } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEventHandler, type ReactNode } from "react";
 import { GtmArtwork } from "@/components/GtmArtwork";
 import { ViditPortrait } from "@/components/ViditPortrait";
@@ -16,9 +16,9 @@ const topics = [
 ] as const;
 
 type GalleryTab = PortfolioTopic | "about";
-type DockSlot = "top" | "active" | "left" | "right";
+type DockSlot = "top" | "active" | "lower" | "bottom";
 const dockTabs: GalleryTab[] = ["about", "outreach", "meta", "apps"];
-const satelliteSlots = ["top", "left", "right"] as const;
+const satelliteSlots = ["top", "lower", "bottom"] as const;
 const hoverDuration = 1200;
 const dockHoverQuery = "(min-width: 801px) and (hover: hover) and (pointer: fine)";
 
@@ -198,7 +198,7 @@ export function GtmOpening({ panels, clients, about }: { panels: PortfolioPanels
           {selected && (
             <>
               <button type="button" className="gtm-home" aria-label="Home" title="Home" onClick={close}>
-                <House size={22} strokeWidth={1.6} aria-hidden="true" />
+                <span className="gtm-home-figure" aria-hidden="true"><GtmArtwork id="home" /></span>
               </button>
               <AboutPortraitLink
                 slot={dockSlot("about")}
