@@ -1,4 +1,5 @@
 import { getProject, liveProjects } from "./projects";
+import { appOutlines } from "./app-outlines";
 import type { ReactNode } from "react";
 import type { Project } from "@/lib/types";
 
@@ -69,9 +70,9 @@ const appMarks = [
   { id: "PX-003", label: "Tactix XI", icon: "tactix" },
   { id: "PX-004", label: "BlackOak", icon: "blackoak" },
   { id: "PX-005", label: "Keynesium", icon: "keynesium" },
-];
+] as const;
 
 export const appShowcase = appMarks.flatMap(({ id, label, icon }) => {
   const project = liveProjects.find((item) => item.id === id);
-  return project ? [{ project, label, icon: "/projects/app-icons/" + icon + ".webp" }] : [];
+  return project ? [{ project, label, icon: "/projects/app-icons/" + icon + ".webp", outline: appOutlines[icon] }] : [];
 });

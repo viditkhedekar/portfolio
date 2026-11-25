@@ -60,7 +60,7 @@ export function PortfolioApps() {
         style={{ "--app-dwell": `${dwell}ms` } as CSSProperties}
         onPointerLeave={() => setPreview(null)}
       >
-        {appShowcase.map(({ project: item, icon, label }, index) => (
+        {appShowcase.map(({ project: item, icon, label, outline }, index) => (
           <button
             key={item.id}
             type="button"
@@ -79,7 +79,12 @@ export function PortfolioApps() {
             onClick={() => select(index)}
             onKeyDown={(event) => navigate(event, index)}
           >
-            <span className="app-tab-art"><Image src={icon} alt="" width={320} height={320} sizes="(max-width: 650px) 17vw, 116px" /></span>
+            <span className="app-tab-art">
+              <Image src={icon} alt="" width={320} height={320} sizes="(max-width: 650px) 17vw, 116px" />
+              <svg viewBox="0 0 320 320" aria-hidden="true" className="app-tab-outline">
+                <path d={outline} pathLength="1" />
+              </svg>
+            </span>
             <span className="app-tab-label">{label}</span>
           </button>
         ))}
@@ -97,6 +102,7 @@ export function PortfolioApps() {
           >
             <div className="app-bento-intro">
               <h3>{project.name}</h3>
+              <p className="app-bento-tagline">{project.tagline}</p>
               <p>{project.summary}</p>
               <Link className="work-link" href={portfolioPath(project)}>Open project <ArrowUpRight size={16} aria-hidden="true" /></Link>
             </div>

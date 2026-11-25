@@ -13,9 +13,9 @@
   font-size: clamp(1rem, 1.7vw, 1.3rem);
 }
 
-.showcase-carousel, .showcase-reel { min-width: 0; }
+.showcase-carousel { min-width: 0; }
 .showcase-carousel-header { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 12px; }
-.showcase-carousel h3, .showcase-reel h3 { margin: 0; font-size: clamp(1.25rem, 2.45vw, 2rem); font-weight: 750; letter-spacing: -.015em; }
+.showcase-carousel h3 { margin: 0; font-size: clamp(1.25rem, 2.45vw, 2rem); font-weight: 750; letter-spacing: -.015em; }
 .showcase-controls { display: flex; gap: 8px; }
 .showcase-controls button {
   display: grid;
@@ -57,14 +57,6 @@
 .showcase-track figcaption { margin: 8px 0 0; font-size: .92rem; color: var(--ink); }
 .showcase-caption { margin-top: 12px; color: var(--muted); font-size: .83rem; }
 
-.showcase-reel {
-  display: grid;
-  width: min(100%, 680px);
-  gap: 12px;
-  border-top: 1px solid var(--line);
-  padding-top: clamp(18px, 3vw, 34px);
-}
-.showcase-reel video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 13px; background: #171613; }
 .apps-showcase { gap: clamp(22px, 3.5vw, 42px); }
 
 .app-tab-bar {
@@ -99,6 +91,7 @@
   translate: -50%;
 }
 .app-tab-art {
+  position: relative;
   display: block;
   width: min(100%, 116px);
   transform: scale(.83);
@@ -107,6 +100,27 @@
 .app-tab:is([aria-selected="true"], [data-preview]) .app-tab-art { transform: scale(1); }
 .app-tab[data-preview] .app-tab-art { transition-duration: var(--app-dwell); }
 .app-tab-art img { display: block; width: 100%; height: auto; }
+.app-tab-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: #24211c;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1 1.04;
+  stroke-dashoffset: 1.02;
+  opacity: 0;
+  pointer-events: none;
+  transition: stroke-dashoffset .78s cubic-bezier(.28, .14, .27, 1), opacity .38s ease;
+}
+.app-tab-outline path { vector-effect: non-scaling-stroke; }
+.app-tab:focus-visible .app-tab-outline { stroke-dashoffset: 0; opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  .app-tab:hover .app-tab-outline { stroke-dashoffset: 0; opacity: 1; }
+}
 .app-tab-label { white-space: normal; overflow-wrap: anywhere; font-size: clamp(.63rem, 1.25vw, .96rem); font-weight: 720; line-height: 1.16; }
 
 .app-bento {
@@ -123,7 +137,13 @@
 }
 .app-bento-intro, .app-bento-image { grid-column: 1 / -1; }
 .app-bento h3 { font-size: clamp(2.55rem, 6.3vw, 5.7rem); overflow-wrap: anywhere; }
-.app-bento-intro { background: #f2e7cb; }
+.app-bento-intro {
+  background: transparent;
+  border: 0;
+  padding: 4px 0 clamp(13px, 2.5vw, 24px);
+}
+.app-bento-intro .app-bento-tagline { margin-top: 10px; color: var(--ink); font-weight: 690; }
+.app-bento-tagline + p { margin-top: 8px; }
 .app-bento-intro .work-link { margin-top: 15px; }
 .app-bento-image {
   position: relative;
@@ -144,5 +164,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .app-tab-art { transition: none; }
+  .app-tab-art, .app-tab-outline { transition: none; }
 }

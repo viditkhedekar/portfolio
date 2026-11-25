@@ -4,7 +4,7 @@
   --outreach-stroke: #e2d6bd;
   display: grid;
   min-width: 0;
-  gap: clamp(48px, 7vw, 105px);
+  gap: clamp(36px, 5.4vw, 76px);
 }
 
 .outreach-case {
@@ -63,8 +63,8 @@
 
 .outreach-clients {
   display: grid;
-  gap: clamp(21px, 4vw, 42px);
-  padding: clamp(22px, 4.9vw, 57px);
+  gap: clamp(22px, 3vw, 33px);
+  padding: clamp(21px, 3.5vw, 42px);
 }
 
 .outreach-clients h3, .outreach-pricing h3 {
@@ -78,7 +78,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
-  gap: clamp(14px, 2.4vw, 40px);
+  gap: clamp(14px, 2.4vw, 32px);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -96,14 +96,14 @@
   line-height: 1.08;
   letter-spacing: -.008em;
 }
-.outreach-client img { width: clamp(24px, 2.5vw, 36px); height: 28px; object-fit: contain; }
-.outreach-client-wordmark img { display: block; width: min(100%, 154px); height: auto; }
+.outreach-client img { flex: none; width: clamp(44px, 4.4vw, 63px); height: clamp(35px, 3.5vw, 52px); object-fit: contain; }
+.outreach-client-wordmark img { display: block; width: min(100%, 205px); height: auto; }
 .outreach-client-batch { font-size: .73rem; font-weight: 740; color: var(--gold-ink); }
 
 .outreach-section-heading {
   max-width: 18ch;
   margin: 0;
-  font-size: clamp(2.45rem, 5vw, 5rem);
+  font-size: clamp(2.1rem, 4.4vw, 4.35rem);
   font-weight: 760;
   letter-spacing: -.016em;
   line-height: 1.02;
@@ -112,25 +112,28 @@
 .outreach-process {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: clamp(14px, 3vw, 32px);
-  margin: clamp(17px, 3vw, 34px) 0 0;
-  padding: 0;
+  gap: clamp(10px, 2vw, 24px);
+  margin: clamp(15px, 2.4vw, 28px) 0 0;
+  border: 1px solid var(--outreach-stroke);
+  border-radius: clamp(14px, 2.2vw, 24px);
+  background: linear-gradient(180deg, var(--outreach-paper), #f4ecda);
+  padding: clamp(13px, 2.3vw, 28px) clamp(8px, 2vw, 22px) 9px;
   list-style: none;
 }
 
 .outreach-process li { position: relative; min-width: 0; }
-.outreach-process figure { display: grid; justify-items: center; gap: 6px; border-radius: 10px; }
+.outreach-process figure { display: grid; justify-items: center; gap: 7px; border-radius: 10px; }
 .outreach-process-art {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  aspect-ratio: 1.17;
-  border: 1px solid var(--outreach-stroke);
-  border-radius: clamp(7px, 1.5vw, 15px);
-  background: linear-gradient(145deg, var(--outreach-paper), var(--outreach-gold));
-  color: var(--gold-ink);
+  display: block;
+  width: min(100%, 92px);
+  height: auto;
+  transform-origin: center bottom;
+  transition: transform .52s cubic-bezier(.23, 1, .32, 1), filter .52s ease;
 }
-.outreach-process-art svg { width: 47%; height: auto; max-width: 48px; }
+.outreach-process figure:is(:hover, :focus-visible) .outreach-process-art {
+  transform: translateY(-9px) scale(1.16);
+  filter: drop-shadow(0 6px 5px #77592d29);
+}
 .outreach-process figcaption {
   margin: 0;
   color: var(--ink);
@@ -144,12 +147,12 @@
 .outreach-process figure:is(:hover, :focus-visible) figcaption { opacity: 1; translate: 0 0; }
 .outreach-process-arrow {
   position: absolute;
-  top: 0;
+  top: 37%;
   left: 100%;
-  width: clamp(14px, 3vw, 32px);
+  width: clamp(10px, 2vw, 24px);
   height: auto;
   color: var(--gold-ink);
-  translate: 0 120%;
+  translate: 0 -50%;
 }
 .outreach-content[data-enhanced] .outreach-process-arrow {
   clip-path: inset(0 100% 0 0);
@@ -172,7 +175,7 @@
   padding: clamp(11px, 3.5vw, 42px);
 }
 .outreach-price-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 15px; margin-top: 11px; }
-.outreach-price-line [data-outreach-price] { font-size: clamp(2.45rem, 6.5vw, 6.5rem); font-weight: 760; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: .95; }
+.outreach-price-line [data-outreach-price] { min-width: 4ch; font-size: clamp(2.45rem, 6vw, 5.9rem); font-weight: 760; font-variant-numeric: tabular-nums; letter-spacing: -.02em; line-height: .95; }
 .outreach-price-period { color: var(--muted); font-size: clamp(.79rem, 1.75vw, 1.55rem); font-weight: 650; }
 .outreach-per-call { margin-top: 17px; font-size: clamp(.82rem, 1.65vw, 1.18rem); font-weight: 650; }
 .outreach-pricing-note { margin-top: 8px; color: var(--muted); font-size: clamp(.72rem, 1.45vw, .98rem); }
@@ -184,7 +187,7 @@
   gap: 14px;
   padding: clamp(12px, 3.5vw, 42px);
   color: var(--ink);
-  font-size: clamp(1.52rem, 4.3vw, 4.35rem);
+  font-size: clamp(1.38rem, 3.3vw, 3.25rem);
   font-weight: 770;
   letter-spacing: -.018em;
   line-height: 1;
@@ -205,13 +208,21 @@
 .outreach-booking:hover span { background: var(--gold-ink); color: var(--outreach-paper); }
 
 @media (max-width: 650px) {
-  .outreach-content { gap: clamp(38px, 9vw, 57px); }
+  .outreach-content { gap: clamp(35px, 8vw, 52px); }
   .outreach-heading h2 { font-size: clamp(2.12rem, 8.8vw, 4rem); }
   .outreach-clients ul { grid-template-columns: minmax(0, 1fr); gap: 19px; }
   .outreach-clients li + li { border-top: 1px solid var(--outreach-stroke); padding-top: 14px; }
-  .outreach-booking { flex-direction: column; align-items: flex-start; justify-content: center; }
   .outreach-price-line { column-gap: 4px; }
-  .outreach-process-arrow { translate: 0 96%; }
+}
+
+@media (max-width: 390px) {
+  .outreach-booking {
+    align-self: center;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 112px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -219,5 +230,6 @@
   .outreach-content[data-enhanced] [data-outreach-reveal],
   .outreach-content[data-enhanced] [data-outreach-reveal]:not([data-revealed]) { opacity: 1; translate: 0 0; transition: none; }
   .outreach-content[data-enhanced] .outreach-process-arrow { clip-path: none; transition: none; }
-  .outreach-process figcaption, .outreach-booking span { transition: none; }
+  .outreach-process-art, .outreach-process figcaption, .outreach-booking span { transition: none; }
+  .outreach-process figure:is(:hover, :focus-visible) .outreach-process-art { transform: none; }
 }
