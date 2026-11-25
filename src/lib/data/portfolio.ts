@@ -62,3 +62,16 @@ export function findPortfolioProject(slug: string) {
 export const featuredApps = liveProjects.filter(({ id }) =>
   ["PX-001", "PX-002", "PX-003"].includes(id),
 );
+
+const appMarks = [
+  { id: "PX-001", label: "GrowthKit AI", icon: "growthkit" },
+  { id: "PX-002", label: "PhysIQal", icon: "physiqal" },
+  { id: "PX-003", label: "Tactix XI", icon: "tactix" },
+  { id: "PX-004", label: "BlackOak", icon: "blackoak" },
+  { id: "PX-005", label: "Keynesium", icon: "keynesium" },
+];
+
+export const appShowcase = appMarks.flatMap(({ id, label, icon }) => {
+  const project = liveProjects.find((item) => item.id === id);
+  return project ? [{ project, label, icon: "/projects/app-icons/" + icon + ".webp" }] : [];
+});

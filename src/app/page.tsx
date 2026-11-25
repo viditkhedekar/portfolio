@@ -1,18 +1,23 @@
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
 import { GtmOpening } from "@/components/GtmOpening";
 import { OutreachContent } from "@/components/OutreachContent";
-import { portfolioWorkPanels } from "@/components/PortfolioWorkPanels";
+import { PortfolioApps } from "@/components/PortfolioApps";
+import { PortfolioMetaAds } from "@/components/PortfolioMetaAds";
+import { growencyUrl } from "@/lib/data/portfolio";
 import "./gtm-opening.css";
 
 export default function Home() {
   const about = (
     <div className="preview-copy">
       <h2>Hi, I’m Vidit.</h2>
-      <p>I run operations and client delivery at Growency and build software, including GrowthKit AI and PhysIQal Performance.</p>
-      <Link className="work-link" href="/about">About me <ArrowUpRight size={17} aria-hidden="true" /></Link>
+      <p>I run operations and client delivery at <a href={growencyUrl}>Growency</a>. We help businesses reach new customers through cold outreach and Meta ads.</p>
+      <p>I also build software. GrowthKit AI helps teams track competitors and understand their market. PhysIQal Performance analyses exercise form from video.</p>
     </div>
   );
 
-  return <GtmOpening panels={portfolioWorkPanels()} outreach={<OutreachContent />} about={about} />;
+  return (
+    <GtmOpening
+      panels={{ outreach: <OutreachContent />, meta: <PortfolioMetaAds />, apps: <PortfolioApps /> }}
+      about={about}
+    />
+  );
 }

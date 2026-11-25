@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ClientList, ExternalArrow } from "@/components/PortfolioMedia";
-import { featuredApps, portfolioPath } from "@/lib/data/portfolio";
+import { appShowcase, portfolioPath } from "@/lib/data/portfolio";
 
 export const metadata: Metadata = {
   title: "Selected work",
@@ -26,7 +26,7 @@ export default function ProjectsPage() {
       <section className="apps-index" id="apps" aria-labelledby="apps-title">
         <h2 id="apps-title">Apps I’ve built</h2>
         <div className="project-grid">
-          {featuredApps.map((project) => {
+          {appShowcase.map(({ project }) => {
             const media = project.media?.[1] ?? project.media?.[0];
             return (
               <Link key={project.id} href={portfolioPath(project)} className="project-item">

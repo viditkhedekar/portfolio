@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type 
 import { GtmArtwork } from "@/components/GtmArtwork";
 import { ViditPortrait } from "@/components/ViditPortrait";
 import { gtmMorph } from "@/lib/data/gtm-morph";
-import type { PortfolioPanels, PortfolioTopic } from "@/lib/data/portfolio";
+import type { PortfolioTopic } from "@/lib/data/portfolio";
 
 const topics = [
   { id: "outreach", label: "Outreach", href: "/projects/growency#outreach" },
@@ -34,10 +34,17 @@ const materialStart = readingTime + stagger * (topics.length - 1)
 const contourEasing = ".4 0 .24 1";
 const layoutTransition: Transition = { layout: { type: "tween", duration: 0.94, ease: [0.35, 0.02, 0.18, 1] } };
 
-function AboutPortraitLink({ slot, preview, animate, onPointerMove, onPointerLeave }: {
+function clearAboutHash() {
+  if (window.location.hash === "#about") {
+    window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+  }
+}
+
+function AboutPortraitLink({ slot, preview, animate, onClick, onPointerMove, onPointerLeave }: {
   slot?: DockSlot;
   preview?: boolean;
   animate: boolean;
+  onClick: (event: MouseEvent<HTMLAnchorElement>) => void;
   onPointerMove?: PointerEventHandler<HTMLAnchorElement>;
   onPointerLeave?: PointerEventHandler<HTMLAnchorElement>;
 }) {
@@ -46,7 +53,7 @@ function AboutPortraitLink({ slot, preview, animate, onPointerMove, onPointerLea
 
   return (
     <Link
-      href="/about"
+      href="/#about"
       className={inRail ? "gtm-about-link gtm-about-rail" : "gtm-about-link gtm-about-inline"}
       aria-label="About Vidit Khedekar"
       aria-hidden={!isPresent || undefined}
@@ -54,6 +61,7 @@ function AboutPortraitLink({ slot, preview, animate, onPointerMove, onPointerLea
       title="About me"
       data-dock-slot={slot}
       data-preview={preview || undefined}
+      onClick={onClick}
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
     >
@@ -66,9 +74,8 @@ function AboutPortraitLink({ slot, preview, animate, onPointerMove, onPointerLea
   );
 }
 
-export function GtmOpening({ panels, outreach, about }: {
-  panels: Pick<PortfolioPanels, "meta" | "apps">;
-  outreach: ReactNode;
+export function GtmOpening({ panels, about }: {
+  panels: Record<PortfolioTopic, ReactNode>;
   about: ReactNode;
 }) {
   const opening = useRef<HTMLElement>(null);
@@ -79,6 +86,20 @@ export function GtmOpening({ panels, outreach, about }: {
   const reducedMotion = useReducedMotion();
   const inactiveTabs = dockTabs.filter((id) => id !== selected);
   const activeTopic = selected && selected !== "about" ? selected : null;
+
+  useEffect(() => {
+    function openAbout() {
+      if (window.location.hash !== "#about") return;
+      if (opening.current) opening.current.dataset.material = "felt";
+      setSelected("about");
+    }
+    const frame = window.requestAnimationFrame(openAbout);
+    window.addEventListener("hashchange", openAbout);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("hashchange", openAbout);
+    };
+  }, []);
 
   useEffect(() => {
     const section = opening.current;
@@ -124,6 +145,7 @@ export function GtmOpening({ panels, outreach, about }: {
     if (!preview || reducedMotion) return;
     const timer = window.setTimeout(() => {
       if (window.matchMedia(dockHoverQuery).matches && !gallery.current?.contains(document.activeElement)) {
+        if (preview !== "about") clearAboutHash();
         setSelected(preview);
         if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -148,10 +170,11 @@ export function GtmOpening({ panels, outreach, about }: {
     setPreview((current) => current === id ? null : current);
   }
 
-  function choose(event: MouseEvent<HTMLAnchorElement>, id: PortfolioTopic) {
+  function choose(event: MouseEvent<HTMLAnchorElement>, id: GalleryTab) {
     if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
     event.preventDefault();
     if (opening.current) opening.current.dataset.material = "felt";
+    if (id !== "about") clearAboutHash();
     setPreview(null);
     setSelected(id);
     if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: reducedMotion ? "instant" : "smooth" });
@@ -160,6 +183,7 @@ export function GtmOpening({ panels, outreach, about }: {
   function close() {
     links.current[activeTopic ?? "outreach"]?.focus({ preventScroll: true });
     setPreview(null);
+    clearAboutHash();
     setSelected(null);
     if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: reducedMotion ? "instant" : "smooth" });
   }
@@ -189,7 +213,7 @@ export function GtmOpening({ panels, outreach, about }: {
               transition={{ duration: reducedMotion ? 0 : 0.24 }}
             >
               <span aria-hidden="true">I’m</span>
-              <AboutPortraitLink animate={!reducedMotion} />
+              <AboutPortraitLink animate={!reducedMotion} onClick={(event) => choose(event, "about")} />
               <span aria-hidden="true">your</span>
             </motion.div>
           )}
@@ -208,6 +232,7 @@ export function GtmOpening({ panels, outreach, about }: {
                 slot={dockSlot("about")}
                 preview={preview === "about"}
                 animate={!reducedMotion}
+                onClick={(event) => choose(event, "about")}
                 onPointerMove={dockHover("about")}
                 onPointerLeave={() => clearDockHover("about")}
               />
@@ -367,12 +392,7 @@ export function GtmOpening({ panels, outreach, about }: {
               exit={{ opacity: 0, y: reducedMotion ? 0 : -6, transition: { duration: reducedMotion ? 0 : 0.16 } }}
               transition={{ duration: reducedMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
-              {activeTopic === "outreach" ? outreach : activeTopic ? (
-                <>
-                  {panels[activeTopic].copy}
-                  <div className="gtm-gallery-media">{panels[activeTopic].media}</div>
-                </>
-              ) : about}
+              {activeTopic ? panels[activeTopic] : about}
             </motion.section>
           )}
         </AnimatePresence>

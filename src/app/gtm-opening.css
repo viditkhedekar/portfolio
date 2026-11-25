@@ -34,12 +34,29 @@
 
 .gtm-about-inline { flex: 0 0 .78em; width: .78em; }
 .gtm-portrait { display: block; }
+.portrait-image { display: block; position: relative; height: 100%; }
 .gtm-portrait img {
   display: block;
   width: 100%;
   height: auto;
   filter: drop-shadow(0 4px 6px #33271924);
+  transition: opacity .53s ease;
 }
+
+.portrait-outline {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+}
+.portrait-outline path { stroke-dasharray: 1 1.04; stroke-dashoffset: 1.02; transition: stroke-dashoffset .85s cubic-bezier(.35, 0, .23, 1); }
+.gtm-about-link:is(:hover, :focus-visible, [data-preview]) .portrait-outline { opacity: 1; }
+.gtm-about-link:is(:hover, :focus-visible, [data-preview]) .portrait-outline path { stroke-dashoffset: 0; }
+.gtm-about-link:is(:hover, :focus-visible, [data-preview]) img { opacity: .4; }
 
 .gtm-topics {
   display: grid;

@@ -4,8 +4,9 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { OutreachContent } from "@/components/OutreachContent";
-import { ExternalArrow, GrowencyAds } from "@/components/PortfolioMedia";
-import { findPortfolioProject, growencyUrl, portfolioPath, portfolioSlug } from "@/lib/data/portfolio";
+import { ExternalArrow } from "@/components/PortfolioMedia";
+import { PortfolioMetaAds } from "@/components/PortfolioMetaAds";
+import { findPortfolioProject, portfolioPath, portfolioSlug } from "@/lib/data/portfolio";
 import { liveProjects } from "@/lib/data/projects";
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -39,13 +40,8 @@ export default async function ProjectPage({ params }: PageProps) {
           <section className="outreach-case" id="outreach" aria-label="Outreach">
             <OutreachContent />
           </section>
-          <section className="case-section case-ads" id="meta-ads">
-            <div>
-              <h2>Meta Ads</h2>
-              <p>We turn a brief into ad creative, run tests on Facebook and Instagram, and use the results to decide which ads to keep running.</p>
-              <a className="work-link" href={growencyUrl}>Visit Growency <ExternalArrow /></a>
-            </div>
-            <GrowencyAds />
+          <section className="outreach-case" id="meta-ads" aria-label="Meta Ads">
+            <PortfolioMetaAds />
           </section>
         </>
       ) : (

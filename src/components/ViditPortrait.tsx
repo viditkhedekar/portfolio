@@ -1,13 +1,15 @@
 import Image from "next/image";
 
+// The alpha silhouette of the illustrated portrait.
+const silhouette = "M310 116Q320 100 332 94Q343 89 352 76Q361 64 374 56Q387 49 400 50Q412 51 414 48Q416 45 426 49Q437 53 451 46Q465 40 482 44Q500 47 526 46Q553 46 576 66Q599 87 608 89Q618 91 630 98Q642 106 648 115Q653 124 652 133Q652 142 664 146Q676 150 684 160Q692 171 690 180Q689 190 694 198Q700 206 701 214Q702 222 694 216Q687 209 692 226Q696 244 694 252Q691 261 688 255Q686 249 680 262Q673 276 672 282Q672 287 676 291Q679 295 676 298Q673 302 673 328Q673 355 660 384Q648 414 636 420Q624 427 611 452Q598 478 596 506Q595 535 625 572Q655 610 740 650Q826 690 832 698Q838 706 848 737Q858 768 851 781Q844 794 826 812Q807 829 789 841Q771 853 740 867Q710 881 668 893Q625 905 582 911Q539 917 493 918Q447 919 394 914Q340 908 296 896Q251 884 220 870Q189 855 164 837Q139 819 119 794Q99 769 103 750Q107 732 117 712Q127 692 214 650Q301 609 338 565Q376 521 374 496Q373 471 364 454Q354 436 343 435Q332 434 326 429Q319 424 306 398Q292 373 292 350Q291 326 278 305Q266 284 266 273Q267 262 262 256Q256 251 257 243Q258 235 256 232Q253 230 256 226Q259 223 254 212Q249 202 256 202Q264 202 266 180Q267 158 278 144Q289 129 294 131Q300 133 310 116Z";
+
 export function ViditPortrait({ sizes, decorative = false }: { sizes: string; decorative?: boolean }) {
   return (
-    <Image
-      src="/vidit-portrait.webp"
-      alt={decorative ? "" : "Stylised portrait of Vidit Khedekar"}
-      width={640}
-      height={585}
-      sizes={sizes}
-    />
+    <span className="portrait-image">
+      <Image src="/vidit-cartoon.webp" alt={decorative ? "" : "Illustrated portrait of Vidit Khedekar"} width={640} height={640} sizes={sizes} />
+      <svg className="portrait-outline" viewBox="0 0 960 960" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="16" strokeLinecap="round">
+        <path pathLength="1" d={silhouette} />
+      </svg>
+    </span>
   );
 }
