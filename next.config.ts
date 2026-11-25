@@ -5,7 +5,6 @@ import { liveProjects, slugOf } from "./src/lib/data/projects";
 const nextConfig: NextConfig = {
   async redirects() {
     return [
-      { source: "/about", destination: "/", permanent: false },
       { source: "/school", destination: "/", permanent: false },
       { source: "/certifications", destination: "/", permanent: false },
       { source: "/archive", destination: "/projects", permanent: false },

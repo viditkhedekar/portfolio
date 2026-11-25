@@ -22,22 +22,6 @@ export function GtmArtwork({ id }: { id: PortfolioTopic }) {
               event.currentTarget.closest("[data-gtm-topic]")?.setAttribute("data-art-ready", "true");
             }}
           />
-          {id === "outreach" && (
-            <>
-              <span className="gtm-envelope-pocket" />
-              <span className="gtm-envelope-letter" />
-              <span className="gtm-envelope-flap"><Image src={felt} alt="" fill sizes={sizes} /></span>
-            </>
-          )}
-          {id === "meta" && (
-            <span className="gtm-camera-lens"><Image src={felt} alt="" fill sizes={sizes} /></span>
-          )}
-          {id === "apps" && (
-            <>
-              <span className="gtm-app-tile gtm-app-tile-main"><Image src={felt} alt="" fill sizes={sizes} /></span>
-              <span className="gtm-app-tile gtm-app-tile-small"><Image src={felt} alt="" fill sizes={sizes} /></span>
-            </>
-          )}
         </span>
         <span className="gtm-glass">
           <Image

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { AnimatePresence, LayoutGroup, motion, useReducedMotion, type Transition } from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion, useIsPresent, useReducedMotion, type Transition } from "framer-motion";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
 import { GtmArtwork } from "@/components/GtmArtwork";
+import { ViditPortrait } from "@/components/ViditPortrait";
 import { gtmMorph } from "@/lib/data/gtm-morph";
 import type { PortfolioPanels, PortfolioTopic } from "@/lib/data/portfolio";
 
@@ -25,6 +26,25 @@ const materialStart = readingTime + stagger * (topics.length - 1)
   + traceDuration + Math.max(morphDuration, detailOffset + detailDuration) + outlineHold;
 const contourEasing = ".4 0 .24 1";
 const layoutTransition: Transition = { layout: { type: "tween", duration: 0.94, ease: [0.35, 0.02, 0.18, 1] } };
+
+function AboutPortraitLink({ inRail, animate }: { inRail?: boolean; animate: boolean }) {
+  const isPresent = useIsPresent();
+
+  return (
+    <Link
+      href="/about"
+      className={inRail ? "gtm-about-link gtm-about-rail" : "gtm-about-link gtm-about-inline"}
+      aria-label="About Vidit Khedekar"
+      aria-hidden={!isPresent || undefined}
+      tabIndex={isPresent ? undefined : -1}
+      title="About me"
+    >
+      <motion.span className="gtm-portrait" layoutId={animate ? "gtm-portrait" : undefined} transition={layoutTransition}>
+        <ViditPortrait decorative sizes={inRail ? "80px" : "(max-width: 650px) 16vw, 150px"} />
+      </motion.span>
+    </Link>
+  );
+}
 
 export function GtmOpening({ panels, clients }: { panels: PortfolioPanels; clients: ReactNode }) {
   const opening = useRef<HTMLElement>(null);
@@ -100,20 +120,24 @@ export function GtmOpening({ panels, clients }: { panels: PortfolioPanels; clien
       }}
     >
       <h1 className="visually-hidden" id="gtm-title">I’m your GTM guy.</h1>
-      <AnimatePresence initial={false} mode="popLayout">
-        {!selected && (
-          <motion.p
-            className="gtm-opening-line"
-            aria-hidden="true"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reducedMotion ? 0 : 0.24 }}
-          >I’m your</motion.p>
-        )}
-      </AnimatePresence>
       <LayoutGroup>
+        <AnimatePresence initial={false} mode="popLayout">
+          {!selected && (
+            <motion.div
+              className="gtm-opening-line gtm-opening-intro-line"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reducedMotion ? 0 : 0.24 }}
+            >
+              <span aria-hidden="true">I’m</span>
+              <AboutPortraitLink animate={!reducedMotion} />
+              <span aria-hidden="true">your</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
         <nav className="gtm-topics" aria-label="Selected work">
+          {selected && <AboutPortraitLink inRail animate={!reducedMotion} />}
           {topics.map(({ id, label, href }, index) => {
             const shape = gtmMorph[id];
             const start = readingTime + index * stagger;
