@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { ArrowRight, ArrowUpRight, ChartNoAxesCombined, Crosshair, Gauge, Layers3 } from "lucide-react";
-import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { growencySpecAds } from "@/lib/data/growency-spec-ads";
 import { growencyClients, growencyUrl } from "@/lib/data/portfolio";
 
@@ -57,7 +57,8 @@ function CreativeCard() {
   );
 }
 
-export function MetaServices({ id }: { id: string }) {
+export function MetaServices() {
+  const faqGroup = useId();
   const bento = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,7 +76,7 @@ export function MetaServices({ id }: { id: string }) {
   }, []);
 
   return (
-    <section id={id} className="meta-services">
+    <section className="meta-services">
       <header className="meta-services-heading">
         <h3>We manage your Facebook and Instagram ad campaigns.</h3>
         <p>We create the ads, manage the campaigns and use the results to decide what to push.</p>
@@ -158,15 +159,15 @@ export function MetaServices({ id }: { id: string }) {
 
         <section className="meta-tile meta-faq">
           <h4>FAQs</h4>
-          <details name={`${id}-faq`}>
+          <details name={faqGroup}>
             <summary>What do you test?</summary>
             <p>We start with what we most need to learn, such as which hook gets attention or which offer converts.</p>
           </details>
-          <details name={`${id}-faq`}>
+          <details name={faqGroup}>
             <summary>When do you scale an ad?</summary>
             <p>When it delivers enough conversions within our cost target and holds that cost as spending increases.</p>
           </details>
-          <details name={`${id}-faq`}>
+          <details name={faqGroup}>
             <summary>How do we get started?</summary>
             <p>Tell us what you sell, who buys it and what the campaign needs to achieve. We’ll use any results you already have to plan the first tests.</p>
           </details>
