@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { GtmOpening } from "@/components/GtmOpening";
-import { ClientList } from "@/components/PortfolioMedia";
+import { OutreachContent } from "@/components/OutreachContent";
 import { portfolioWorkPanels } from "@/components/PortfolioWorkPanels";
 import "./gtm-opening.css";
 
@@ -14,5 +14,5 @@ export default function Home() {
     </div>
   );
 
-  return <GtmOpening panels={portfolioWorkPanels()} clients={<ClientList />} about={about} />;
+  return <GtmOpening panels={portfolioWorkPanels()} outreach={<OutreachContent />} about={about} />;
 }

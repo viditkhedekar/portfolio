@@ -3,7 +3,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { ClientList, ExternalArrow, GrowencyAds } from "@/components/PortfolioMedia";
+import { OutreachContent } from "@/components/OutreachContent";
+import { ExternalArrow, GrowencyAds } from "@/components/PortfolioMedia";
 import { findPortfolioProject, growencyUrl, portfolioPath, portfolioSlug } from "@/lib/data/portfolio";
 import { liveProjects } from "@/lib/data/projects";
 
@@ -35,10 +36,8 @@ export default async function ProjectPage({ params }: PageProps) {
 
       {project.id === "PX-010" ? (
         <>
-          <ClientList />
-          <section className="case-section" id="outreach">
-            <h2>Cold outreach</h2>
-            <p>We research target accounts, write and test outreach, and manage the follow-up. The work starts with deciding who is most likely to need what the client sells.</p>
+          <section className="outreach-case" id="outreach" aria-label="Outreach">
+            <OutreachContent />
           </section>
           <section className="case-section case-ads" id="meta-ads">
             <div>

@@ -66,7 +66,11 @@ function AboutPortraitLink({ slot, preview, animate, onPointerMove, onPointerLea
   );
 }
 
-export function GtmOpening({ panels, clients, about }: { panels: PortfolioPanels; clients: ReactNode; about: ReactNode }) {
+export function GtmOpening({ panels, outreach, about }: {
+  panels: Pick<PortfolioPanels, "meta" | "apps">;
+  outreach: ReactNode;
+  about: ReactNode;
+}) {
   const opening = useRef<HTMLElement>(null);
   const gallery = useRef<HTMLDivElement>(null);
   const links = useRef<Partial<Record<PortfolioTopic, HTMLAnchorElement>>>({});
@@ -363,11 +367,10 @@ export function GtmOpening({ panels, clients, about }: { panels: PortfolioPanels
               exit={{ opacity: 0, y: reducedMotion ? 0 : -6, transition: { duration: reducedMotion ? 0 : 0.16 } }}
               transition={{ duration: reducedMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
-              {activeTopic ? (
+              {activeTopic === "outreach" ? outreach : activeTopic ? (
                 <>
                   {panels[activeTopic].copy}
                   <div className="gtm-gallery-media">{panels[activeTopic].media}</div>
-                  {activeTopic === "outreach" && clients}
                 </>
               ) : about}
             </motion.section>

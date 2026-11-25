@@ -18,9 +18,18 @@ export function topicArtwork(id: PortfolioTopic) {
 }
 
 export const growencyClients = [
-  { name: "Kairos Health", detail: "YC F26", href: "https://kairoshealthai.com/" },
-  { name: "Posting Machine", href: "https://www.postingmachine.ai/" },
-  { name: "Infratex.ai", href: "https://www.infratex.ai/" },
+  {
+    name: "Kairos Health", detail: "YC F26", href: "https://kairoshealthai.com/",
+    logo: { file: "kairos-health", width: 144, height: 125 },
+  },
+  {
+    name: "Posting Machine", href: "https://www.postingmachine.ai/",
+    logo: { file: "posting-machine", width: 144, height: 87 },
+  },
+  {
+    name: "Infratex.ai", href: "https://www.infratex.ai/",
+    logo: { file: "infratex", width: 440, height: 98, wordmark: true },
+  },
 ];
 
 export const growencyAds = [
