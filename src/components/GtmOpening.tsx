@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { AnimatePresence, LayoutGroup, motion, useIsPresent, useReducedMotion, type Transition } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
-import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from "react";
+import { ArrowRight, House } from "lucide-react";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type PointerEventHandler, type ReactNode } from "react";
 import { GtmArtwork } from "@/components/GtmArtwork";
 import { ViditPortrait } from "@/components/ViditPortrait";
 import { gtmMorph } from "@/lib/data/gtm-morph";
@@ -14,6 +14,13 @@ const topics = [
   { id: "meta", label: "Ads", href: "/projects/growency#meta-ads" },
   { id: "apps", label: "Apps", href: "/projects#apps" },
 ] as const;
+
+type GalleryTab = PortfolioTopic | "about";
+type DockSlot = "top" | "active" | "left" | "right";
+const dockTabs: GalleryTab[] = ["about", "outreach", "meta", "apps"];
+const satelliteSlots = ["top", "left", "right"] as const;
+const hoverDuration = 1200;
+const dockHoverQuery = "(min-width: 801px) and (hover: hover) and (pointer: fine)";
 
 const readingTime = 0.68;
 const stagger = 0.14;
@@ -27,8 +34,15 @@ const materialStart = readingTime + stagger * (topics.length - 1)
 const contourEasing = ".4 0 .24 1";
 const layoutTransition: Transition = { layout: { type: "tween", duration: 0.94, ease: [0.35, 0.02, 0.18, 1] } };
 
-function AboutPortraitLink({ inRail, animate }: { inRail?: boolean; animate: boolean }) {
+function AboutPortraitLink({ slot, preview, animate, onPointerMove, onPointerLeave }: {
+  slot?: DockSlot;
+  preview?: boolean;
+  animate: boolean;
+  onPointerMove?: PointerEventHandler<HTMLAnchorElement>;
+  onPointerLeave?: PointerEventHandler<HTMLAnchorElement>;
+}) {
   const isPresent = useIsPresent();
+  const inRail = !!slot;
 
   return (
     <Link
@@ -38,19 +52,29 @@ function AboutPortraitLink({ inRail, animate }: { inRail?: boolean; animate: boo
       aria-hidden={!isPresent || undefined}
       tabIndex={isPresent ? undefined : -1}
       title="About me"
+      data-dock-slot={slot}
+      data-preview={preview || undefined}
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
     >
-      <motion.span className="gtm-portrait" layoutId={animate ? "gtm-portrait" : undefined} transition={layoutTransition}>
-        <ViditPortrait decorative sizes={inRail ? "80px" : "(max-width: 650px) 16vw, 150px"} />
+      <motion.span className={inRail ? "gtm-portrait gtm-figure" : "gtm-portrait"} layoutId={animate ? "gtm-portrait" : undefined} transition={layoutTransition}>
+        <span className={inRail ? "gtm-zoom" : undefined}>
+          <ViditPortrait decorative sizes={inRail ? "(max-width: 800px) 18vw, 210px" : "(max-width: 650px) 16vw, 150px"} />
+        </span>
       </motion.span>
     </Link>
   );
 }
 
-export function GtmOpening({ panels, clients }: { panels: PortfolioPanels; clients: ReactNode }) {
+export function GtmOpening({ panels, clients, about }: { panels: PortfolioPanels; clients: ReactNode; about: ReactNode }) {
   const opening = useRef<HTMLElement>(null);
+  const gallery = useRef<HTMLDivElement>(null);
   const links = useRef<Partial<Record<PortfolioTopic, HTMLAnchorElement>>>({});
-  const [selected, setSelected] = useState<PortfolioTopic | null>(null);
+  const [selected, setSelected] = useState<GalleryTab | null>(null);
+  const [preview, setPreview] = useState<GalleryTab | null>(null);
   const reducedMotion = useReducedMotion();
+  const inactiveTabs = dockTabs.filter((id) => id !== selected);
+  const activeTopic = selected && selected !== "about" ? selected : null;
 
   useEffect(() => {
     const section = opening.current;
@@ -92,16 +116,46 @@ export function GtmOpening({ panels, clients }: { panels: PortfolioPanels; clien
     };
   }, []);
 
+  useEffect(() => {
+    if (!preview || reducedMotion) return;
+    const timer = window.setTimeout(() => {
+      if (window.matchMedia(dockHoverQuery).matches && !gallery.current?.contains(document.activeElement)) {
+        setSelected(preview);
+        if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+      setPreview(null);
+    }, hoverDuration + 35);
+    return () => window.clearTimeout(timer);
+  }, [preview, reducedMotion]);
+
+  function dockSlot(id: GalleryTab): DockSlot | undefined {
+    if (!selected) return undefined;
+    return selected === id ? "active" : satelliteSlots[inactiveTabs.indexOf(id)];
+  }
+
+  function dockHover(id: GalleryTab): PointerEventHandler<HTMLAnchorElement> {
+    return (event) => {
+      if (!selected || id === selected || id === preview || reducedMotion || event.pointerType !== "mouse") return;
+      if (window.matchMedia(dockHoverQuery).matches && !gallery.current?.contains(document.activeElement)) setPreview(id);
+    };
+  }
+
+  function clearDockHover(id: GalleryTab) {
+    setPreview((current) => current === id ? null : current);
+  }
+
   function choose(event: MouseEvent<HTMLAnchorElement>, id: PortfolioTopic) {
     if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
     event.preventDefault();
     if (opening.current) opening.current.dataset.material = "felt";
+    setPreview(null);
     setSelected(id);
     if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: reducedMotion ? "instant" : "smooth" });
   }
 
   function close() {
-    if (selected) links.current[selected]?.focus({ preventScroll: true });
+    links.current[activeTopic ?? "outreach"]?.focus({ preventScroll: true });
+    setPreview(null);
     setSelected(null);
     if (window.scrollY > 0) window.scrollTo({ top: 0, behavior: reducedMotion ? "instant" : "smooth" });
   }
@@ -136,8 +190,25 @@ export function GtmOpening({ panels, clients }: { panels: PortfolioPanels; clien
             </motion.div>
           )}
         </AnimatePresence>
-        <nav className="gtm-topics" aria-label="Selected work">
-          {selected && <AboutPortraitLink inRail animate={!reducedMotion} />}
+        <nav
+          className="gtm-topics"
+          aria-label={selected ? "Portfolio sections" : "Selected work"}
+          style={{ "--gtm-hover-duration": `${hoverDuration}ms` } as CSSProperties}
+        >
+          {selected && (
+            <>
+              <button type="button" className="gtm-home" aria-label="Home" title="Home" onClick={close}>
+                <House size={22} strokeWidth={1.6} aria-hidden="true" />
+              </button>
+              <AboutPortraitLink
+                slot={dockSlot("about")}
+                preview={preview === "about"}
+                animate={!reducedMotion}
+                onPointerMove={dockHover("about")}
+                onPointerLeave={() => clearDockHover("about")}
+              />
+            </>
+          )}
           {topics.map(({ id, label, href }, index) => {
             const shape = gtmMorph[id];
             const start = readingTime + index * stagger;
@@ -150,11 +221,15 @@ export function GtmOpening({ panels, clients }: { panels: PortfolioPanels; clien
                 key={id}
                 href={href}
                 data-gtm-topic={id}
+                data-dock-slot={dockSlot(id)}
+                data-preview={preview === id || undefined}
                 aria-expanded={selected === id}
                 aria-controls="gtm-work-content"
                 style={style}
                 ref={(node) => { if (node) links.current[id] = node; }}
                 onClick={(event) => choose(event, id)}
+                onPointerMove={dockHover(id)}
+                onPointerLeave={() => clearDockHover(id)}
               >
                 <motion.span className="gtm-figure" aria-hidden="true" layout={!reducedMotion} transition={layoutTransition}>
                   <svg className="gtm-vector" viewBox="0 0 260 218" focusable="false">
@@ -253,7 +328,9 @@ export function GtmOpening({ panels, clients }: { panels: PortfolioPanels; clien
                       ))}
                     </g>
                   </svg>
-                  <GtmArtwork id={id} />
+                  <span className="gtm-zoom">
+                    <GtmArtwork id={id} />
+                  </span>
                 </motion.span>
                 <span className="gtm-topic-label">{label}</span>
                 <span className="gtm-topic-invitation" aria-hidden="true">Click for more <ArrowRight size={15} /></span>
@@ -274,22 +351,25 @@ export function GtmOpening({ panels, clients }: { panels: PortfolioPanels; clien
           >guy.</motion.p>
         )}
       </AnimatePresence>
-      <div className="gtm-gallery" id="gtm-work-content" hidden={!selected}>
-        {selected && <button className="gtm-gallery-back" type="button" onClick={close}><ArrowLeft size={16} aria-hidden="true" /> Back to intro</button>}
+      <div ref={gallery} className="gtm-gallery" id="gtm-work-content" hidden={!selected} onFocusCapture={() => setPreview(null)}>
         <AnimatePresence mode="wait">
           {selected && (
             <motion.section
               key={selected}
               className="gtm-gallery-panel"
-              aria-label={topics.find(({ id }) => id === selected)?.label}
+              aria-label={selected === "about" ? "About me" : topics.find(({ id }) => id === selected)?.label}
               initial={reducedMotion ? false : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }}
+              exit={{ opacity: 0, y: reducedMotion ? 0 : -6, transition: { duration: reducedMotion ? 0 : 0.16 } }}
               transition={{ duration: reducedMotion ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
-              {panels[selected].copy}
-              <div className="gtm-gallery-media">{panels[selected].media}</div>
-              {selected === "outreach" && clients}
+              {activeTopic ? (
+                <>
+                  {panels[activeTopic].copy}
+                  <div className="gtm-gallery-media">{panels[activeTopic].media}</div>
+                  {activeTopic === "outreach" && clients}
+                </>
+              ) : about}
             </motion.section>
           )}
         </AnimatePresence>
