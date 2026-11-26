@@ -3,10 +3,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { AppProjectBento } from "@/components/AppProjectBento";
 import { OutreachContent } from "@/components/OutreachContent";
 import { ExternalArrow } from "@/components/PortfolioMedia";
 import { PortfolioMetaAds } from "@/components/PortfolioMetaAds";
-import { findPortfolioProject, portfolioPath, portfolioSlug } from "@/lib/data/portfolio";
+import { appShowcase, findPortfolioProject, portfolioPath, portfolioSlug } from "@/lib/data/portfolio";
 import { liveProjects } from "@/lib/data/projects";
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -26,6 +27,15 @@ export default async function ProjectPage({ params }: PageProps) {
   const project = findPortfolioProject(slug);
   if (!project) notFound();
   if (slug !== portfolioSlug(project)) permanentRedirect(portfolioPath(project));
+
+  if (appShowcase.some(({ project: app }) => app.id === project.id)) {
+    return (
+      <article className="case-study app-bento-case">
+        <Link href="/projects" className="small-link"><ArrowLeft size={16} aria-hidden="true" /> Selected work</Link>
+        <AppProjectBento project={project} standalone />
+      </article>
+    );
+  }
 
   return (
     <article className="case-study">

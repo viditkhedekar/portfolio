@@ -1,11 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
 import { useEffect, useId, useRef, useState, type CSSProperties, type KeyboardEvent } from "react";
-import { appShowcase, portfolioPath } from "@/lib/data/portfolio";
+import { appShowcase } from "@/lib/data/portfolio";
+import { AppProjectBento } from "@/components/AppProjectBento";
 import "@/app/portfolio-showcase.css";
 
 const dwell = 820;
@@ -48,7 +47,6 @@ export function PortfolioApps() {
   }
 
   const { project } = appShowcase[active];
-  const screenshot = project.media?.[1];
 
   return (
     <div className="showcase apps-showcase">
@@ -93,32 +91,13 @@ export function PortfolioApps() {
       <div ref={panel} role="tabpanel" id={`${baseId}-detail`} aria-labelledby={`${baseId}-tab-${active}`} onFocusCapture={() => setPreview(null)}>
         <AnimatePresence mode="wait" initial={false}>
           <motion.article
-            className="app-bento"
             key={project.id}
             initial={{ opacity: 0, y: reducedMotion ? 0 : 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, transition: { duration: reducedMotion ? 0 : .13 } }}
             transition={{ duration: reducedMotion ? 0 : .42, ease: [.22, 1, .36, 1] }}
           >
-            <div className="app-bento-intro">
-              <h3>{project.name}</h3>
-              <p className="app-bento-tagline">{project.tagline}</p>
-              <p>{project.summary}</p>
-              <Link className="work-link" href={portfolioPath(project)}>Open project <ArrowUpRight size={16} aria-hidden="true" /></Link>
-            </div>
-            {screenshot && (
-              <figure className="app-bento-image">
-                <Image src={screenshot.src} alt={screenshot.alt} fill sizes="(max-width: 780px) 90vw, 47vw" />
-              </figure>
-            )}
-            <div className="app-bento-detail">
-              <h4>What I built</h4>
-              <p>{project.implementation}</p>
-            </div>
-            <div className="app-bento-detail">
-              <h4>What it does</h4>
-              <p>{project.currentState ?? project.result}</p>
-            </div>
+            <AppProjectBento project={project} />
           </motion.article>
         </AnimatePresence>
       </div>

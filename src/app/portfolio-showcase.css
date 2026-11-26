@@ -1,5 +1,5 @@
 .showcase { display: grid; min-width: 0; gap: clamp(28px, 5.2vw, 67px); }
-.showcase-heading h2, .app-bento h3 {
+.showcase-heading h2, .app-bento-title {
   margin: 0;
   font-size: clamp(3.1rem, 7.5vw, 7.1rem);
   font-weight: 770;
@@ -79,43 +79,96 @@
 }
 .app-tab-label { white-space: normal; overflow-wrap: anywhere; font-size: clamp(.63rem, 1.25vw, .96rem); font-weight: 720; line-height: 1.16; }
 
+.app-bento-case { display: grid; gap: clamp(18px, 3vw, 38px); }
+.app-bento-case > .small-link { justify-self: start; }
 .app-bento {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: clamp(9px, 1.6vw, 19px);
 }
-.app-bento-intro, .app-bento-detail {
+.app-bento-intro, .app-bento-detail, .app-bento-image {
   min-width: 0;
+  margin: 0;
   border: 1px solid var(--line);
   border-radius: clamp(13px, 2vw, 24px);
-  padding: clamp(19px, 3.6vw, 43px);
   background: var(--wash);
 }
-.app-bento-intro, .app-bento-image { grid-column: 1 / -1; }
-.app-bento h3 { font-size: clamp(2.55rem, 6.3vw, 5.7rem); overflow-wrap: anywhere; }
+.app-bento-intro, .app-bento-detail { padding: clamp(18px, 2.75vw, 36px); }
+.app-bento-detail, .app-bento-image { grid-column: span 3; }
+.app-bento [data-full] { grid-column: 1 / -1; }
 .app-bento-intro {
-  background: transparent;
-  border: 0;
-  padding: 4px 0 clamp(13px, 2.5vw, 24px);
+  grid-column: span 4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fcfaf4;
 }
-.app-bento-intro .app-bento-tagline { margin-top: 10px; color: var(--ink); font-weight: 690; }
+.app-bento-title { font-size: clamp(2.55rem, 5.6vw, 5rem); overflow-wrap: anywhere; }
+.app-bento-intro .app-bento-tagline { margin-top: 12px; color: var(--ink); font-weight: 690; }
 .app-bento-tagline + p { margin-top: 8px; }
-.app-bento-intro .work-link { margin-top: 15px; }
-.app-bento-image {
-  position: relative;
-  min-width: 0;
-  aspect-ratio: 2.12;
-  overflow: hidden;
-  border-radius: clamp(13px, 2vw, 24px);
-  background: var(--wash);
-}
-.app-bento-image img { object-fit: contain; }
-.app-bento-detail h4 { margin: 0 0 8px; font-size: clamp(1.05rem, 1.8vw, 1.45rem); font-weight: 750; line-height: 1.1; }
-.app-bento-detail p { color: var(--muted); }
+.app-bento-links { display: flex; flex-wrap: wrap; gap: 10px 21px; margin-top: clamp(13px, 2.2vw, 23px); }
+.app-bento-links a { max-width: 100%; overflow-wrap: anywhere; font-size: .86rem; }
+.app-bento-links svg { flex: none; }
 
-@media (max-width: 650px) {
+.app-bento-stack { grid-column: span 2; background: #f3eddf; }
+.app-bento-technologies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 12px 0 19px;
+  padding: 0;
+  list-style: none;
+}
+.app-bento-technologies li {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fcfaf4;
+  padding: 3px 8px;
+  font-size: .8rem;
+  font-weight: 680;
+}
+.app-bento-metadata { display: grid; gap: 6px; margin: 0; }
+.app-bento-metadata div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--line);
+  font-size: .82rem;
+}
+.app-bento-metadata dt { color: var(--muted); }
+.app-bento-metadata dd { margin: 0; font-size: .77rem; font-weight: 700; }
+
+.app-bento-capture {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.7;
+  border-radius: inherit;
+  overflow: hidden;
+  background: #171612;
+}
+.app-bento-capture img { object-fit: contain; }
+.app-bento-image figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 9px 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.app-bento-image figcaption small { color: var(--muted); font-weight: 600; }
+.app-bento-detail :is(h2, h4) { margin: 0 0 8px; font-size: clamp(1.05rem, 1.8vw, 1.45rem); font-weight: 750; line-height: 1.1; }
+.app-bento-detail p { color: var(--muted); line-height: 1.55; }
+
+@media (max-width: 700px) {
   .app-bento { grid-template-columns: minmax(0, 1fr); }
-  .app-bento h3 { font-size: clamp(2.15rem, 10vw, 3.5rem); }
+  .app-bento > * { grid-column: 1 / -1; }
+  .app-bento-title { font-size: clamp(2.15rem, 10vw, 3.5rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {
