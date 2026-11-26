@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ExternalArrow } from "@/components/PortfolioMedia";
 import { channels } from "@/lib/data/identity";
 
@@ -9,6 +10,7 @@ export default function ContactPage() {
     <section className="page-heading">
       <h1>Get in touch.</h1>
       <ul className="contact-list">
+        <li><Link className="work-link" href="/book">Book a call <ExternalArrow /></Link></li>
         {channels.map(({ id, href, handle }) => (
           <li key={id}><a className="work-link" href={href}>{handle} <ExternalArrow /></a></li>
         ))}

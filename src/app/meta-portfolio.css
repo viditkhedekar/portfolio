@@ -32,35 +32,62 @@
   cursor: pointer;
 }
 .meta-ad-controls button:hover { background: var(--meta-gold); }
+.meta-heading h2 {
+  max-width: 23ch;
+  font-size: clamp(2.45rem, 5.9vw, 6rem);
+  line-height: 1.05;
+  text-wrap: balance;
+}
+.meta-heading h2 span {
+  padding-block-end: .025em;
+  background: linear-gradient(var(--gold), var(--gold)) no-repeat left 96% / 100% .075em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: meta-underline 1.12s cubic-bezier(.38, .05, .22, 1) .3s backwards;
+}
+@keyframes meta-underline { from { background-size: 0 .075em; } }
+
 .meta-ad-stage {
   position: relative;
-  container-type: inline-size;
-  height: clamp(272px, 43vw, 500px);
+  height: clamp(256px, 43vw, 510px);
   overflow: clip;
   isolation: isolate;
   border: 1px solid var(--line);
   border-radius: clamp(14px, 2.6vw, 27px);
-  background: radial-gradient(ellipse at 50% 56%, #fcfaf4, #efe9dd);
+  background: #f9f7f2;
+}
+.meta-ad-canvas, .meta-ad-fallback { position: absolute; inset: 0; width: 100%; height: 100%; }
+.meta-ad-canvas {
+  opacity: 0;
+  pointer-events: none;
   cursor: grab;
   touch-action: pan-y pinch-zoom;
-  user-select: none;
+  transition: opacity .33s ease;
 }
-.meta-ad-stage[data-dragging], .meta-ad-stage[data-dragging] .meta-ad-card { cursor: grabbing; }
-.meta-ad-ring { position: absolute; inset: 0; margin: 0; padding: 0; list-style: none; }
+.meta-ad-canvas[data-dragging] { cursor: grabbing; }
+.meta-ad-fallback {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: clamp(9px, 2.1vw, 20px);
+  margin: 0;
+  overflow: auto hidden;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline-start: clamp(9px, 2.1vw, 20px);
+  overscroll-behavior-inline: contain;
+  list-style: none;
+  transition: opacity .25s ease, visibility 0s linear .25s;
+}
+.meta-ad-fallback li {
+  flex: 0 0 min(58%, 265px, calc((clamp(256px, 43vw, 510px) - 42px) * .8));
+  scroll-snap-align: start;
+}
 .meta-ad-card {
-  position: absolute;
-  top: 47%;
-  left: 50%;
   display: block;
-  width: clamp(101px, 25cqw, 224px);
-  padding: 0;
+  border-radius: clamp(7px, 1.4vw, 14px);
+  box-shadow: 0 0 0 1px #38271119;
   overflow: hidden;
-  border: 0;
-  border-radius: clamp(7px, 1.3cqw, 14px);
-  background: var(--meta-paper);
-  box-shadow: 0 9px 24px #3927102e, 0 0 0 1px #38271119;
   cursor: zoom-in;
-  -webkit-tap-highlight-color: transparent;
 }
 .meta-ad-card img {
   display: block;
@@ -68,17 +95,16 @@
   height: auto;
   aspect-ratio: 4 / 5;
   object-fit: cover;
-  pointer-events: none;
 }
+.meta-ad-stage[data-renderer="webgl"] .meta-ad-canvas { opacity: 1; pointer-events: auto; }
+.meta-ad-stage[data-renderer="webgl"] .meta-ad-fallback { opacity: 0; visibility: hidden; pointer-events: none; }
 .meta-ad-carousel-caption {
   align-items: flex-start;
   margin-top: 10px;
   color: var(--muted);
   font-size: .82rem;
 }
-.meta-ad-carousel-caption strong, .meta-ad-carousel-caption small { display: block; }
-.meta-ad-carousel-caption strong { color: var(--ink); font-size: .94rem; }
-.meta-ad-carousel-caption p { text-align: right; }
+.meta-ad-carousel-caption p:last-child { text-align: right; }
 
 html:has(.meta-ad-dialog[open]) { overflow: hidden; }
 .meta-ad-dialog {
@@ -131,12 +157,7 @@ html:has(.meta-ad-dialog[open]) { overflow: hidden; }
   color: #fffaf2;
 }
 .meta-ad-dialog-close:hover { background: #211b15; }
-@keyframes meta-rise {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.meta-services { min-width: 0; }
+.meta-services { min-width: 0; container-type: inline-size; }
 .meta-services-heading { margin-bottom: clamp(17px, 3vw, 34px); }
 .meta-services-heading h3 {
   max-width: 22ch;
@@ -150,7 +171,12 @@ html:has(.meta-ad-dialog[open]) { overflow: hidden; }
 .meta-services-heading p { max-width: 45ch; margin-top: 12px; color: var(--muted); }
 .meta-bento {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 5fr) minmax(0, 2fr) minmax(0, 5fr);
+  grid-template-areas:
+    "strategy creative creative"
+    "testing creative creative"
+    "budget budget quote"
+    "pricing faq faq";
   gap: clamp(9px, 1.5vw, 18px);
 }
 .meta-tile {
@@ -165,8 +191,17 @@ html:has(.meta-ad-dialog[open]) { overflow: hidden; }
   padding: clamp(16px, 2.4vw, 29px);
   overflow: hidden;
 }
-.meta-tile-enter { animation: meta-rise .66s cubic-bezier(.24, .72, .25, 1) backwards; }
-.meta-tile-enter:nth-child(even) { animation-delay: 80ms; }
+.meta-strategy { grid-area: strategy; }
+.meta-creative { grid-area: creative; }
+.meta-testing { grid-area: testing; }
+.meta-budget { grid-area: budget; }
+.meta-quote { grid-area: quote; }
+.meta-pricing { grid-area: pricing; }
+.meta-faq { grid-area: faq; }
+.meta-bento[data-motion] .meta-tile {
+  transition: opacity .69s ease var(--reveal-delay, 0ms), transform .82s cubic-bezier(.23, 1, .32, 1) var(--reveal-delay, 0ms);
+}
+.meta-bento[data-motion] .meta-tile:not([data-entered]):not(:focus-within) { opacity: 0; transform: translateY(20px); }
 .meta-tile > svg { margin-bottom: 8px; color: var(--gold-ink); }
 .meta-tile h4 {
   margin: 0 0 7px;
@@ -193,39 +228,45 @@ html:has(.meta-ad-dialog[open]) { overflow: hidden; }
 .meta-creative-deck {
   position: relative;
   width: 100%;
-  min-height: 145px;
+  flex: 1;
+  min-height: clamp(245px, 31cqw, 365px);
   margin: 13px 0;
 }
 .meta-creative-art {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: min(32%, 102px);
+  width: min(39%, 182px);
   height: auto;
   border-radius: 6px;
   box-shadow: 0 5px 13px #24180533;
-  transition: transform .66s cubic-bezier(.23, 1, .32, 1);
+  transition: transform .9s cubic-bezier(.23, 1, .32, 1);
 }
 .meta-creative-art[data-slot="0"] { z-index: 2; transform: translate(-50%, -50%); }
 .meta-creative-art[data-slot="1"] { z-index: 1; transform: translate(-112%, -47%) rotate(-11deg) scale(.86); }
 .meta-creative-art[data-slot="2"] { z-index: 1; transform: translate(12%, -47%) rotate(11deg) scale(.86); }
-.meta-creative-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; }
-.meta-creative-controls :is(a, button) {
-  display: inline-flex;
+.meta-creative-caption {
+  display: flex;
   align-items: center;
-  gap: 5px;
-  border: 0;
-  background: none;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  color: var(--muted);
+}
+.meta-creative-pause {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 35px;
+  height: 35px;
   padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--meta-paper);
   color: var(--ink);
-  font: inherit;
-  font-size: .82rem;
-  font-weight: 700;
-  text-decoration: underline;
-  text-decoration-color: var(--gold);
-  text-underline-offset: 3px;
   cursor: pointer;
 }
+.meta-creative-pause:hover { background: var(--meta-gold); }
 .meta-results { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
 .meta-results li + li { border-top: 1px solid var(--line); padding-top: 5px; }
 .meta-results img { width: 21px; height: auto; border-radius: 2px; }
@@ -233,41 +274,35 @@ html:has(.meta-ad-dialog[open]) { overflow: hidden; }
 .meta-budget-bar { display: grid; grid-template-columns: 3fr 1fr; gap: 3px; margin: 6px 0 12px; height: 8px; }
 .meta-budget-bar span { border-radius: 999px; background: #a88243; }
 .meta-budget-bar span:last-child { background: #e0c68e; }
-.meta-tile-enter .meta-budget-bar span { transform-origin: left; animation: meta-bar .9s cubic-bezier(.23, 1, .32, 1) .18s both; }
-@keyframes meta-bar { from { transform: scaleX(0); } }
 
 .meta-quote {
   justify-content: center;
   background: #28231b;
   color: #fdf8ed;
 }
-.meta-quote blockquote { margin: 0; font-size: clamp(1.04rem, 2vw, 1.46rem); line-height: 1.3; }
+.meta-quote blockquote { display: grid; margin: 0; font-size: clamp(1.04rem, 2vw, 1.46rem); line-height: 1.3; }
 .meta-quote figcaption { margin-top: 9px; color: #dfcda7; font-size: .78rem; }
-.meta-clients { justify-content: center; }
-.meta-clients ul { display: grid; gap: 8px; margin: 4px 0 0; padding: 0; list-style: none; }
-.meta-clients li, .meta-clients a { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-.meta-clients a { font-size: .9rem; font-weight: 700; color: var(--ink); text-decoration-color: var(--gold); }
-.meta-clients img { width: 27px; height: 24px; object-fit: contain; }
-.meta-clients img:not([alt=""]) { width: 108px; height: auto; }
-.meta-clients small { color: var(--gold-ink); font-weight: 680; }
+.meta-quote blockquote > :is(.meta-quote-measure, .meta-quote-text) { grid-area: 1 / 1; }
+.meta-quote-measure { visibility: hidden; }
 .meta-pricing { background: var(--meta-gold); }
 .meta-pricing .meta-monthly { margin: 2px 0 8px; color: var(--ink); font-size: clamp(.9rem, 1.5vw, 1.2rem); }
-.meta-monthly strong { font-size: clamp(1.7rem, 4.3vw, 3.1rem); line-height: 1; }
+.meta-monthly strong { display: inline-block; min-width: 3.75ch; font-variant-numeric: tabular-nums; font-size: clamp(1.7rem, 4.3vw, 3.1rem); line-height: 1; }
 .meta-pricing .work-link { margin-top: 13px; }
 .meta-faq details { width: 100%; border-top: 1px solid var(--line); }
 .meta-faq summary { padding: 9px 0; font-size: .9rem; font-weight: 680; cursor: pointer; }
 .meta-faq details p { padding-bottom: 9px; }
 
+@container (max-width: 610px) {
+  .meta-bento { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; }
+  .meta-tile { grid-area: auto; }
+  .meta-creative-deck { min-height: clamp(164px, 61cqw, 275px); }
+}
 @media (max-width: 650px) {
   .meta-ad-carousel-caption { display: grid; gap: 6px; }
-  .meta-ad-carousel-caption p { text-align: left; }
-  .meta-bento { grid-template-columns: minmax(0, 1fr); }
+  .meta-ad-carousel-caption p:last-child { text-align: left; }
 }
-
 @media (prefers-reduced-motion: reduce) {
-  .meta-ad-dialog::backdrop,
-  .meta-ad-dialog-figure :is(figcaption, .meta-ad-dialog-close),
-  .meta-tile-enter,
-  .meta-tile-enter .meta-budget-bar span { animation: none; }
-  .meta-creative-art { transition: none; }
+  .meta-heading h2 span, .meta-ad-dialog::backdrop, .meta-ad-dialog-figure :is(figcaption, .meta-ad-dialog-close) { animation: none; }
+  .meta-creative-art, .meta-ad-canvas, .meta-ad-fallback, .meta-bento[data-motion] .meta-tile { transition: none; }
+  .meta-creative-pause { display: none; }
 }

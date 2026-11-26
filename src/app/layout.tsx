@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { channels } from "@/lib/data/identity";
 import { growencyUrl } from "@/lib/data/portfolio";
 import "./portfolio.css";
 
@@ -24,8 +23,6 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const email = channels.find(({ id }) => id === "email")!;
-
   return (
     <html lang="en" className={rethinkSans.className}>
       <body>
@@ -33,7 +30,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <header className="site-header site-width">
           <Link className="wordmark" href="/">Vidit Khedekar<span aria-hidden="true">.</span></Link>
           <nav aria-label="Main navigation">
-            <a href={email.href}>Email <ArrowUpRight aria-hidden="true" size={15} /></a>
+            <Link href="/contact">Contact</Link>
+            <a href={growencyUrl}>Growency <ArrowUpRight aria-hidden="true" size={15} /></a>
           </nav>
         </header>
         <main id="main" className="site-width">{children}</main>

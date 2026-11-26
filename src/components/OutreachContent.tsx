@@ -1,8 +1,9 @@
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { OutreachMotion } from "@/components/OutreachMotion";
 import { OutreachWorkflow } from "@/components/OutreachWorkflow";
-import { growencyClients, growencyUrl } from "@/lib/data/portfolio";
+import { growencyClients } from "@/lib/data/portfolio";
 import "@/app/outreach.css";
 
 const monthlyPrice = 499;
@@ -44,10 +45,10 @@ export function OutreachContent() {
           <p className="outreach-pricing-note">We can discuss alternative pricing, including commissions.</p>
         </section>
 
-        <a className="outreach-booking" href={new URL("book", growencyUrl).href}>
+        <Link className="outreach-booking" href="/book">
           Book a call
           <span><ArrowUpRight strokeWidth={1.5} aria-hidden="true" /></span>
-        </a>
+        </Link>
       </div>
     </OutreachMotion>
   );

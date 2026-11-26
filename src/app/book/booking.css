@@ -1,0 +1,19 @@
+.booking-page {
+  display: grid;
+  gap: clamp(20px, 3.8vw, 44px);
+  padding-block: clamp(32px, 5vw, 74px);
+}
+.booking-page .page-heading { padding-block: 0; }
+.booking-page .page-heading h1 { font-size: clamp(3.25rem, 7vw, 6rem); }
+.booking-page .work-link { width: fit-content; margin-top: 14px; }
+.booking-calendar {
+  display: block;
+  width: 100%;
+  height: 730px;
+  border: 1px solid var(--line);
+  border-radius: clamp(14px, 2vw, 24px);
+  background: var(--wash);
+}
+@media (max-width: 600px) {
+  .booking-calendar { height: 840px; }
+}

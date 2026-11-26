@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { GtmOpening } from "@/components/GtmOpening";
 import { OutreachContent } from "@/components/OutreachContent";
 import { PortfolioApps } from "@/components/PortfolioApps";
@@ -9,8 +10,9 @@ export default function Home() {
   const about = (
     <div className="preview-copy">
       <h2>Hi, I’m Vidit.</h2>
-      <p>I run operations and client delivery at <a href={growencyUrl}>Growency</a>. We help businesses reach new customers through cold outreach and Meta ads.</p>
-      <p>I also build software. GrowthKit AI helps teams track competitors and understand their market. PhysIQal Performance analyses exercise form from video.</p>
+      <p>I’m COO at <a href={growencyUrl}>Growency</a>. We help businesses go to market, offering a range of services including cold outreach, Meta ads and SEO/GEO.</p>
+      <p>I’ve had multiple clients, including various YC clients and am looking to scale my agency to $100k MRR.</p>
+      <p>If you’re looking to work with me or you are just a genuinely ambitious person, <Link href="/book">let’s call</Link>.</p>
     </div>
   );
 

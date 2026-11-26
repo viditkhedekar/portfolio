@@ -1,46 +1,23 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
-import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { ArrowLeft, ArrowRight, Pause, Play, X } from "lucide-react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent } from "react";
 import { growencySpecAds as ads } from "@/lib/data/growency-spec-ads";
+import type { AdBounds, GrowencyAdOrbit } from "@/lib/growency/ad-orbit";
 
-const length = ads.length;
-const indexOf = (position: number) => ((position % length) + length) % length;
+const posters = ads.map(({ src }) => src);
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-function cardPose(index: number, position: number) {
-  const angle = (index - position) * (2 * Math.PI / length);
-  const depth = Math.cos(angle);
-  const side = Math.sin(angle);
-  const front = (depth + 1) / 2;
-  const scale = .57 + .53 * front * front * (3 - 2 * front);
-  return {
-    transform: `translate(-50%, -50%) translate(calc(${(side * 35 * (.86 + .14 * front)).toFixed(3)} * 1cqw), calc(${(depth * 10.5 + side * 1.6).toFixed(3)} * 1cqw)) rotate(${(side * 5).toFixed(3)}deg) scale(${(scale * (.79 + .21 * Math.abs(depth))).toFixed(4)}, ${scale.toFixed(4)})`,
-    zIndex: Math.round(front * 1000),
-  };
-}
-
-type Gesture = {
-  id: number;
-  x: number;
-  step: number;
-  position: number;
-  lastX: number;
-  lastTime: number;
-  speed: number;
-  moved: boolean;
-};
-
-function previewTransform(source: HTMLButtonElement, image: HTMLImageElement) {
-  const original = source.getBoundingClientRect();
+function previewTransform(source: () => AdBounds, image: HTMLImageElement) {
+  const original = source();
   const destination = image.getBoundingClientRect();
-  const x = original.x + original.width / 2 - destination.x - destination.width / 2;
-  const y = original.y + original.height / 2 - destination.y - destination.height / 2;
-  return `translate(${x}px, ${y}px) scale(${original.width / destination.width}, ${original.height / destination.height})`;
+  const x = original.left + original.width / 2 - destination.x - destination.width / 2;
+  const y = original.top + original.height / 2 - destination.y - destination.height / 2;
+  return `translate(${x}px, ${y}px) rotate(${original.rotation}deg) scale(${original.width / destination.width}, ${original.height / destination.height})`;
 }
 
-function AdPreview({ ad, source, close }: { ad: typeof ads[number]; source: HTMLButtonElement; close: () => void }) {
+function AdPreview({ ad, source, close }: { ad: typeof ads[number]; source: () => AdBounds; close: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const image = useRef<HTMLImageElement>(null);
   const closeButton = useRef<HTMLButtonElement>(null);
@@ -114,137 +91,115 @@ function AdPreview({ ad, source, close }: { ad: typeof ads[number]; source: HTML
 
 export function MetaAdCarousel() {
   const stage = useRef<HTMLDivElement>(null);
-  const cards = useRef<(HTMLButtonElement | null)[]>([]);
-  const selection = useRef(0);
-  const position = useRef(0);
-  const frame = useRef(0);
-  const gesture = useRef<Gesture | null>(null);
-  const ignoreClick = useRef(false);
-  const [active, setActive] = useState(0);
-  const [preview, setPreview] = useState<{ index: number; source: HTMLButtonElement } | null>(null);
+  const canvas = useRef<HTMLCanvasElement>(null);
+  const fallback = useRef<HTMLUListElement>(null);
+  const orbit = useRef<GrowencyAdOrbit | null>(null);
+  const [enhanced, setEnhanced] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [announcement, setAnnouncement] = useState("");
+  const [preview, setPreview] = useState<{ index: number; source: () => AdBounds } | null>(null);
   const headingId = useId();
   const stageId = useId();
   const hintId = useId();
 
-  useEffect(() => () => window.cancelAnimationFrame(frame.current), []);
+  useEffect(() => {
+    const element = stage.current;
+    const surface = canvas.current;
+    if (!element || !surface || !("IntersectionObserver" in window) || !("ResizeObserver" in window)) return;
+    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let active = true;
+    let attempt = 0;
+    let loading = false;
+    let near = false;
 
-  function paint(value: number) {
-    position.current = value;
-    for (const [index, element] of cards.current.entries()) {
-      if (!element) continue;
-      const { transform, zIndex } = cardPose(index, value);
-      element.style.transform = transform;
-      element.style.zIndex = String(zIndex);
+    function showFallback() {
+      orbit.current?.destroy();
+      orbit.current = null;
+      setEnhanced(false);
+      setPaused(false);
     }
-  }
 
-  function rotateTo(target: number) {
-    window.cancelAnimationFrame(frame.current);
-    selection.current = target;
-    setActive(indexOf(target));
-    if (reducedMotion()) {
-      paint(indexOf(target));
-      selection.current = indexOf(target);
+    async function load() {
+      if (!active || !near || motion.matches || !surface || orbit.current || loading) return;
+      const current = ++attempt;
+      loading = true;
+      try {
+        // Growency enables the orbit only if the device supports WebGL 2.
+        const context = surface.getContext("webgl2", { antialias: true, alpha: true });
+        if (!context) return;
+        const { GrowencyAdOrbit } = await import("@/lib/growency/ad-orbit");
+        if (!active || current !== attempt || motion.matches) return;
+        orbit.current = new GrowencyAdOrbit({
+          canvas: surface,
+          context,
+          posters,
+          onReady: () => setEnhanced(true),
+          onFallback: showFallback,
+          onSelect: (index) => setAnnouncement(ads[index].title),
+          onOpen: ({ index, bounds }) => setPreview({ index, source: bounds }),
+        });
+      } catch {
+        if (active && current === attempt) showFallback();
+      } finally {
+        loading = false;
+        if (active && current !== attempt && !motion.matches) void load();
+      }
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      near = entry.isIntersecting;
+      void load();
+    }, { rootMargin: "100px 0px" });
+    observer.observe(element);
+
+    function adapt() {
+      if (motion.matches) {
+        attempt++;
+        showFallback();
+      } else void load();
+    }
+    motion.addEventListener("change", adapt);
+
+    return () => {
+      active = false;
+      observer.disconnect();
+      motion.removeEventListener("change", adapt);
+      orbit.current?.destroy();
+      orbit.current = null;
+    };
+  }, []);
+
+  function rotate(direction: -1 | 1) {
+    if (enhanced && orbit.current) {
+      orbit.current.rotate(direction);
       return;
     }
-
-    const start = position.current;
-    const duration = Math.min(860, 520 + Math.abs(target - start) * 52);
-    let startTime: number | undefined;
-    function tick(now: number) {
-      startTime ??= now;
-      const progress = Math.min((now - startTime) / duration, 1);
-      const easing = 1 - (1 - progress) ** 4;
-      paint(start + (target - start) * easing);
-      if (progress < 1) frame.current = window.requestAnimationFrame(tick);
-    }
-    if (start !== target) frame.current = window.requestAnimationFrame(tick);
-  }
-
-  function open(index: number) {
-    const source = cards.current[index];
-    if (!source) return;
-    window.cancelAnimationFrame(frame.current);
-    stage.current?.focus({ preventScroll: true });
-    setPreview({ index, source });
-  }
-
-  function close() {
-    setPreview(null);
-    stage.current?.focus({ preventScroll: true });
-    rotateTo(selection.current);
+    const track = fallback.current;
+    const item = track?.firstElementChild as HTMLElement | null;
+    if (!track || !item) return;
+    track.scrollBy({ left: (item.offsetWidth + 12) * direction, behavior: reducedMotion() ? "instant" : "smooth" });
   }
 
   function navigate(event: KeyboardEvent<HTMLDivElement>) {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-    if (event.key === "Enter" || event.key === " ") {
-      if (event.target !== event.currentTarget) return;
+    if (event.key === "ArrowLeft" || event.key === "ArrowRight") {
       event.preventDefault();
-      open(active);
-      return;
+      rotate(event.key === "ArrowRight" ? 1 : -1);
+    } else if ((event.key === "Enter" || event.key === " ") && enhanced && event.target === event.currentTarget) {
+      event.preventDefault();
+      orbit.current?.open();
     }
-    const current = selection.current;
-    const first = current - indexOf(current);
-    const targets: Record<string, number> = { ArrowLeft: current - 1, ArrowRight: current + 1, Home: first, End: first + length - 1 };
-    const target = targets[event.key];
-    if (typeof target !== "number") return;
-    event.preventDefault();
-    rotateTo(target);
   }
 
-  function startDrag(event: PointerEvent<HTMLDivElement>) {
-    if (!event.isPrimary || event.button !== 0 || gesture.current) return;
-    ignoreClick.current = false;
-    const x = event.clientX;
-    gesture.current = {
-      id: event.pointerId,
-      x,
-      step: Math.max(54, event.currentTarget.clientWidth / (length * .82)),
-      position: position.current,
-      lastX: x,
-      lastTime: event.timeStamp,
-      speed: 0,
-      moved: false,
-    };
+  function toggleMotion() {
+    orbit.current?.setPaused(!paused);
+    setPaused(!paused);
   }
 
-  function drag(event: PointerEvent<HTMLDivElement>) {
-    const held = gesture.current;
-    if (held?.id !== event.pointerId) return;
-    const x = event.clientX;
-    const distance = held.x - x;
-    if (!held.moved) {
-      if (Math.abs(distance) <= 7) return;
-      window.cancelAnimationFrame(frame.current);
-      held.position = position.current;
-      held.moved = true;
-      ignoreClick.current = true;
-      event.currentTarget.setPointerCapture(event.pointerId);
-      event.currentTarget.setAttribute("data-dragging", "");
-    }
-    const now = event.timeStamp;
-    const instant = (held.lastX - x) / held.step / Math.max(now - held.lastTime, 8);
-    held.speed = .55 * held.speed + .45 * instant;
-    held.lastX = x;
-    held.lastTime = now;
-    if (!reducedMotion()) paint(held.position + distance / held.step);
-  }
-
-  function endDrag(event: PointerEvent<HTMLDivElement>) {
-    const held = gesture.current;
-    if (held?.id !== event.pointerId) return;
-    gesture.current = null;
-    if (!held.moved) return;
-    event.currentTarget.removeAttribute("data-dragging");
-    const glide = event.type === "pointerup" && event.timeStamp - held.lastTime < 85
-      ? Math.max(-2, Math.min(2, held.speed * 160))
-      : 0;
-    const traveled = (held.x - held.lastX) / held.step;
-    if (reducedMotion()) {
-      rotateTo(Math.round(held.position + traveled));
-    } else {
-      rotateTo(Math.round(held.position + traveled + glide));
-    }
+  function dismiss() {
+    orbit.current?.close();
+    setPreview(null);
+    stage.current?.focus({ preventScroll: true });
   }
 
   return (
@@ -252,10 +207,15 @@ export function MetaAdCarousel() {
       <div className="meta-ad-carousel-header">
         <h3 id={headingId}>Sample ads</h3>
         <div className="meta-ad-controls">
-          <button type="button" aria-label="Previous ad" aria-controls={stageId} onClick={() => rotateTo(selection.current - 1)}>
+          {enhanced && (
+            <button type="button" aria-label={paused ? "Resume ad rotation" : "Pause ad rotation"} onClick={toggleMotion}>
+              {paused ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}
+            </button>
+          )}
+          <button type="button" aria-label="Previous sample ad" aria-controls={stageId} onClick={() => rotate(-1)}>
             <ArrowLeft size={19} aria-hidden="true" />
           </button>
-          <button type="button" aria-label="Next ad" aria-controls={stageId} onClick={() => rotateTo(selection.current + 1)}>
+          <button type="button" aria-label="Next sample ad" aria-controls={stageId} onClick={() => rotate(1)}>
             <ArrowRight size={19} aria-hidden="true" />
           </button>
         </div>
@@ -265,51 +225,44 @@ export function MetaAdCarousel() {
         id={stageId}
         ref={stage}
         className="meta-ad-stage"
+        data-renderer={enhanced ? "webgl" : "static"}
         role="group"
         aria-label="Growency sample ads"
         aria-describedby={hintId}
         tabIndex={0}
         onKeyDown={navigate}
-        onPointerDown={startDrag}
-        onPointerMove={drag}
-        onPointerUp={endDrag}
-        onPointerCancel={endDrag}
-        onLostPointerCapture={(event) => {
-          if (event.target === event.currentTarget) endDrag(event);
-        }}
-        onPointerLeave={(event) => {
-          if (!gesture.current?.moved) endDrag(event);
-        }}
       >
-        <ul className="meta-ad-ring">
+        <canvas className="meta-ad-canvas" aria-hidden="true" ref={canvas} />
+        <ul ref={fallback} className="meta-ad-fallback" inert={enhanced}>
           {ads.map((ad, index) => (
             <li key={ad.id}>
-              <button
-                ref={(node) => { cards.current[index] = node; }}
-                type="button"
-                tabIndex={-1}
-                aria-label={`Preview ${ad.title}`}
+              <a
                 className="meta-ad-card"
-                style={cardPose(index, 0)}
+                href={ad.src}
+                aria-label={ad.title + " · " + ad.note}
                 onClick={(event) => {
-                  if (!ignoreClick.current || event.detail === 0) open(index);
+                  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                  event.preventDefault();
+                  const link = event.currentTarget;
+                  setPreview({ index, source: () => {
+                    const { left, top, width, height } = link.getBoundingClientRect();
+                    return { left, top, width, height, rotation: 0 };
+                  } });
                 }}
               >
-                <Image src={ad.src} alt="" width={ad.width} height={ad.height} sizes="(max-width: 650px) 150px, 240px" draggable={false} loading="eager" />
-              </button>
+                <Image src={ad.src} alt={ad.alt} width={ad.width} height={ad.height} sizes="(max-width: 650px) 54vw, 265px" loading={index < 3 ? "eager" : "lazy"} />
+              </a>
             </li>
           ))}
         </ul>
       </div>
 
       <div className="meta-ad-carousel-caption">
-        <div aria-live="polite" aria-atomic="true">
-          <strong>{ads[active].title}</strong>
-          <small>{ads[active].note}</small>
-        </div>
-        <p id={hintId}>Drag to rotate · Select an ad to preview <span className="visually-hidden">Use the arrow keys to rotate and Enter to open the selected ad.</span></p>
+        <p>Growency spec work. The brands shown did not commission these ads.</p>
+        <p id={hintId}>{enhanced ? "Drag to rotate · Select an ad to preview" : "Swipe to browse · Select an ad to preview"}</p>
       </div>
-      {preview && <AdPreview ad={ads[preview.index]} source={preview.source} close={close} />}
+      <span className="visually-hidden" role="status">{announcement}</span>
+      {preview && <AdPreview ad={ads[preview.index]} source={preview.source} close={dismiss} />}
     </section>
   );
 }

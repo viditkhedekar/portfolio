@@ -6,9 +6,8 @@ import "@/app/meta-portfolio.css";
 export function PortfolioMetaAds() {
   return (
     <div className="showcase meta-showcase">
-      <header className="showcase-heading">
-        <h2>Meta Ads</h2>
-        <p>I build and test Facebook and Instagram campaigns at Growency.</p>
+      <header className="showcase-heading meta-heading">
+        <h2>I build and test <span>Facebook and Instagram</span> campaigns at Growency.</h2>
       </header>
 
       <MetaAdCarousel />
