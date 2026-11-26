@@ -219,7 +219,6 @@ figcaption { margin-top: 8px; color: var(--muted); font-size: .8125rem; }
 .case-media .app-image { aspect-ratio: 1.6; }
 .case-media .app-image img { object-fit: contain; background: var(--ink); }
 .case-media figcaption { text-transform: capitalize; }
-.contact-list { list-style: none; padding: 0; }
 
 @media (max-width: 740px) {
   .work-selector { grid-template-columns: minmax(0, 1fr); justify-items: start; gap: 8px; }

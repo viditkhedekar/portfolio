@@ -6,6 +6,27 @@
 .booking-page .page-heading { padding-block: 0; }
 .booking-page .page-heading h1 { font-size: clamp(3.25rem, 7vw, 6rem); }
 .booking-page .work-link { width: fit-content; margin-top: 14px; }
+.booking-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.booking-socials a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding-inline: 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: .9rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.booking-socials a:hover { background: var(--wash); }
 .booking-calendar {
   display: block;
   width: 100%;

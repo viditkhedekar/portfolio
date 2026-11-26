@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ArrowUpRight } from "lucide-react";
+import { BookingSocials } from "./BookingSocials";
 import "./booking.css";
 
 export const metadata: Metadata = {
@@ -27,6 +28,7 @@ export default function BookPage() {
         <a className="work-link" href={calendar} target="_blank" rel="noreferrer">
           Open in Calendly <ArrowUpRight size={15} aria-hidden="true" />
         </a>
+        <BookingSocials />
       </header>
       <iframe className="booking-calendar" title="Book a 30-minute call with Vidit Khedekar" src={embed.href} />
     </section>

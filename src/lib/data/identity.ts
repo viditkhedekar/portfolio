@@ -62,6 +62,12 @@ export const channels: Channel[] = [
     handle: "viditkhedekar",
     href: "https://github.com/viditkhedekar/",
   },
+  {
+    id: "x",
+    label: "X",
+    handle: "@vidkhe",
+    href: "https://x.com/vidkhe",
+  },
 ];
 
 /** Convenience accessor — the GitHub link is surfaced outside the contact module. */

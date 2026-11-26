@@ -30,7 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <header className="site-header site-width">
           <Link className="wordmark" href="/">Vidit Khedekar<span aria-hidden="true">.</span></Link>
           <nav aria-label="Main navigation">
-            <Link href="/contact">Contact</Link>
+            <Link href="/book">Contact</Link>
             <a href={growencyUrl}>Growency <ArrowUpRight aria-hidden="true" size={15} /></a>
           </nav>
         </header>
