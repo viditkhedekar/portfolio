@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { Analytics } from "@vercel/analytics/next";
 import { growencyUrl } from "@/lib/data/portfolio";
 import "./portfolio.css";
 
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <span>Vidit Khedekar</span>
           <a href={growencyUrl}>Growency <ArrowUpRight aria-hidden="true" size={15} /></a>
         </footer>
+        <Analytics />
       </body>
     </html>
   );
